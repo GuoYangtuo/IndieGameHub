@@ -1,0 +1,57 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 前端构建
+      - name: Build frontend
+        working-directory: client
+        run: |
+          npm install
+          npm run build
+
+      # 服务器部署
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_SSH_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 清理旧文件
+            echo "Cleaning directories..."
+            rm -rf /var/www/html/*
+            rm -rf /root/server/*
+            
+            # 传输前端文件
+            echo "Copying frontend files..."
+            scp -r -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/client/build/* root@${{ secrets.SERVER_IP }}:/var/www/html/
+            
+            # 传输后端代码
+            echo "Copying backend files..."
+            scp -r -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/server/* root@${{ secrets.SERVER_IP }}:/root/server/
+            
+            # 重启后端服务
+            echo "Restarting backend..."
+            cd /root/server
+            npm install --production
+            pkill -f "node server.js" || true
+            nohup node server.js > server.log 2>&1 &
+            
+            # 验证服务
+            echo "Verifying services..."
+            ls -la /var/www/html
+            pgrep -f "node server.js"
