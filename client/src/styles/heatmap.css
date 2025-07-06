@@ -1,0 +1,77 @@
+/* 热力图颜色样式 */
+.react-calendar-heatmap .color-empty {
+  fill: #eeeeee;
+}
+
+.react-calendar-heatmap .color-scale-1 {
+  fill: #d6e685;
+}
+
+.react-calendar-heatmap .color-scale-2 {
+  fill: #8cc665;
+}
+
+.react-calendar-heatmap .color-scale-3 {
+  fill: #44a340;
+}
+
+.react-calendar-heatmap .color-scale-4 {
+  fill: #1e6823;
+}
+
+/* 高亮选中日期 */
+.react-calendar-heatmap .highlighted {
+  stroke: #2196f3;
+  stroke-width: 2px;
+}
+
+/* 响应式热力图 */
+.react-calendar-heatmap {
+  width: 100%;
+}
+
+/* 工具提示样式 */
+.__react_component_tooltip {
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
+  opacity: 0.95 !important;
+  background-color: #333 !important;
+  color: #fff !important;
+  max-width: 250px !important;
+  text-align: center !important;
+  z-index: 9999 !important;
+}
+
+.__react_component_tooltip::after {
+  width: 8px !important;
+  height: 8px !important;
+  background-color: #333 !important;
+  opacity: 0.95 !important;
+}
+
+/* 暗色模式下的提示样式 */
+@media (prefers-color-scheme: dark) {
+  .__react_component_tooltip {
+    background-color: #333 !important;
+    color: #eee !important;
+  }
+  
+  .__react_component_tooltip::after {
+    background-color: #333 !important;
+  }
+}
+
+.heatmap-selected {
+  border: 1px solid #000 !important;
+}
+
+.heatmap-tooltip-date {
+  display: none;
+}
+
+.heatmap-tooltip-monthday {
+  display: block;
+} 

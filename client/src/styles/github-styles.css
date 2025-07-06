@@ -1,0 +1,162 @@
+/* GitHub风格全局样式 */
+
+/* 卡片样式 */
+.github-card {
+  border-radius: 6px;
+  border: 1px solid;
+  border-color: var(--border-color);
+  transition: all 0.2s ease-in-out;
+}
+
+.github-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2);
+}
+
+/* 标签样式 */
+.github-label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 16px;
+  padding: 0 10px;
+  height: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* 按钮样式 */
+.github-button {
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  height: 32px;
+  padding: 0 16px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.github-button:hover {
+  filter: brightness(0.95);
+}
+
+.github-button.primary {
+  background-color: var(--color-btn-primary-bg);
+  border: 1px solid var(--color-btn-primary-border);
+  color: var(--color-btn-primary-text);
+}
+
+.github-button.secondary {
+  background-color: var(--color-btn-bg);
+  border: 1px solid var(--color-btn-border);
+  color: var(--color-btn-text);
+}
+
+/* 列表项样式 */
+.github-list-item {
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.github-list-item:hover {
+  background-color: var(--color-hover-bg);
+}
+
+/* 头像样式 */
+.github-avatar {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* 文本和标题样式 */
+.github-title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.github-subtitle {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.github-body {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.github-caption {
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* CSS变量 - 亮色主题 */
+:root {
+  --color-text-primary: #24292f;
+  --color-text-secondary: #57606a;
+  --color-text-tertiary: #6e7781;
+  --border-color: #d0d7de;
+  --color-hover-bg: rgba(234, 238, 242, 0.5);
+  --color-btn-text: #24292f;
+  --color-btn-bg: #f6f8fa;
+  --color-btn-border: #d0d7de;
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #2da44e;
+  --color-btn-primary-border: rgba(27, 31, 36, 0.15);
+}
+
+/* CSS变量 - 深色主题 */
+[data-theme="dark"] {
+  --color-text-primary: #c9d1d9;
+  --color-text-secondary: #8b949e;
+  --color-text-tertiary: #6e7781;
+  --border-color: #30363d;
+  --color-hover-bg: rgba(177, 186, 196, 0.12);
+  --color-btn-text: #c9d1d9;
+  --color-btn-bg: #21262d;
+  --color-btn-border: #30363d;
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #238636;
+  --color-btn-primary-border: rgba(240, 246, 252, 0.1);
+}
+
+/* 特殊样式效果 */
+.github-hover-grow {
+  transition: transform 0.2s ease;
+}
+
+.github-hover-grow:hover {
+  transform: scale(1.02);
+}
+
+.github-card-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(246, 248, 250, 0.5);
+}
+
+[data-theme="dark"] .github-card-header {
+  background-color: rgba(13, 17, 23, 0.3);
+}
+
+.github-card-body {
+  padding: 16px;
+}
+
+.github-card-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: rgba(246, 248, 250, 0.5);
+}
+
+[data-theme="dark"] .github-card-footer {
+  background-color: rgba(13, 17, 23, 0.3);
+} 

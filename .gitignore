@@ -1,0 +1,11 @@
+﻿.VSCodeCounter
+client/node_modules
+client/build
+client/README.md
+server/dist
+server/node_modules
+server/README.md
+server/uploads
+testMySQL
+databaseDesign.mwb
+server/src/data
