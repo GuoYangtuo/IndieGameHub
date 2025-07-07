@@ -59,5 +59,4 @@ jobs:
             # 安装后端依赖并重启服务
             echo "Restarting backend..."
             cd /root/server
-            npm install
-            
+            systemctl restart mybackend
