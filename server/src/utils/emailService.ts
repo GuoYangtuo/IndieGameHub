@@ -17,7 +17,7 @@ export const sendVerificationCode = async (
   try {
     // 发送邮件
     const { data, error } = await resend.emails.send({
-      from: 'IndieGameHub <onboarding@resend.dev>',
+      from: 'IndieGameHub <onboarding@indiegamehub.xyz>',
       to: email,
       subject: '验证您的IndieGameHub账户',
       html: `
@@ -58,7 +58,7 @@ export const sendPasswordResetEmail = async (
     
     // 发送邮件
     const { data, error } = await resend.emails.send({
-      from: 'IndieGameHub <onboarding@resend.dev>',
+      from: 'IndieGameHub <onboarding@indiegamehub.xyz>',
       to: email,
       subject: '重置您的IndieGameHub密码',
       html: `

@@ -270,23 +270,13 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="body2" noWrap sx={{ maxWidth: '70%' }}>
                               {update.isVersion && update.versionName 
-                                ? `${update.versionName}` 
+                                ? `版本更新：${update.versionName}` 
                                 : update.content}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               {formatRelativeTime(update.createdAt)}
                             </Typography>
                           </Box>
-                        }
-                        secondary={
-                          update.isVersion && 
-                          <Chip 
-                            label="版本更新" 
-                            size="small" 
-                            color="primary" 
-                            variant="outlined"
-                            sx={{ mt: 0.5 }} 
-                          />
                         }
                       />
                       {update.imageUrl && (
