@@ -27,7 +27,28 @@ jobs:
           npm install
           npm run build
 
-      # 服务器部署
+      # 使用SCP传输文件
+      - name: Copy frontend files to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_SSH_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "client/build/*"
+          target: "/var/www/html/"
+          strip_components: 2
+
+      - name: Copy backend files to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_SSH_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "server/*"
+          target: "/root/server/"
+          strip_components: 1
+
+      # 服务器部署操作
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
         with:
@@ -35,20 +56,7 @@ jobs:
           username: ${{ secrets.SERVER_SSH_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # 清理旧文件
-            echo "Cleaning directories..."
-            rm -rf /var/www/html/*
-            rm -rf /root/server/*
-            
-            # 传输前端文件
-            echo "Copying frontend files..."
-            scp -r -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/client/build/* root@${{ secrets.SERVER_IP }}:/var/www/html/
-            
-            # 传输后端代码
-            echo "Copying backend files..."
-            scp -r -o StrictHostKeyChecking=no $GITHUB_WORKSPACE/server/* root@${{ secrets.SERVER_IP }}:/root/server/
-            
-            # 重启后端服务
+            # 安装后端依赖并重启服务
             echo "Restarting backend..."
             cd /root/server
             npm install --production
