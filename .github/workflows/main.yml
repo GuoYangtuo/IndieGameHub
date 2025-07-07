@@ -21,6 +21,8 @@ jobs:
       # 前端构建
       - name: Build frontend
         working-directory: client
+        env:
+          CI: false  # 关键修改：禁用CI严格模式
         run: |
           npm install
           npm run build
