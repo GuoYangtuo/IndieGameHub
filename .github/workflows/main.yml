@@ -59,11 +59,5 @@ jobs:
             # 安装后端依赖并重启服务
             echo "Restarting backend..."
             cd /root/server
-            npm install --production
-            pkill -f "node server.js" || true
-            nohup node server.js > server.log 2>&1 &
+            npm install
             
-            # 验证服务
-            echo "Verifying services..."
-            ls -la /var/www/html
-            pgrep -f "node server.js"
