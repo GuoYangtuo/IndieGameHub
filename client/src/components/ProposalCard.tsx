@@ -188,12 +188,16 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
     }
   };
 
+  // 检查提案是否是已关闭或已完成状态
+  const isInactiveProposal = status === 'closed' || status === 'completed';
+
   if (viewMode === 'list') {
     // 列表视图
     return (
       <Card sx={{ 
         mb: 1, 
-        opacity: status === 'closed' ? 0.7 : 1,
+        opacity: isInactiveProposal ? 0.7 : 1,
+        filter: isInactiveProposal ? 'grayscale(40%)' : 'none',
         borderLeft: `4px solid ${getCategoryBorderColor()}`,
         borderRadius: 2,
         transition: 'box-shadow 0.2s ease',
@@ -209,7 +213,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
               variant="h6" 
               sx={{ 
                 fontWeight: 600,
-                color: (theme: Theme) => theme.palette.mode === 'dark' ? '#c9d1d9' : '#24292f',
+                color: (theme: Theme) => isInactiveProposal 
+                  ? theme.palette.text.secondary 
+                  : (theme.palette.mode === 'dark' ? '#c9d1d9' : '#24292f'),
                 mb: 0.5
               }}
             >
@@ -312,7 +318,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
               </Tooltip>
             )}
             
-            {user && (isMember || isCreator) && status === 'open' && (
+            {user && isMember && status === 'open' && (
               <Tooltip title="关闭提案">
                 <IconButton 
                   size="small"
@@ -328,7 +334,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
               </Tooltip>
             )}
             
-            {user && isCreator && status === 'open' && (
+            {/* 修改为允许创建者删除已关闭的提案 */}
+            {user && isCreator && (status === 'open' || status === 'closed') && (
               <Tooltip title="删除提案">
                 <IconButton 
                   size="small"
@@ -358,6 +365,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
         display: 'flex', 
         flexDirection: 'column',
         borderTop: `3px solid ${getCategoryBorderColor()}`,
+        opacity: isInactiveProposal ? 0.7 : 1,
+        filter: isInactiveProposal ? 'grayscale(40%)' : 'none',
         transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease',
         '&:hover': {
           transform: 'translateY(-4px)',
@@ -404,6 +413,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
             fontSize: '1.1rem',
             fontWeight: 600,
             lineHeight: 1.3,
+            color: isInactiveProposal ? 'text.secondary' : 'text.primary',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
@@ -505,7 +515,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
               </Tooltip>
             )}
             
-            {user && (isMember || isCreator) && status === 'open' && (
+            {user && isMember && status === 'open' && (
               <Tooltip title="关闭提案">
                 <IconButton 
                   size="small"
@@ -517,7 +527,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
               </Tooltip>
             )}
             
-            {user && isCreator && status === 'open' && (
+            {/* 修改为允许创建者删除已关闭的提案 */}
+            {user && isCreator && (status === 'open' || status === 'closed') && (
               <Tooltip title="删除提案">
                 <IconButton 
                   size="small"

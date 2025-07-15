@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, forwardRef, useImperativeHandle, RefObject } from 'react';
 import { TextField, TextFieldProps } from '@mui/material';
 import useDebounce from '../hooks/useDebounce';
 
@@ -15,15 +15,23 @@ interface DebouncedInputProps extends Omit<TextFieldProps, 'onChange'> {
   debounceTime?: number;
 }
 
-const DebouncedInput: React.FC<DebouncedInputProps> = ({
+// 为组件添加额外暴露的方法
+interface DebouncedInputHandle {
+  resetValue: () => void;
+  inputElement: HTMLInputElement | HTMLTextAreaElement | null;
+}
+
+const DebouncedInput = forwardRef<DebouncedInputHandle, DebouncedInputProps>(({
   onDebouncedChange,
   onChange,
   debounceTime = 300,
   value: propValue,
   ...props
-}) => {
+}, ref) => {
   // 内部状态跟踪输入值
   const [inputValue, setInputValue] = useState<string>(propValue as string || '');
+  // 保存对内部TextField的ref
+  const inputRef = React.useRef<HTMLDivElement>(null);
   
   // 防抖处理后的值
   const debouncedValue = useDebounce<string>(inputValue, debounceTime);
@@ -49,13 +57,36 @@ const DebouncedInput: React.FC<DebouncedInputProps> = ({
     [onChange]
   );
 
+  // 添加重置值的方法
+  const resetValue = () => {
+    setInputValue('');
+    if (onDebouncedChange) {
+      onDebouncedChange('');
+    }
+  };
+
+  // 获取实际的input或textarea元素
+  const getInputElement = (): HTMLInputElement | HTMLTextAreaElement | null => {
+    if (!inputRef.current) return null;
+    return inputRef.current.querySelector('input, textarea') as HTMLInputElement | HTMLTextAreaElement | null;
+  };
+
+  // 暴露方法给父组件
+  useImperativeHandle(ref, () => ({
+    resetValue,
+    get inputElement() {
+      return getInputElement();
+    }
+  }));
+
   return (
     <TextField
       {...props}
       value={inputValue}
       onChange={handleChange}
+      ref={inputRef}
     />
   );
-};
+});
 
 export default DebouncedInput; 

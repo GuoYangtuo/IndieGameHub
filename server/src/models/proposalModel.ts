@@ -264,11 +264,6 @@ export const closeProposal = async (proposalId: string, userId: string): Promise
       return null;
     }
     
-    // 检查用户是否为提案创建者
-    if (proposal.createdBy !== userId) {
-      return null;
-    }
-    
     // 更新提案状态
     await query(
       'UPDATE proposals SET status = ? WHERE id = ?',

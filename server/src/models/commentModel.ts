@@ -47,26 +47,8 @@ export const findCommentsByProposalId = async (proposalId: string): Promise<Comm
       [proposalId]
     );
     
-    // 确保日期格式正确
-    return comments.map((comment: any) => {
-      // 处理日期格式
-      if (comment.createdAt) {
-        try {
-          const date = new Date(comment.createdAt);
-          if (!isNaN(date.getTime())) {
-            comment.createdAt = date.toISOString();
-          } else {
-            comment.createdAt = new Date().toISOString(); // 使用当前时间作为备用
-          }
-        } catch (error) {
-          comment.createdAt = new Date().toISOString(); // 如果转换失败，使用当前时间
-        }
-      } else {
-        comment.createdAt = new Date().toISOString(); // 如果没有createdAt，使用当前时间
-      }
-      
-      return comment;
-    });
+    // 直接返回数据库中的原始时间，不进行转换
+    return comments;
   } catch (error) {
     console.error('根据提案ID查找评论失败:', error);
     return [];
@@ -85,26 +67,8 @@ export const findCommentsByProjectId = async (projectId: string): Promise<Commen
       [projectId]
     );
     
-    // 确保日期格式正确
-    return comments.map((comment: any) => {
-      // 处理日期格式
-      if (comment.createdAt) {
-        try {
-          const date = new Date(comment.createdAt);
-          if (!isNaN(date.getTime())) {
-            comment.createdAt = date.toISOString();
-          } else {
-            comment.createdAt = new Date().toISOString(); // 使用当前时间作为备用
-          }
-        } catch (error) {
-          comment.createdAt = new Date().toISOString(); // 如果转换失败，使用当前时间
-        }
-      } else {
-        comment.createdAt = new Date().toISOString(); // 如果没有createdAt，使用当前时间
-      }
-      
-      return comment;
-    });
+    // 直接返回数据库中的原始时间，不进行转换
+    return comments;
   } catch (error) {
     console.error('根据项目ID查找评论失败:', error);
     return [];
@@ -124,7 +88,6 @@ export const createComment = async (commentData: CreateCommentData): Promise<Com
     const id = generateId();
     const now = new Date();
     const mysqlDateFormat = now.toISOString().slice(0, 19).replace('T', ' ');
-    const createdAt = now.toISOString(); // 保留ISO格式用于返回的对象
     
     await query(
       `INSERT INTO comments (id, proposalId, projectId, userId, content, createdAt) 
@@ -138,7 +101,7 @@ export const createComment = async (commentData: CreateCommentData): Promise<Com
       projectId,
       userId,
       content,
-      createdAt,
+      createdAt: mysqlDateFormat, // 使用MySQL格式时间
       userNickname
     };
     

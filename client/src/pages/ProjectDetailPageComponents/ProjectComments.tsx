@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -37,6 +37,12 @@ interface ProjectCommentsProps {
   onDeleteComment: (commentId: string) => void;
 }
 
+// 为DebouncedInput组件定义接口
+interface DebouncedInputHandle {
+  resetValue: () => void;
+  inputElement: HTMLInputElement | HTMLTextAreaElement | null;
+}
+
 const ProjectComments: React.FC<ProjectCommentsProps> = ({
   comments,
   user,
@@ -47,6 +53,26 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
   onAddComment,
   onDeleteComment
 }) => {
+  // 添加对输入框的引用
+  const inputRef = useRef<DebouncedInputHandle>(null);
+
+  // 自定义清空函数
+  const clearInput = () => {
+    // 使用组件提供的resetValue方法重置输入
+    if (inputRef.current) {
+      inputRef.current.resetValue();
+    }
+  };
+
+  // 自定义提交评论函数
+  const handleAddComment = () => {
+    onAddComment();
+    // 提交后立即清空输入框
+    clearInput();
+  };
+
+  console.log('comments', comments);
+  
   return (
     <Paper 
       elevation={0} 
@@ -117,6 +143,7 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
       {user && (
         <Box sx={{ display: 'flex', mt: 2 }}>
           <DebouncedInput
+            ref={inputRef}
             fullWidth
             placeholder="发表评论..."
             value={commentContent}
@@ -136,7 +163,7 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
           <IconButton
             color="primary"
             disabled={!commentContent.trim() || isAddingComment}
-            onClick={onAddComment}
+            onClick={handleAddComment}
             sx={{ ml: 1 }}
           >
             <Send />

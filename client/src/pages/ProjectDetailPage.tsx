@@ -334,7 +334,7 @@ const ProjectDetailPage: React.FC = () => {
         
         // 设置项目成员信息
         setMembers(data.members || []);
-        
+        console.log('data.project.comments', data.project.comments);
         // 设置项目评论
         setProjectComments(data.project.comments || []);
         
@@ -516,13 +516,17 @@ const ProjectDetailPage: React.FC = () => {
       setProjectCommentError(null);
       
       const response = await commentAPI.createProjectComment(project.id, projectCommentContent);
+      console.log('response', response);
       setProjectComments([...projectComments, response.data]);
-      setProjectCommentContent(''); // 清空评论输入框
+      // 提交后立即清空评论内容（这里注释掉原来的代码，转移到finally中）
+      // setProjectCommentContent(''); // 清空评论输入框
     } catch (err: any) {
       console.error('添加项目评论失败:', err);
       setProjectCommentError(err.response?.data?.message || '添加评论失败，请稍后再试');
     } finally {
       setAddingProjectComment(false);
+      // 无论成功或失败，都清空评论内容
+      setProjectCommentContent('');
     }
   };
 

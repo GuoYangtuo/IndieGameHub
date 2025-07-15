@@ -332,6 +332,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
     }
   };
 
+  // 渲染对话框
   return (
     <Dialog 
       open={open}
@@ -391,7 +392,14 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Description sx={{ mr: 1, color: 'primary.main' }} />
-              <Typography variant="h6">
+              <Typography 
+                variant="h6"
+                sx={{ 
+                  color: proposal && (proposal.status === 'closed' || proposal.status === 'completed') 
+                    ? 'text.secondary' 
+                    : 'text.primary' 
+                }}
+              >
                 {proposal?.title || '提案详情'}
               </Typography>
             </Box>
@@ -428,7 +436,12 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
         )}
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3 }}>
+      <DialogContent 
+        sx={{ 
+          pt: 3,
+          opacity: proposal && (proposal.status === 'closed' || proposal.status === 'completed') ? 0.85 : 1
+        }}
+      >
         {/* 提案内容区域 */}
         <Paper 
           elevation={0} 
@@ -472,7 +485,15 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   {getCategoryIcon(proposal?.category)}
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      fontWeight: 500,
+                      color: proposal && (proposal.status === 'closed' || proposal.status === 'completed') 
+                        ? 'text.secondary' 
+                        : 'text.primary' 
+                    }}
+                  >
                     {proposal?.category || '提案内容'}
                   </Typography>
                 </Box>
@@ -496,18 +517,19 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                   '& .wmde-markdown': { 
                     backgroundColor: 'transparent',
                     p: 0
-                  } 
-                }}
+                  },
+                  color: proposal && (proposal.status === 'closed' || proposal.status === 'completed') 
+                    ? 'text.secondary' 
+                    : 'text.primary'
+                }} 
               >
                 <MDEditor.Markdown source={proposal?.description || ''} />
               </Box>
               
-              {/* 附件区域 */}
+              {/* 附件列表 */}
               {proposal?.attachments && proposal.attachments.length > 0 && (
                 <Box sx={{ mt: 3 }}>
-                  <Divider sx={{ mb: 2 }} />
-                  <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
-                    <AttachFile fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="subtitle2" gutterBottom>
                     附件
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -515,11 +537,14 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                       <Chip
                         key={index}
                         label={attachment.name}
-                        onClick={() => window.open(attachment.url, '_blank')}
-                        icon={<Download fontSize="small" />}
                         variant="outlined"
-                        size="small"
-                        sx={{ borderRadius: 1 }}
+                        icon={<AttachFile />}
+                        onClick={() => {
+                          if (attachment.url) {
+                            window.open(attachment.url, '_blank');
+                          }
+                        }}
+                        sx={{ cursor: 'pointer' }}
                       />
                     ))}
                   </Box>
@@ -758,7 +783,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
       <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         {user && proposal && (
           <Box sx={{ display: 'flex', mr: 'auto' }}>
-            {/* 只对创建者显示删除按钮 */}
+            {/* 修改：允许创建者删除提案，无论状态如何 */}
             {user.id === proposal.createdBy && (
               <Button 
                 color="error" 
@@ -773,7 +798,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
               </Button>
             )}
             
-            {/* 只对项目成员和管理员显示关闭按钮 */}
+            {/* 只对项目成员和管理员显示关闭按钮，且只在提案为开放状态时显示 */}
             {isMember && proposal.status === 'open' && user.id !== proposal.createdBy && (
               <Button 
                 color="warning" 
