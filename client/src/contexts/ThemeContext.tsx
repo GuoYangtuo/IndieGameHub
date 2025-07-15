@@ -37,7 +37,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // 从本地存储获取主题模式
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('darkMode');
-    return savedMode ? JSON.parse(savedMode) : false;
+    return savedMode !== null ? JSON.parse(savedMode) : true; // 默认使用深色主题
   });
 
   // 切换主题模式
@@ -58,6 +58,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.body.classList.remove('dark-theme');
     }
   }, [isDarkMode]);
+
+  // 确保组件挂载时立即应用深色主题
+  useEffect(() => {
+    // 检查是否首次访问（localStorage中没有主题设置）
+    const savedMode = localStorage.getItem('darkMode');
+    if (savedMode === null) {
+      // 如果是首次访问，立即设置深色主题
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.add('dark-theme');
+    }
+  }, []);
 
   // GitHub风格配色
   const githubLightPalette = {
