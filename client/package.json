@@ -22,12 +22,14 @@
     "@types/react-dom": "^19.1.5",
     "@uiw/react-md-editor": "^4.0.7",
     "axios": "^1.9.0",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "multer": "^2.0.0",
     "react": "^19.1.0",
     "react-calendar-heatmap": "^1.10.0",
     "react-dom": "^19.1.0",
+    "react-loadable": "^5.5.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.1",
     "react-scripts": "5.0.1",
@@ -61,6 +63,7 @@
   },
   "proxy": "http://localhost:5000",
   "devDependencies": {
-    "@types/lodash": "^4.17.17"
+    "@types/lodash": "^4.17.17",
+    "@types/react-loadable": "^5.5.11"
   }
 }

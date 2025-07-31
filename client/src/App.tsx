@@ -5,18 +5,21 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProjectTitleProvider } from './contexts/ProjectTitleContext';
 import Navbar from './components/Navbar';
-import HomePage from './pages/HomePage';
-import ProjectDetailPage from './pages/ProjectDetailPage';
-import ProjectSettingsPage from './pages/ProjectSettingsPage';
-import CreateProjectPage from './pages/CreateProjectPage';
-import ProfilePage from './pages/ProfilePage';
-import DonatePage from './pages/DonatePage';
-import EmailVerificationPage from './pages/EmailVerifiedPage';
-import AdminPage from './pages/AdminPage';
 import { Box, GlobalStyles } from '@mui/material';
 import { ThemeProvider as CustomThemeProvider, useTheme } from './contexts/ThemeContext';
+import withLoadable from './utils/loadable';
 import './App.css';
 import './styles/github-styles.css'; // 导入GitHub风格样式表
+
+// 使用按需加载导入页面组件
+const HomePage = withLoadable(() => import('./pages/HomePage'));
+const ProjectDetailPage = withLoadable(() => import('./pages/ProjectDetailPage'));
+const ProjectSettingsPage = withLoadable(() => import('./pages/ProjectSettingsPage'));
+const CreateProjectPage = withLoadable(() => import('./pages/CreateProjectPage'));
+const ProfilePage = withLoadable(() => import('./pages/ProfilePage'));
+const DonatePage = withLoadable(() => import('./pages/DonatePage'));
+const EmailVerificationPage = withLoadable(() => import('./pages/EmailVerifiedPage'));
+const AdminPage = withLoadable(() => import('./pages/AdminPage'));
 
 // 自定义滚动条全局样式
 const ScrollbarStyles = () => {
