@@ -633,9 +633,54 @@ export const getFavoriteProjectsController = async (req: Request, res: Response)
     }
     
     // 获取用户收藏的项目ID列表
-    const favoriteProjects = await getFavoriteProjects(userId);
+    const favoriteProjectIds = await getFavoriteProjects(userId);
     
-    res.status(200).json(favoriteProjects);
+    if (favoriteProjectIds.length === 0) {
+      res.status(200).json([]);
+      return;
+    }
+    
+    // 获取完整的项目信息
+    const { getAllProjects, getProjectMembers, getProjectUpdates, getProjectImages } = require('../models/projectModel');
+    const allProjects = await getAllProjects();
+    
+    // 过滤出收藏的项目
+    const favoriteProjects = allProjects.filter((project: any) => 
+      favoriteProjectIds.includes(project.id)
+    );
+    
+    // 为每个项目添加额外信息
+    const projectsWithDetails = await Promise.all(
+      favoriteProjects.map(async (project: any) => {
+        try {
+          // 获取项目成员
+          const members = await getProjectMembers(project.id);
+          
+          // 获取项目更新
+          const updates = await require('../models/projectModel').getProjectUpdates(project.id);
+          
+          // 获取项目图片
+          const images = await getProjectImages(project.id);
+          
+          return {
+            ...project,
+            members: members.map((member: any) => member.userId),
+            updates: updates || [],
+            displayImages: images || []
+          };
+        } catch (err) {
+          console.error(`获取项目 ${project.id} 详情失败:`, err);
+          return {
+            ...project,
+            members: [],
+            updates: [],
+            displayImages: []
+          };
+        }
+      })
+    );
+    
+    res.status(200).json(projectsWithDetails);
   } catch (error) {
     console.error('获取收藏项目列表失败:', error);
     res.status(500).json({ message: '服务器错误' });

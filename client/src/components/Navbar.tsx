@@ -175,6 +175,7 @@ const Navbar: React.FC = () => {
         const response = await userAPI.getFavoriteProjects();
         const favorites = response.data;
         const currentProject = await projectAPI.getProjectBySlug(slug);
+        console.log(currentProject.data);
         if (currentProject.data) {
           setIsFavorite(favorites.some((p: any) => p.id === currentProject.data.id));
         }
@@ -354,6 +355,8 @@ const Navbar: React.FC = () => {
       const projectResponse = await projectAPI.getProjectBySlug(slug);
       const projectId = projectResponse.data.id;
       
+      const newFavoriteStatus = !isFavorite;
+      
       if (isFavorite) {
         await userAPI.removeFavoriteProject(projectId);
       } else {
@@ -361,7 +364,16 @@ const Navbar: React.FC = () => {
       }
       
       // 更新状态
-      setIsFavorite(!isFavorite);
+      setIsFavorite(newFavoriteStatus);
+      
+      // 发出自定义事件通知其他组件收藏状态已改变
+      const event = new CustomEvent('favoriteStatusChanged', {
+        detail: { 
+          projectId: projectId,
+          isFavorite: newFavoriteStatus 
+        }
+      });
+      window.dispatchEvent(event);
     } catch (err) {
       console.error('切换关注状态失败:', err);
     }

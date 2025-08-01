@@ -125,7 +125,7 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
         elevation={0} 
         sx={{ 
           p: 2, 
-          mb: 3, 
+          mb: 1, 
           borderRadius: 1,
           border: theme => `1px solid ${theme.palette.divider}`,
           transition: 'box-shadow 0.2s ease-in-out',

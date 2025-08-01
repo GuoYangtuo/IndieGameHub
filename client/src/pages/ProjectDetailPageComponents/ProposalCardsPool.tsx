@@ -22,7 +22,7 @@ import {
   Collapse,
   Divider
 } from '@mui/material';
-import { ExpandMore, ExpandLess, Lock, PlaylistAdd, Add } from '@mui/icons-material';
+import { ExpandMore, ExpandLess, Lock, PlaylistAdd, Add, Description, Sort, TrendingUp, ViewModule, ViewList, Shuffle, Schedule } from '@mui/icons-material';
 import ProposalCard from '../../components/ProposalCard';
 
 interface Bounty {
@@ -342,11 +342,19 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
             <Button
               variant="contained"
               color="secondary"
-              startIcon={<Add />}
+              startIcon={<Description />}
               onClick={onOpenProposalDialog}
-              sx={{ mr: 2 }}
+              sx={{ 
+                mr: 2,
+                '& .MuiButton-startIcon': {
+                  mr: { xs: 0, sm: 1 }
+                },
+                minWidth: { xs: 'auto', sm: 'auto' }
+              }}
             >
-              创建提案
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                创建提案
+              </Box>
             </Button>
           )}
           
@@ -374,7 +382,16 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
           
           {/* 排序选项切换按钮 */}
           <Chip
-            label={proposalSort === 'random' ? "随机排序" : proposalSort === 'time' ? "时间排序" : "热度排序"}
+            icon={
+              proposalSort === 'random' ? <Shuffle fontSize="small" /> : 
+              proposalSort === 'time' ? <Schedule fontSize="small" /> : 
+              <TrendingUp fontSize="small" />
+            }
+            label={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {proposalSort === 'random' ? "随机排序" : proposalSort === 'time' ? "时间排序" : "热度排序"}
+              </Box>
+            }
             onClick={() => {
               if (proposalSort === 'random') onSortChange('time');
               else if (proposalSort === 'time') onSortChange('hot');
@@ -388,7 +405,12 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
           
           {/* 视图切换按钮 */}
           <Chip
-            label={proposalView === 'cards' ? "卡片视图" : "列表视图"}
+            icon={proposalView === 'cards' ? <ViewModule fontSize="small" /> : <ViewList fontSize="small" />}
+            label={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {proposalView === 'cards' ? "卡片视图" : "列表视图"}
+              </Box>
+            }
             onClick={() => onViewModeChange(proposalView === 'cards' ? 'list' : 'cards')}
             clickable
             color="primary"

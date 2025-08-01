@@ -368,6 +368,25 @@ const ProjectDetailPage: React.FC = () => {
     fetchData();
   }, [slug, setProjectTitle, setProjectSlug, setDemoLink]);
 
+  // 监听收藏状态变化事件
+  useEffect(() => {
+    const handleFavoriteStatusChange = (event: CustomEvent) => {
+      const { projectId, isFavorite: newStatus } = event.detail;
+      // 如果事件对应的是当前项目，更新收藏状态
+      if (project && projectId === project.id) {
+        setIsFavorite(newStatus);
+      }
+    };
+    
+    // 添加事件监听器
+    window.addEventListener('favoriteStatusChanged', handleFavoriteStatusChange as EventListener);
+    
+    // 清理函数
+    return () => {
+      window.removeEventListener('favoriteStatusChanged', handleFavoriteStatusChange as EventListener);
+    };
+  }, [project]);
+
   // 单独处理与用户相关的逻辑
   useEffect(() => {
     // 如果用户状态变更，但不需要重新加载整个项目数据

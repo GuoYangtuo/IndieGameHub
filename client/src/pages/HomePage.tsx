@@ -23,7 +23,7 @@ import ProjectCard from '../components/ProjectCard';
 import { projectAPI, userAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { formatRelativeTime, toDateString } from '../utils/dateUtils';
+import { formatRelativeTime, toDateString, parseDate } from '../utils/dateUtils';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import ReactTooltip from 'react-tooltip';
 import 'react-calendar-heatmap/dist/styles.css';
@@ -94,34 +94,19 @@ const ProjectHeatmap: React.FC<{
   const handleDateClick = (value: any) => {
     if (!value || !value.date) return;
     
-    const dateStr = value.date.toISOString().split('T')[0];
-    
-    if (dateStr === selectedDate) {
-      // 如果点击已选中的日期，取消选择
-      onSelectDate && onSelectDate(null, project.id);
-    } else {
-      // 否则选择该日期
-      onSelectDate && onSelectDate(dateStr, project.id);
-    }
-  };
-
-  // 获取热力图数据
-  const getHeatmapData = () => {
-    const updatesByDate: Record<string, ProjectUpdate[]> = {};
-    
-    updates.forEach(update => {
-      const date = new Date(update.createdAt).toISOString().split('T')[0];
-      if (!updatesByDate[date]) {
-        updatesByDate[date] = [];
+    try {
+      const dateStr = toDateString(value.date.toISOString());
+      
+      if (selectedDate === dateStr) {
+        // 如果点击已选中的日期，取消选择
+        onSelectDate && onSelectDate(null, project.id);
+      } else {
+        // 否则选中该日期
+        onSelectDate && onSelectDate(dateStr, project.id);
       }
-      updatesByDate[date].push(update);
-    });
-    
-    return Object.entries(updatesByDate).map(([date, updates]) => ({
-      date: new Date(date),
-      count: updates.length,
-      updates
-    }));
+    } catch (error) {
+      console.error('处理日期点击时出错:', error);
+    }
   };
 
   // 获取当前日期的更新
@@ -129,54 +114,102 @@ const ProjectHeatmap: React.FC<{
     if (!selectedDate) return [];
     
     return updates.filter(update => {
-      const updateDate = toDateString(update.createdAt);
-      return updateDate === selectedDate;
+      try {
+        const updateDate = toDateString(update.createdAt);
+        return updateDate === selectedDate;
+      } catch (error) {
+        return false;
+      }
+    }).sort((a, b) => {
+      try {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } catch (error) {
+        return 0;
+      }
     });
   };
 
-  // 获取最近的更新
-  const getRecentUpdates = () => {
-    return [...updates]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3);
-  };
-
-  const heatmapData = getHeatmapData();
   const selectedDateUpdates = getSelectedDateUpdates();
-  const recentUpdates = getRecentUpdates();
 
   return (
-    <Paper elevation={1} sx={{ p: 2, mb: 2, borderRadius: 2 }}>
+    <Paper elevation={1} sx={{ p: { xs: 2, md: 1.5 }, mb: 2, borderRadius: 2 }}>
       <Typography 
         variant="h6" 
         sx={{ 
           fontWeight: 'bold',
           mb: 1,
-          cursor: 'pointer'
+          cursor: 'pointer',
+          fontSize: { xs: '1.25rem', md: '1.1rem' }, // 在桌面端稍微缩小字体
+          lineHeight: 1.2
         }}
         onClick={() => window.location.href = `/${project.slug}`}
       >
         {project.name}
       </Typography>
       
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-        {/* 热力图 - 尺寸更小 */}
-        <Box sx={{ flex: '0 0 auto', width: { xs: '100%', md: '220px' } }}>
-          <Paper elevation={0} sx={{ p: 0.5, bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 1 }}>
+        {/* 更新活跃度热力图 - 左侧 */}
+        <Box sx={{ 
+          flex: { xs: '1', md: '0.15' },
+          display: { xs: 'none', md: 'block' }
+        }}>
             <CalendarHeatmap
               startDate={new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
               endDate={new Date()}
-              values={heatmapData}
+              values={
+                (() => {
+                  // 按日期分组更新
+                  const updatesByDate: Record<string, ProjectUpdate[]> = {};
+                  
+                  if (updates && Array.isArray(updates)) {
+                    updates.forEach(update => {
+                      try {
+                        const date = parseDate(update.createdAt);
+                        if (date) {
+                          const dateStr = toDateString(date.toISOString());
+                          if (!updatesByDate[dateStr]) {
+                            updatesByDate[dateStr] = [];
+                          }
+                          updatesByDate[dateStr].push(update);
+                        }
+                      } catch (error) {
+                        // 忽略无效日期
+                      }
+                    });
+                  }
+                  
+                  // 转换为热力图数据格式
+                  return Object.entries(updatesByDate).map(([date, updates]) => {
+                    try {
+                      return {
+                        date: new Date(date),
+                        count: updates.length, // 使用实际更新数量
+                        content: updates.map(u => u.content).join(', '),
+                        updates: updates // 保存完整的更新数据
+                      };
+                    } catch (error) {
+                      return null;
+                    }
+                  }).filter(Boolean) as { date: Date; count: number; content: string; updates: ProjectUpdate[] }[];
+                })()
+              }
               classForValue={(value) => {
                 if (!value) {
                   return 'color-empty';
                 }
                 
                 // 判断是否是选中的日期
-                const dateStr = toDateString(value.date?.toISOString());
+                let dateStr = null;
+                try {
+                  dateStr = toDateString(value.date?.toISOString());
+                } catch (error) {
+                  return 'color-empty';
+                }
+                
                 const isSelected = dateStr === selectedDate;
                 
                 // 根据更新次数设置不同的颜色级别
+                // 1-3次，4-6次，7-9次，10次+
                 const count = value.count || 0;
                 let colorClass = 'color-empty';
                 if (count >= 10) colorClass = 'color-scale-4';
@@ -184,77 +217,105 @@ const ProjectHeatmap: React.FC<{
                 else if (count >= 4) colorClass = 'color-scale-2';
                 else if (count > 0) colorClass = 'color-scale-1';
                 
+                // 如果是选中的日期，添加高亮类
                 return isSelected ? `${colorClass} highlighted` : colorClass;
               }}
               tooltipDataAttrs={(value) => {
                 if (!value || !value.date) {
                   return null;
                 }
-                const date = value.date.toLocaleDateString('zh-CN');
-                const count = value.count || 0;
-                return {
-                  'data-tip': `${date}: ${count}次更新`,
-                };
+                
+                try {
+                  const date = value.date.toLocaleDateString('zh-CN');
+                  // 获取当日更新计数
+                  const count = value.count || 0;
+                  return {
+                    'data-tip': `${date}: ${count}次更新`,
+                  };
+                } catch (error) {
+                  return {
+                    'data-tip': '无效日期',
+                  };
+                }
               }}
               onClick={handleDateClick}
-              gutterSize={1}
-              horizontal={false}
             />
             <ReactTooltip />
-          </Paper>
         </Box>
         
-        {/* 更新列表 */}
-        <Box sx={{ flex: '1 1 auto' }}>
-          {selectedDate ? (
-            <>
-              <Typography variant="subtitle2" gutterBottom>
-                {selectedDate} 的更新
-              </Typography>
-              {selectedDateUpdates.length === 0 ? (
-                <Alert severity="info" sx={{ py: 0.5 }}>当天没有更新记录</Alert>
-              ) : (
-                <List dense disablePadding>
-                  {selectedDateUpdates.map((update) => (
+        {/* 日常更新列表 - 右侧 */}
+        <Box sx={{ 
+            flex: { xs: '1', md: '0.85' },
+            width: { xs: '100%', md: 'auto' },
+            borderLeft: { xs: 'none', md: theme => `1px solid ${theme.palette.divider}` }
+          }}>
+            {!updates || !Array.isArray(updates) || 
+            (selectedDate && selectedDateUpdates.length === 0) || 
+            (!selectedDate && updates.filter(u => !u.isVersion).length === 0) ? (
+              <Alert severity="info">暂无开发进度更新</Alert>
+            ) : (
+              <Box sx={{ maxHeight: '200px', overflow: 'auto' }}>
+                <List dense>
+                  {(selectedDate ? selectedDateUpdates : 
+                    (Array.isArray(updates) ? updates : [])
+                      .filter(update => !update.isVersion)
+                      .sort((a, b) => {
+                        try {
+                          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                        } catch (error) {
+                          return 0;
+                        }
+                      })
+                      .slice(0, 3)
+                  ).map((update) => (
                     <ListItem 
                       key={update.id} 
-                      divider 
-                      sx={{ cursor: 'pointer', py: 0.5 }}
+                      divider
+                      sx={{ cursor: 'pointer' }}
                       onClick={() => window.location.href = `/${project.slug}`}
                     >
                       <ListItemText 
-                        primary={update.content}
-                        primaryTypographyProps={{ variant: 'body2', noWrap: true }}
-                        secondary={formatRelativeTime(update.createdAt)}
+                        primary={
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="body2" noWrap sx={{ maxWidth: { xs: '80%', md: '70%' } }}>
+                              {update.isVersion && update.versionName 
+                                ? `${update.versionName}` 
+                                : update.content}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {formatRelativeTime(update.createdAt)}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          Boolean(update.isVersion) && 
+                          <Chip 
+                            label="版本更新" 
+                            size="small" 
+                            color="primary" 
+                            variant="outlined"
+                            sx={{ mt: 0.5 }} 
+                          />
+                        }
                       />
+                      {update.imageUrl && (
+                        <Box 
+                          component="img" 
+                          src={update.imageUrl} 
+                          sx={{ 
+                            width: 40, 
+                            height: 40, 
+                            ml: 1, 
+                            borderRadius: 1,
+                            objectFit: 'cover'
+                          }} 
+                        />
+                      )}
                     </ListItem>
                   ))}
                 </List>
-              )}
-            </>
-          ) : (
-            <>
-              <Typography variant="subtitle2" gutterBottom>
-                最近更新
-              </Typography>
-              <List dense disablePadding>
-                {recentUpdates.map((update) => (
-                  <ListItem 
-                    key={update.id} 
-                    divider 
-                    sx={{ cursor: 'pointer', py: 0.5 }}
-                    onClick={() => window.location.href = `/${project.slug}`}
-                  >
-                    <ListItemText 
-                      primary={update.content}
-                      primaryTypographyProps={{ variant: 'body2', noWrap: true }}
-                      secondary={formatRelativeTime(update.createdAt)}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </>
-          )}
+              </Box>
+            )}
         </Box>
       </Box>
     </Paper>
@@ -600,25 +661,46 @@ const HomePage: React.FC = () => {
             <Alert severity="info" sx={{ mb: 2 }}>关注的项目暂无更新</Alert>
           ) : (
             <>
-              {/* 默认只显示第一个项目 */}
-              <ProjectHeatmap 
-                project={projectsWithUpdates[0].project}
-                updates={projectsWithUpdates[0].updates}
-                onSelectDate={handleSelectDate}
-                selectedDate={selectedProjectId === projectsWithUpdates[0].project.id ? selectedDate : null}
-              />
-              
-              {/* 展开后显示所有项目 */}
-              <Collapse in={expandFavorites}>
-                {projectsWithUpdates.slice(1).map((item) => (
-                  <ProjectHeatmap 
+              {/* 默认显示前两个项目 */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                {projectsWithUpdates.slice(0, 2).map((item) => (
+                  <Box 
                     key={item.project.id}
-                    project={item.project}
-                    updates={item.updates}
-                    onSelectDate={handleSelectDate}
-                    selectedDate={selectedProjectId === item.project.id ? selectedDate : null}
-                  />
+                    sx={{ 
+                      width: { xs: '100%', md: 'calc(50% - 8px)' },
+                      minWidth: { md: '400px' }
+                    }}
+                  >
+                    <ProjectHeatmap 
+                      project={item.project}
+                      updates={item.updates}
+                      onSelectDate={handleSelectDate}
+                      selectedDate={selectedProjectId === item.project.id ? selectedDate : null}
+                    />
+                  </Box>
                 ))}
+              </Box>
+              
+              {/* 展开后显示其余项目 */}
+              <Collapse in={expandFavorites}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+                  {projectsWithUpdates.slice(2).map((item) => (
+                    <Box 
+                      key={item.project.id}
+                      sx={{ 
+                        width: { xs: '100%', md: 'calc(50% - 8px)' },
+                        minWidth: { md: '400px' }
+                      }}
+                    >
+                      <ProjectHeatmap 
+                        project={item.project}
+                        updates={item.updates}
+                        onSelectDate={handleSelectDate}
+                        selectedDate={selectedProjectId === item.project.id ? selectedDate : null}
+                      />
+                    </Box>
+                  ))}
+                </Box>
               </Collapse>
             </>
           )}
@@ -629,7 +711,7 @@ const HomePage: React.FC = () => {
 
       {/* 所有项目列表 */}
       <Typography variant="h5" gutterBottom>
-        项目列表
+        探索新的独立游戏
       </Typography>
       {/* 此功能暂不开放 */}
       <Alert severity="info">此功能暂不开放</Alert>
