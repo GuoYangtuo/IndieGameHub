@@ -331,7 +331,21 @@ export const addMember = async (req: Request, res: Response): Promise<void> => {
 
     // 获取更新后的成员列表
     const members = await getProjectMembers(projectId);
-    res.status(200).json({ message: '成员已添加', members });
+    
+    // 获取成员的完整用户信息
+    const { getAllUsers } = require('../models/userModel');
+    const allUsers = await getAllUsers();
+    const memberIds = members.map(member => member.userId);
+    const membersData = allUsers
+      .filter((user: any) => memberIds.includes(user.id))
+      .map((user: any) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatarUrl: user.avatarUrl || ''
+      }));
+    
+    res.status(200).json({ message: '成员已添加', members: membersData });
   } catch (error) {
     console.error('添加项目成员失败:', error);
     res.status(500).json({ message: '服务器错误' });
@@ -378,7 +392,21 @@ export const removeMember = async (req: Request, res: Response): Promise<void> =
 
     // 获取更新后的成员列表
     const members = await getProjectMembers(projectId);
-    res.status(200).json({ message: '成员已移除', members });
+    
+    // 获取成员的完整用户信息
+    const { getAllUsers } = require('../models/userModel');
+    const allUsers = await getAllUsers();
+    const memberIds = members.map(member => member.userId);
+    const membersData = allUsers
+      .filter((user: any) => memberIds.includes(user.id))
+      .map((user: any) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatarUrl: user.avatarUrl || ''
+      }));
+    
+    res.status(200).json({ message: '成员已移除', members: membersData });
   } catch (error) {
     console.error('移除项目成员失败:', error);
     res.status(500).json({ message: '服务器错误' });
@@ -433,7 +461,21 @@ export const addMemberByUsername = async (req: Request, res: Response): Promise<
 
     // 获取更新后的成员列表
     const members = await getProjectMembers(projectId);
-    res.status(200).json({ message: '成员已添加', members });
+    
+    // 获取成员的完整用户信息
+    const { getAllUsers } = require('../models/userModel');
+    const allUsers = await getAllUsers();
+    const memberIds = members.map(member => member.userId);
+    const membersData = allUsers
+      .filter((user: any) => memberIds.includes(user.id))
+      .map((user: any) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatarUrl: user.avatarUrl || ''
+      }));
+    
+    res.status(200).json({ message: '成员已添加', members: membersData });
   } catch (error) {
     console.error('通过用户名添加项目成员失败:', error);
     res.status(500).json({ message: '服务器错误' });

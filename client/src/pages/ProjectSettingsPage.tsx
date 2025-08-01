@@ -77,7 +77,7 @@ const ProjectSettingsPage: React.FC = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   
   const [members, setMembers] = useState<User[]>([]);
-  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberName, setNewMemberName] = useState('');
   const [addingMember, setAddingMember] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
   
@@ -191,17 +191,16 @@ const ProjectSettingsPage: React.FC = () => {
   
   // 处理添加成员
   const handleAddMember = async () => {
-    if (!project || !newMemberEmail) return;
+    if (!project || !newMemberName) return;
     
     try {
       setAddingMember(true);
       setMemberError(null);
       
-      const response = await projectAPI.addMemberByUsername(project.id, newMemberEmail);
+      const response = await projectAPI.addMemberByUsername(project.id, newMemberName);
       
-      setProject(response.data.project);
       setMembers(response.data.members);
-      setNewMemberEmail('');
+      setNewMemberName('');
       
       setSuccessMessage('成员添加成功');
     } catch (err: any) {
@@ -219,7 +218,6 @@ const ProjectSettingsPage: React.FC = () => {
     try {
       const response = await projectAPI.removeMember(project.id, memberId);
       
-      setProject(response.data.project);
       setMembers(response.data.members);
       
       setSuccessMessage('成员移除成功');
@@ -412,8 +410,8 @@ const ProjectSettingsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <TextField
                       label="用户名"
-                      value={newMemberEmail}
-                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      value={newMemberName}
+                      onChange={(e) => setNewMemberName(e.target.value)}
                       variant="outlined"
                       size="small"
                       sx={{ flexGrow: 1, mr: 1 }}
@@ -426,7 +424,7 @@ const ProjectSettingsPage: React.FC = () => {
                       color="primary"
                       startIcon={<PersonAdd />}
                       onClick={handleAddMember}
-                      disabled={addingMember || !newMemberEmail}
+                      disabled={addingMember || !newMemberName}
                     >
                       添加
                     </Button>

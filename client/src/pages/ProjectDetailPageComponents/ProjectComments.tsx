@@ -70,8 +70,6 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
     // 提交后立即清空输入框
     clearInput();
   };
-
-  console.log('comments', comments);
   
   return (
     <Paper 
