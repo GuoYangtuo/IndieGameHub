@@ -1,0 +1,176 @@
+﻿[
+    {
+      "sha": "c2202d36c10661873fb729bcf9c4c00b99e10c7a",
+      "node_id": "C_kwDOAO6SJdoAKGMyMjAyZDM2YzEwNjYxODczZmI3MjliY2Y5YzRjMDBiOTllMTBjN2E",
+      "commit": {
+        "author": {
+          "name": "Thaddeus Crews",
+          "email": "repiteo@outlook.com",
+          "date": "2025-08-01T16:45:22Z"
+        },
+        "committer": {
+          "name": "Thaddeus Crews",
+          "email": "repiteo@outlook.com",
+          "date": "2025-08-01T16:45:22Z"
+        },
+        "message": "Merge pull request #103838 from ebeem/master\n\nCore: Fix translation remaps incorrectly falling back",
+        "tree": {
+          "sha": "8c8d7ae08a5044f325d7d54117befa8a9989e689",
+          "url": "https://api.github.com/repos/godotengine/godot/git/trees/8c8d7ae08a5044f325d7d54117befa8a9989e689"
+        },
+        "url": "https://api.github.com/repos/godotengine/godot/git/commits/c2202d36c10661873fb729bcf9c4c00b99e10c7a",
+        "comment_count": 0,
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "-----BEGIN PGP SIGNATURE-----\n\niHUEABYKAB0WIQR0jbig63roeIHiWAeMbl/rX8A8zAUCaIzvIwAKCRCMbl/rX8A8\nzEayAQDyQ1sGld5hOHWqHFwEhgTKOh16skRjkxrob7XgqsEhNQEAuVTV7TXEoUi5\nQbnYm7hUNIdJmBYJCZfKhuA+3mILvgw=\n=stth\n-----END PGP SIGNATURE-----",
+          "payload": "tree 8c8d7ae08a5044f325d7d54117befa8a9989e689\nparent cce10e0b22a6323fbafa5082d2105091b6d193eb\nparent 9add19a4ad227e085e2658597b2ab6c9a9496fa7\nauthor Thaddeus Crews \u003Crepiteo@outlook.com\u003E 1754066722 -0500\ncommitter Thaddeus Crews \u003Crepiteo@outlook.com\u003E 1754066722 -0500\n\nMerge pull request #103838 from ebeem/master\n\nCore: Fix translation remaps incorrectly falling back\n",
+          "verified_at": "2025-08-01T16:49:57Z"
+        }
+      },
+      "url": "https://api.github.com/repos/godotengine/godot/commits/c2202d36c10661873fb729bcf9c4c00b99e10c7a",
+      "html_url": "https://github.com/godotengine/godot/commit/c2202d36c10661873fb729bcf9c4c00b99e10c7a",
+      "comments_url": "https://api.github.com/repos/godotengine/godot/commits/c2202d36c10661873fb729bcf9c4c00b99e10c7a/comments",
+      "author": {
+        "login": "Repiteo",
+        "id": 17489292,
+        "node_id": "MDQ6VXNlcjE3NDg5Mjky",
+        "avatar_url": "https://avatars.githubusercontent.com/u/17489292?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Repiteo",
+        "html_url": "https://github.com/Repiteo",
+        "followers_url": "https://api.github.com/users/Repiteo/followers",
+        "following_url": "https://api.github.com/users/Repiteo/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Repiteo/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Repiteo/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Repiteo/subscriptions",
+        "organizations_url": "https://api.github.com/users/Repiteo/orgs",
+        "repos_url": "https://api.github.com/users/Repiteo/repos",
+        "events_url": "https://api.github.com/users/Repiteo/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Repiteo/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "Repiteo",
+        "id": 17489292,
+        "node_id": "MDQ6VXNlcjE3NDg5Mjky",
+        "avatar_url": "https://avatars.githubusercontent.com/u/17489292?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Repiteo",
+        "html_url": "https://github.com/Repiteo",
+        "followers_url": "https://api.github.com/users/Repiteo/followers",
+        "following_url": "https://api.github.com/users/Repiteo/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Repiteo/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Repiteo/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Repiteo/subscriptions",
+        "organizations_url": "https://api.github.com/users/Repiteo/orgs",
+        "repos_url": "https://api.github.com/users/Repiteo/repos",
+        "events_url": "https://api.github.com/users/Repiteo/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Repiteo/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "cce10e0b22a6323fbafa5082d2105091b6d193eb",
+          "url": "https://api.github.com/repos/godotengine/godot/commits/cce10e0b22a6323fbafa5082d2105091b6d193eb",
+          "html_url": "https://github.com/godotengine/godot/commit/cce10e0b22a6323fbafa5082d2105091b6d193eb"
+        },
+        {
+          "sha": "9add19a4ad227e085e2658597b2ab6c9a9496fa7",
+          "url": "https://api.github.com/repos/godotengine/godot/commits/9add19a4ad227e085e2658597b2ab6c9a9496fa7",
+          "html_url": "https://github.com/godotengine/godot/commit/9add19a4ad227e085e2658597b2ab6c9a9496fa7"
+        }
+      ]
+    },
+    {
+      "sha": "cce10e0b22a6323fbafa5082d2105091b6d193eb",
+      "node_id": "C_kwDOAO6SJdoAKGNjZTEwZTBiMjJhNjMyM2ZiYWZhNTA4MmQyMTA1MDkxYjZkMTkzZWI",
+      "commit": {
+        "author": {
+          "name": "Thaddeus Crews",
+          "email": "repiteo@outlook.com",
+          "date": "2025-08-01T16:45:21Z"
+        },
+        "committer": {
+          "name": "Thaddeus Crews",
+          "email": "repiteo@outlook.com",
+          "date": "2025-08-01T16:45:21Z"
+        },
+        "message": "Merge pull request #109181 from nikitalita/gltf-dedupe-images\n\nDedupe images during GLTF Export",
+        "tree": {
+          "sha": "b9993cf5e6eb23c5fcfab85efaa3db0bd04fd12a",
+          "url": "https://api.github.com/repos/godotengine/godot/git/trees/b9993cf5e6eb23c5fcfab85efaa3db0bd04fd12a"
+        },
+        "url": "https://api.github.com/repos/godotengine/godot/git/commits/cce10e0b22a6323fbafa5082d2105091b6d193eb",
+        "comment_count": 0,
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "-----BEGIN PGP SIGNATURE-----\n\niHUEABYKAB0WIQR0jbig63roeIHiWAeMbl/rX8A8zAUCaIzvIgAKCRCMbl/rX8A8\nzKkSAP9e4sdfsnyAAOOAZQOR5PuCGJTvmoprVbW4R1PlBKt9lgD/a+m3Etg4mOUN\nhHvxutttdzG73paFzklhYSIm/0inkgo=\n=wVSt\n-----END PGP SIGNATURE-----",
+          "payload": "tree b9993cf5e6eb23c5fcfab85efaa3db0bd04fd12a\nparent b33c3de6913e3d6cb9d5582126b58c284a31c15f\nparent 7fcc7e19f3be0df8d366071dc7d0d87b1b3f1f34\nauthor Thaddeus Crews \u003Crepiteo@outlook.com\u003E 1754066721 -0500\ncommitter Thaddeus Crews \u003Crepiteo@outlook.com\u003E 1754066721 -0500\n\nMerge pull request #109181 from nikitalita/gltf-dedupe-images\n\nDedupe images during GLTF Export\n",
+          "verified_at": "2025-08-01T16:49:57Z"
+        }
+      },
+      "url": "https://api.github.com/repos/godotengine/godot/commits/cce10e0b22a6323fbafa5082d2105091b6d193eb",
+      "html_url": "https://github.com/godotengine/godot/commit/cce10e0b22a6323fbafa5082d2105091b6d193eb",
+      "comments_url": "https://api.github.com/repos/godotengine/godot/commits/cce10e0b22a6323fbafa5082d2105091b6d193eb/comments",
+      "author": {
+        "login": "Repiteo",
+        "id": 17489292,
+        "node_id": "MDQ6VXNlcjE3NDg5Mjky",
+        "avatar_url": "https://avatars.githubusercontent.com/u/17489292?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Repiteo",
+        "html_url": "https://github.com/Repiteo",
+        "followers_url": "https://api.github.com/users/Repiteo/followers",
+        "following_url": "https://api.github.com/users/Repiteo/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Repiteo/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Repiteo/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Repiteo/subscriptions",
+        "organizations_url": "https://api.github.com/users/Repiteo/orgs",
+        "repos_url": "https://api.github.com/users/Repiteo/repos",
+        "events_url": "https://api.github.com/users/Repiteo/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Repiteo/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "Repiteo",
+        "id": 17489292,
+        "node_id": "MDQ6VXNlcjE3NDg5Mjky",
+        "avatar_url": "https://avatars.githubusercontent.com/u/17489292?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Repiteo",
+        "html_url": "https://github.com/Repiteo",
+        "followers_url": "https://api.github.com/users/Repiteo/followers",
+        "following_url": "https://api.github.com/users/Repiteo/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Repiteo/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Repiteo/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Repiteo/subscriptions",
+        "organizations_url": "https://api.github.com/users/Repiteo/orgs",
+        "repos_url": "https://api.github.com/users/Repiteo/repos",
+        "events_url": "https://api.github.com/users/Repiteo/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Repiteo/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "b33c3de6913e3d6cb9d5582126b58c284a31c15f",
+          "url": "https://api.github.com/repos/godotengine/godot/commits/b33c3de6913e3d6cb9d5582126b58c284a31c15f",
+          "html_url": "https://github.com/godotengine/godot/commit/b33c3de6913e3d6cb9d5582126b58c284a31c15f"
+        },
+        {
+          "sha": "7fcc7e19f3be0df8d366071dc7d0d87b1b3f1f34",
+          "url": "https://api.github.com/repos/godotengine/godot/commits/7fcc7e19f3be0df8d366071dc7d0d87b1b3f1f34",
+          "html_url": "https://github.com/godotengine/godot/commit/7fcc7e19f3be0df8d366071dc7d0d87b1b3f1f34"
+        }
+      ]
+    }
+  ]

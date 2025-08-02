@@ -8,7 +8,6 @@ import {
   Button,
   Paper,
   Alert,
-  Stack,
   IconButton,
   CircularProgress
 } from '@mui/material';
@@ -24,10 +23,13 @@ const CreateProjectPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [githubRepoUrl, setGithubRepoUrl] = useState('');
+  const [githubAccessToken, setGithubAccessToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [checkingName, setCheckingName] = useState(false);
+  const [validatingGithub, setValidatingGithub] = useState(false);
   
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
@@ -96,6 +98,24 @@ const CreateProjectPage: React.FC = () => {
     setCoverImage(null);
     setCoverImagePreview(null);
   };
+  
+  // 验证GitHub仓库
+  const validateGithubRepo = async (repoUrl: string, accessToken: string) => {
+    if (!repoUrl.trim()) {
+      return { isValid: true, message: '' }; // 空仓库地址认为有效
+    }
+    
+    try {
+      const response = await projectAPI.validateGithubRepository(repoUrl, accessToken);
+      if (response.data.isValid && response.data.isAccessible) {
+        return { isValid: true, message: '仓库验证成功' };
+      } else {
+        return { isValid: false, message: response.data.message };
+      }
+    } catch (err: any) {
+      return { isValid: false, message: err.response?.data?.message || '验证失败' };
+    }
+  };
 
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,6 +145,18 @@ const CreateProjectPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      // 如果填写了仓库地址，先验证仓库
+      if (githubRepoUrl.trim()) {
+        setValidatingGithub(true);
+        const validationResult = await validateGithubRepo(githubRepoUrl, githubAccessToken);
+        setValidatingGithub(false);
+        
+        if (!validationResult.isValid) {
+          setError(`仓库验证失败：${validationResult.message}`);
+          return;
+        }
+      }
+      
       let projectResponse;
       
       // 如果有封面图片，使用带封面的创建API
@@ -133,11 +165,13 @@ const CreateProjectPage: React.FC = () => {
         formData.append('name', name);
         formData.append('description', description);
         formData.append('coverImage', coverImage);
+        if (githubRepoUrl) formData.append('githubRepoUrl', githubRepoUrl);
+        if (githubAccessToken) formData.append('githubAccessToken', githubAccessToken);
         
         projectResponse = await projectAPI.createProjectWithCover(formData);
       } else {
         // 否则使用基本API
-        projectResponse = await projectAPI.createProject(name, description);
+        projectResponse = await projectAPI.createProject(name, description, undefined, githubRepoUrl, githubAccessToken);
       }
       
       const projectSlug = projectResponse.data.slug;
@@ -153,6 +187,7 @@ const CreateProjectPage: React.FC = () => {
       }
     } finally {
       setLoading(false);
+      setValidatingGithub(false);
     }
   };
 
@@ -168,12 +203,6 @@ const CreateProjectPage: React.FC = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           创建新项目
         </Typography>
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
         
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
@@ -261,15 +290,53 @@ const CreateProjectPage: React.FC = () => {
             )}
           </Box>
           
+          <Box sx={{ mt: 3, mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              GitHub 仓库关联 (可选)
+            </Typography>
+            
+            <TextField
+              margin="normal"
+              fullWidth
+              id="githubRepoUrl"
+              label="GitHub 仓库 URL"
+              name="githubRepoUrl"
+              value={githubRepoUrl}
+              onChange={(e) => setGithubRepoUrl(e.target.value)}
+              placeholder="https://github.com/username/repository"
+              helperText="项目关联的GitHub仓库地址，用于代码管理和协作"
+            />
+            
+            <TextField
+              margin="normal"
+              fullWidth
+              id="githubAccessToken"
+              label="GitHub 访问令牌 (私有仓库需要)"
+              name="githubAccessToken"
+              type="password"
+              value={githubAccessToken}
+              onChange={(e) => setGithubAccessToken(e.target.value)}
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              helperText="访问私有仓库需要提供Personal Access Token（仓库地址会在创建项目时自动验证）"
+            />
+
+          </Box>
+          
+          {error && (
+            <Alert severity="error" sx={{ mt: 3 }}>
+              {error}
+            </Alert>
+          )}
+
           <Button
             type="submit"
             fullWidth
             variant="contained"
             size="large"
             sx={{ mt: 3 }}
-            disabled={loading || !!nameError || checkingName}
+            disabled={loading || !!nameError || checkingName || validatingGithub}
           >
-            {loading ? '创建中...' : '创建项目'}
+            {validatingGithub ? '验证仓库中...' : loading ? '创建中...' : '创建项目'}
           </Button>
         </Box>
       </Paper>

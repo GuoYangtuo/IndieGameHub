@@ -13,6 +13,8 @@ export interface Project {
   createdAt: string;
   coverImage?: string;
   projectBalance: number; // 项目账户存款额
+  githubRepoUrl?: string; // GitHub仓库地址
+  githubAccessToken?: string; // GitHub访问密钥
 }
 
 // 项目成员接口
@@ -41,6 +43,8 @@ export interface CreateProjectData {
   description: string;
   demoLink?: string;
   createdBy: string;
+  githubRepoUrl?: string;
+  githubAccessToken?: string;
 }
 
 // 更新项目接口
@@ -57,6 +61,8 @@ export interface UpdateProjectInfoData {
   name: string;
   description: string;
   demoLink?: string;
+  githubRepoUrl?: string;
+  githubAccessToken?: string;
 }
 
 // 项目图片接口
@@ -193,9 +199,9 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
     
     await query(
       `INSERT INTO projects 
-       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, projectData.name, uniqueSlug, projectData.description, projectData.demoLink || '', projectData.createdBy, mysqlDateFormat, 0]
+       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, projectData.name, uniqueSlug, projectData.description, projectData.demoLink || '', projectData.createdBy, mysqlDateFormat, 0, projectData.githubRepoUrl || null, projectData.githubAccessToken || null]
     );
     
     // 添加创建者为成员
@@ -366,12 +372,14 @@ export const updateProject = async (
   id: string,
   name: string,
   description: string,
-  demoLink?: string
+  demoLink?: string,
+  githubRepoUrl?: string,
+  githubAccessToken?: string
 ): Promise<Project | null> => {
   try {
     await query(
-      'UPDATE projects SET name = ?, description = ?, demoLink = ? WHERE id = ?',
-      [name, description, demoLink || null, id]
+      'UPDATE projects SET name = ?, description = ?, demoLink = ?, githubRepoUrl = ?, githubAccessToken = ? WHERE id = ?',
+      [name, description, demoLink || null, githubRepoUrl || null, githubAccessToken || null, id]
     );
     
     return await findProjectById(id);

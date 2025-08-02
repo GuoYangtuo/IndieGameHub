@@ -28,6 +28,7 @@ import {
 } from '../models/projectModel';
 import { findUserByUsername } from '../models/userModel';
 import { findProposalsByProjectId } from '../models/proposalModel';
+import { validateGitHubRepo } from '../utils/githubTools';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -211,12 +212,31 @@ export const createNewProject = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const { name, description, demoLink } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken } = req.body;
 
     // 验证请求数据
     if (!name || !description) {
       res.status(400).json({ message: '项目名称和描述是必填项' });
       return;
+    }
+
+    // 如果提供了GitHub仓库URL，验证其可访问性
+    if (githubRepoUrl) {
+      try {
+        const validationResult = await validateGitHubRepo(githubRepoUrl, githubAccessToken);
+        if (!validationResult.isValid) {
+          res.status(400).json({ message: `GitHub仓库URL格式错误: ${validationResult.error}` });
+          return;
+        }
+        if (!validationResult.isAccessible) {
+          res.status(400).json({ message: `无法访问GitHub仓库: ${validationResult.error}` });
+          return;
+        }
+      } catch (error) {
+        console.error('验证GitHub仓库失败:', error);
+        res.status(400).json({ message: '验证GitHub仓库时发生错误，请检查仓库URL和访问令牌' });
+        return;
+      }
     }
 
     // 检查项目名称是否已存在
@@ -231,7 +251,9 @@ export const createNewProject = async (req: Request, res: Response): Promise<voi
       name,
       description,
       demoLink,
-      createdBy: userId
+      createdBy: userId,
+      githubRepoUrl,
+      githubAccessToken
     });
 
     if (!project) {
@@ -531,12 +553,31 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
     }
 
     const { projectId } = req.params;
-    const { name, description, demoLink } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken } = req.body;
 
     // 验证请求数据
     if (!name || !description) {
       res.status(400).json({ message: '项目名称和描述是必填项' });
       return;
+    }
+
+    // 如果提供了GitHub仓库URL，验证其可访问性
+    if (githubRepoUrl) {
+      try {
+        const validationResult = await validateGitHubRepo(githubRepoUrl, githubAccessToken);
+        if (!validationResult.isValid) {
+          res.status(400).json({ message: `GitHub仓库URL格式错误: ${validationResult.error}` });
+          return;
+        }
+        if (!validationResult.isAccessible) {
+          res.status(400).json({ message: `无法访问GitHub仓库: ${validationResult.error}` });
+          return;
+        }
+      } catch (error) {
+        console.error('验证GitHub仓库失败:', error);
+        res.status(400).json({ message: '验证GitHub仓库时发生错误，请检查仓库URL和访问令牌' });
+        return;
+      }
     }
 
     // 获取项目
@@ -553,7 +594,7 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
     }
 
     // 更新项目
-    const updatedProject = await updateProject(projectId, name, description, demoLink);
+    const updatedProject = await updateProject(projectId, name, description, demoLink, githubRepoUrl, githubAccessToken);
 
     if (!updatedProject) {
       res.status(500).json({ message: '更新项目信息失败' });
@@ -1226,6 +1267,38 @@ export const checkProjectName = async (req: Request, res: Response): Promise<voi
     });
   } catch (error) {
     console.error('检查项目名称失败:', error);
+    res.status(500).json({ message: '服务器错误' });
+  }
+};
+
+// 验证GitHub仓库
+export const validateGitHubRepository = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { repoUrl, accessToken } = req.body;
+    
+    if (!repoUrl) {
+      res.status(400).json({ message: '请提供GitHub仓库URL' });
+      return;
+    }
+    
+    const validationResult = await validateGitHubRepo(repoUrl, accessToken);
+    
+    if (validationResult.isValid && validationResult.isAccessible) {
+      res.status(200).json({
+        isValid: true,
+        isAccessible: true,
+        message: '仓库验证成功',
+        repoInfo: validationResult.repoInfo
+      });
+    } else {
+      res.status(400).json({
+        isValid: validationResult.isValid,
+        isAccessible: validationResult.isAccessible,
+        message: validationResult.error || '仓库验证失败'
+      });
+    }
+  } catch (error) {
+    console.error('验证GitHub仓库失败:', error);
     res.status(500).json({ message: '服务器错误' });
   }
 }; 

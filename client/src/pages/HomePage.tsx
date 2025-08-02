@@ -142,7 +142,7 @@ const ProjectHeatmap: React.FC<{
           fontSize: { xs: '1.25rem', md: '1.1rem' }, // 在桌面端稍微缩小字体
           lineHeight: 1.2
         }}
-        onClick={() => window.location.href = `/${project.slug}`}
+        onClick={() => window.location.href = `/projects/${project.slug}`}
       >
         {project.name}
       </Typography>

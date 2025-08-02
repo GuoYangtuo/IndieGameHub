@@ -74,6 +74,8 @@ const createTables = async (): Promise<void> => {
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         coverImage VARCHAR(255),
         projectBalance INT DEFAULT 0,
+        githubRepoUrl VARCHAR(500),
+        githubAccessToken VARCHAR(500),
         FOREIGN KEY (createdBy) REFERENCES users(id)
       );
     `);

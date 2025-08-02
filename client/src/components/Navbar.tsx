@@ -480,7 +480,7 @@ const Navbar: React.FC = () => {
             
             {/* 添加分享按钮 - 只在项目页面显示 */}
             {projectTitle && slug && (
-              <Tooltip title="分享项目链接">
+              <Tooltip title="分享项目链接，邀请其他人参与项目">
                 <IconButton 
                   onClick={handleShareLink}
                   color="inherit"

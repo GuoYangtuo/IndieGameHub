@@ -147,8 +147,8 @@ export const projectAPI = {
   getProjectDetailComplete: (slug: string) => api.get(`/projects/detail/${slug}`),
   
   // 创建项目
-  createProject: (name: string, description: string, demoLink?: string) => 
-    api.post('/projects', { name, description, demoLink }),
+  createProject: (name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string) => 
+    api.post('/projects', { name, description, demoLink, githubRepoUrl, githubAccessToken }),
   
   // 创建带封面图片的项目
   createProjectWithCover: (formData: FormData) => 
@@ -171,8 +171,8 @@ export const projectAPI = {
     }),
   
   // 更新项目信息
-  updateProject: (projectId: string, name: string, description: string, demoLink?: string) => 
-    api.put(`/projects/${projectId}`, { name, description, demoLink }),
+  updateProject: (projectId: string, name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string) => 
+    api.put(`/projects/${projectId}`, { name, description, demoLink, githubRepoUrl, githubAccessToken }),
   
   // 通过用户名添加项目成员
   addMemberByUsername: (projectId: string, username: string) => 
@@ -231,7 +231,11 @@ export const projectAPI = {
     
   // 添加一次性贡献或长期贡献
   addContribution: (projectId: string, amount: number, isLongTerm: boolean) => 
-    api.post(`/projects/${projectId}/contribute`, { amount, isLongTerm })
+    api.post(`/projects/${projectId}/contribute`, { amount, isLongTerm }),
+    
+  // 验证GitHub仓库
+  validateGithubRepository: (repoUrl: string, accessToken?: string) => 
+    api.post('/projects/validate-github', { repoUrl, accessToken })
 };
 
 // 提案API

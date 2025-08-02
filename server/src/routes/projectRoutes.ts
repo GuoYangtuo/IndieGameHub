@@ -23,7 +23,8 @@ import {
   addProjectContribution,
   getProjectDetailComplete,
   getProjectContributors,
-  checkProjectName
+  checkProjectName,
+  validateGitHubRepository
 } from '../controllers/projectController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { createNewProjectComment } from '../controllers/commentController';
@@ -44,6 +45,9 @@ projectRouter.get('/slug/:slug', getProjectBySlug);
 
 // 检查项目名称是否存在
 projectRouter.get('/check-name', checkProjectName);
+
+// 验证GitHub仓库
+projectRouter.post('/validate-github', validateGitHubRepository);
 
 // 获取项目详情页完整数据
 projectRouter.get('/detail/:slug', getProjectDetailComplete);

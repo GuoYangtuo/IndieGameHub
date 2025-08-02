@@ -23,7 +23,8 @@ import {
   Chip,
   useTheme,
   Grid,
-  FormControl
+  FormControl,
+  Stack
 } from '@mui/material';
 import { Save, Delete, PersonAdd, PersonRemove } from '@mui/icons-material';
 import { projectAPI, userAPI } from '../services/api';
@@ -46,6 +47,8 @@ interface Project {
   createdBy: string;
   members: string[];
   createdAt: string;
+  githubRepoUrl?: string;
+  githubAccessToken?: string;
   contributionRates?: {
     proposalCreation: number;
     bountyCreation: number;
@@ -69,6 +72,10 @@ const ProjectSettingsPage: React.FC = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectDemoLink, setProjectDemoLink] = useState('');
+  const [githubRepoUrl, setGithubRepoUrl] = useState('');
+  const [githubAccessToken, setGithubAccessToken] = useState('');
+  const [validatingGithub, setValidatingGithub] = useState(false);
+  const [githubValidationResult, setGithubValidationResult] = useState<string | null>(null);
   
   const [savingProject, setSavingProject] = useState(false);
   const [deletingProject, setDeletingProject] = useState(false);
@@ -115,6 +122,8 @@ const ProjectSettingsPage: React.FC = () => {
         setProjectName(projectData.name);
         setProjectDescription(projectData.description);
         setProjectDemoLink(projectData.demoLink || '');
+        setGithubRepoUrl(projectData.githubRepoUrl || '');
+        setGithubAccessToken(projectData.githubAccessToken || '');
         
         // 设置贡献度获得率
         if (projectData.contributionRates) {
@@ -157,6 +166,28 @@ const ProjectSettingsPage: React.FC = () => {
     };
   }, [slug, setProjectTitle, setDemoLink]);
   
+  // 验证GitHub仓库
+  const validateGithubRepo = async () => {
+    if (!githubRepoUrl.trim()) {
+      setGithubValidationResult(null);
+      return;
+    }
+    
+    try {
+      setValidatingGithub(true);
+      const response = await projectAPI.validateGithubRepository(githubRepoUrl, githubAccessToken);
+      if (response.data.isValid && response.data.isAccessible) {
+        setGithubValidationResult('✓ 仓库验证成功');
+      } else {
+        setGithubValidationResult(`✗ ${response.data.message}`);
+      }
+    } catch (err: any) {
+      setGithubValidationResult(`✗ ${err.response?.data?.message || '验证失败'}`);
+    } finally {
+      setValidatingGithub(false);
+    }
+  };
+  
   // 处理更新项目信息
   const handleUpdateProject = async () => {
     if (!project) return;
@@ -170,7 +201,9 @@ const ProjectSettingsPage: React.FC = () => {
         project.id,
         projectName,
         projectDescription,
-        projectDemoLink
+        projectDemoLink,
+        githubRepoUrl,
+        githubAccessToken
       );
       
       setProject(response.data);
@@ -359,6 +392,65 @@ const ProjectSettingsPage: React.FC = () => {
                   disabled={!isCreator}
                 />
               </FormControl>
+              
+              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+                GitHub 仓库关联
+              </Typography>
+              
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <TextField
+                  label="GitHub 仓库 URL (可选)"
+                  value={githubRepoUrl}
+                  onChange={(e) => {
+                    setGithubRepoUrl(e.target.value);
+                    setGithubValidationResult(null);
+                  }}
+                  variant="outlined"
+                  fullWidth
+                  placeholder="https://github.com/username/repository"
+                  disabled={!isCreator}
+                  helperText="项目关联的GitHub仓库地址，用于代码管理和协作"
+                />
+              </FormControl>
+              
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <TextField
+                  label="GitHub 访问令牌 (私有仓库需要)"
+                  value={githubAccessToken}
+                  onChange={(e) => {
+                    setGithubAccessToken(e.target.value);
+                    setGithubValidationResult(null);
+                  }}
+                  variant="outlined"
+                  fullWidth
+                  type="password"
+                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                  disabled={!isCreator}
+                  helperText="访问私有仓库需要提供Personal Access Token"
+                />
+              </FormControl>
+              
+              {isCreator && (
+                <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: 'center' }}>
+                  <Button
+                    variant="outlined"
+                    onClick={validateGithubRepo}
+                    disabled={!githubRepoUrl.trim() || validatingGithub}
+                    startIcon={validatingGithub && <CircularProgress size={20} />}
+                  >
+                    {validatingGithub ? '验证中...' : '验证仓库'}
+                  </Button>
+                  
+                  {githubValidationResult && (
+                    <Typography 
+                      variant="body2" 
+                      color={githubValidationResult.startsWith('✓') ? 'success.main' : 'error.main'}
+                    >
+                      {githubValidationResult}
+                    </Typography>
+                  )}
+                </Stack>
+              )}
               
               <Button
                 variant="contained"
