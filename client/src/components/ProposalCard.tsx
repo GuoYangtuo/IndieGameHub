@@ -464,28 +464,14 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
       <CardActions 
         sx={{ 
           p: 1, 
-          pt: 0.5,
-          mt: 0.5,
+          pt: 1,
+          mt: 0,
           bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(13, 17, 23, 0.3)' : 'rgba(246, 248, 250, 0.5)',
           borderTop: (theme: Theme) => `1px solid ${theme.palette.mode === 'dark' ? '#21262d' : '#eaecef'}`
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title={hasLiked ? "取消感兴趣" : "感兴趣"}>
-              <IconButton
-                size="small"
-                color={hasLiked ? "primary" : "default"}
-                onClick={handleLike}
-                sx={{ mr: 1, p: 0.5 }}
-              >
-                <Visibility fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Typography variant="caption" color="text.secondary">
-              {likes.length}
-            </Typography>
-            
             {bountyTotal > 0 && (
               <Chip 
                 icon={<MonetizationOn fontSize="small" />} 
@@ -494,14 +480,11 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
                 size="small"
                 sx={{ 
                   fontWeight: 500,
-                  height: 24,
-                  ml: 2
+                  height: 24
                 }}
               />
             )}
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            
             {user && isMember && status === 'open' && (
               <Tooltip title="添加到任务队列">
                 <IconButton
@@ -540,6 +523,31 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
                 </IconButton>
               </Tooltip>
             )}
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
+              {likes.length}
+            </Typography>
+            <Tooltip title={hasLiked ? "取消感兴趣" : "感兴趣"}>
+              <IconButton
+                size="small"
+                color={hasLiked ? "primary" : "default"}
+                onClick={handleLike}
+                sx={{ 
+                  p: 0.5,
+                  color: hasLiked ? 'primary.main' : 'text.secondary',
+                  filter: hasLiked ? 'drop-shadow(0 0 4px rgba(25, 118, 210, 0.6))' : 'none',
+                  transition: 'all 0.25s ease',
+                  '&:hover': {
+                    color: 'primary.main',
+                    filter: 'drop-shadow(0 0 4px rgba(25, 118, 210, 0.4))'
+                  }
+                }}
+              >
+                <Visibility fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
       </CardActions>
