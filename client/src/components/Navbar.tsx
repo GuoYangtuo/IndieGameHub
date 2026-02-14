@@ -41,7 +41,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useProjectTitle } from '../contexts/ProjectTitleContext';
-import { projectAPI, userAPI } from '../services/api';
+import { projectAPI, userAPI } from '../services/api'; // userAPI still needed for handleToggleFavorite
 import { Description, Update, AccountTree } from '@mui/icons-material';
 import AuthDialog from './AuthDialog';
 import RechargeDialog from './RechargeDialog';
@@ -57,21 +57,22 @@ interface UserProject {
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
-  const { projectTitle, demoLink } = useProjectTitle();
+  const { projectTitle, demoLink, sharedProjectData, updateFavoriteStatus } = useProjectTitle();
   const navigate = useNavigate();
   const { slug } = useParams<{ slug?: string }>();
   
-  // 用户项目状态
+  // 用户项目状态（仅保留这一个需要独立请求的数据）
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
-  const [project, setProject] = useState<any>(null);
-  const [isMember, setIsMember] = useState(false);
-  const [isCreator, setIsCreator] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
-  const [currentSlug, setCurrentSlug] = useState<string | undefined>(slug);
   
-  // 添加用户贡献度状态
-  const [userContribution, setUserContribution] = useState<number | null>(null);
+  // 从 sharedProjectData 派生的状态（不再单独请求）
+  const isCreator = !!(user && sharedProjectData && sharedProjectData.createdBy === user.id);
+  const isMember = !!(user && sharedProjectData && sharedProjectData.members.includes(user.id));
+  const isFavorite = sharedProjectData?.isFavorite ?? false;
+  const userContribution = sharedProjectData?.userContribution ?? null;
+  const dataLoaded = !slug || !!sharedProjectData; // 非项目页直接算已加载；项目页等 sharedProjectData 就绪
+  
+  const [currentSlug, setCurrentSlug] = useState<string | undefined>(slug);
   
   // 项目下拉菜单
   const [projectsMenuOpen, setProjectsMenuOpen] = useState(false);
@@ -88,9 +89,6 @@ const Navbar: React.FC = () => {
   // 添加状态管理充值弹窗
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
 
-  // 添加关注状态
-  const [isFavorite, setIsFavorite] = useState(false);
-
   // 当路由参数slug变化时更新currentSlug
   useEffect(() => {
     if (slug) {
@@ -98,7 +96,7 @@ const Navbar: React.FC = () => {
     }
   }, [slug]);
   
-  // 获取用户项目
+  // 获取用户项目列表（Navbar 唯一需要独立请求的数据）
   useEffect(() => {
     if (user) {
       const fetchUserProjects = async () => {
@@ -106,16 +104,6 @@ const Navbar: React.FC = () => {
           setProjectsLoading(true);
           const response = await projectAPI.getUserProjects();
           setUserProjects(response.data);
-          
-          // 如果有slug参数，检查当前用户是否为项目创建者
-          if (slug && response.data.length > 0) {
-            const currentProject = response.data.find((p: UserProject) => p.slug === slug);
-            if (currentProject && currentProject.createdBy === user.id) {
-              setIsCreator(true);
-            } else {
-              setIsCreator(false);
-            }
-          }
         } catch (error) {
           console.error('获取用户项目失败', error);
         } finally {
@@ -125,88 +113,7 @@ const Navbar: React.FC = () => {
 
       fetchUserProjects();
     }
-  }, [user, slug]);
-
-  // 检查用户是否是项目创建者或成员
-  useEffect(() => {
-    // 如果有项目标题和用户登录，检查用户是否是项目创建者
-    const checkIfCreatorOrMember = async () => {
-      if (projectTitle && user && slug) {
-        try {
-          const response = await projectAPI.getProjectBySlug(slug);
-          if (response.data) {
-            setProject(response.data);
-            
-            if (response.data.createdBy === user.id) {
-              setIsCreator(true);
-            } else {
-              setIsCreator(false);
-            }
-            
-            if (response.data.members.includes(user.id)) {
-              setIsMember(true);
-            } else {
-              setIsMember(false);
-            }
-          }
-        } catch (err) {
-          console.error('检查项目创建者失败:', err);
-          setIsCreator(false);
-          setIsMember(false);
-        } finally {
-          setDataLoaded(true);
-        }
-      } else {
-        setIsCreator(false);
-        setIsMember(false);
-        setDataLoaded(true);
-      }
-    };
-    
-    checkIfCreatorOrMember();
-  }, [projectTitle, user, slug]);
-
-  // 检查项目是否被关注
-  useEffect(() => {
-    const checkIfFavorite = async () => {
-      if (!user || !slug) return;
-      
-      try {
-        const response = await userAPI.getFavoriteProjects();
-        const favorites = response.data;
-        const currentProject = await projectAPI.getProjectBySlug(slug);
-        console.log(currentProject.data);
-        if (currentProject.data) {
-          setIsFavorite(favorites.some((p: any) => p.id === currentProject.data.id));
-        }
-      } catch (err) {
-        console.error('检查关注状态失败:', err);
-      }
-    };
-    
-    if (user) {
-      checkIfFavorite();
-    }
-  }, [user, slug]);
-
-  // 获取用户在当前项目中的贡献度
-  useEffect(() => {
-    const fetchUserContribution = async () => {
-      if (user && project && slug) {
-        try {
-          const response = await projectAPI.getUserProjectContribution(project.id);
-          setUserContribution(response.data.contribution);
-        } catch (error) {
-          console.error('获取用户贡献度失败:', error);
-          setUserContribution(null);
-        }
-      } else {
-        setUserContribution(null);
-      }
-    };
-    
-    fetchUserContribution();
-  }, [user, project, slug]);
+  }, [user]);
 
   // 处理登出
   const handleLogout = () => {
@@ -349,12 +256,10 @@ const Navbar: React.FC = () => {
 
   // 处理关注/取消关注项目
   const handleToggleFavorite = async () => {
-    if (!user || !slug) return;
+    if (!user || !slug || !sharedProjectData) return;
     
     try {
-      const projectResponse = await projectAPI.getProjectBySlug(slug);
-      const projectId = projectResponse.data.id;
-      
+      const projectId = sharedProjectData.id;
       const newFavoriteStatus = !isFavorite;
       
       if (isFavorite) {
@@ -363,8 +268,8 @@ const Navbar: React.FC = () => {
         await userAPI.addFavoriteProject(projectId);
       }
       
-      // 更新状态
-      setIsFavorite(newFavoriteStatus);
+      // 通过 context 更新收藏状态（同步给 Navbar 和 ProjectDetailPage）
+      updateFavoriteStatus(newFavoriteStatus);
       
       // 发出自定义事件通知其他组件收藏状态已改变
       const event = new CustomEvent('favoriteStatusChanged', {
@@ -458,7 +363,7 @@ const Navbar: React.FC = () => {
 
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
             {/* 显示用户在当前项目的贡献度 - 确保只在项目详情页显示 */}
-            {user && project && slug && userContribution !== null && userContribution > 0 && (
+            {user && sharedProjectData && slug && userContribution !== null && userContribution > 0 && (
               <Tooltip title="您在该项目的贡献度">
                 <Box sx={{ 
                   display: 'flex', 

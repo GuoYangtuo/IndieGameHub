@@ -146,7 +146,7 @@ const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, updateUserCoins } = useAuth();
-  const { setProjectTitle, setProjectSlug, setDemoLink } = useProjectTitle();
+  const { setProjectTitle, setProjectSlug, setDemoLink, setSharedProjectData } = useProjectTitle();
   const { isDarkMode } = useTheme();
   
   // 添加针对高对比度模式的全局样式修复
@@ -258,8 +258,9 @@ const ProjectDetailPage: React.FC = () => {
       setProjectTitle(null);
       setProjectSlug(null);
       setDemoLink(null);
+      setSharedProjectData(null);
     };
-  }, [setProjectTitle, setProjectSlug, setDemoLink]);
+  }, [setProjectTitle, setProjectSlug, setDemoLink, setSharedProjectData]);
 
   // 获取项目和提案数据
   useEffect(() => {
@@ -342,6 +343,18 @@ const ProjectDetailPage: React.FC = () => {
         if (user) {
           setIsFavorite(data.isFavorite || false);
         }
+        
+        // 共享项目核心数据给 Navbar，避免 Navbar 重复请求
+        const currentUserContribution = user && data.contributors
+          ? (data.contributors.find((c: any) => c.id === user.id)?.contribution ?? null)
+          : null;
+        setSharedProjectData({
+          id: data.project.id,
+          createdBy: data.project.createdBy,
+          members: data.project.members || [],
+          isFavorite: data.isFavorite || false,
+          userContribution: currentUserContribution,
+        });
         
         // 如果有提款记录，设置提款记录
         if (data.withdrawals) {

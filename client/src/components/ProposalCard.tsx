@@ -463,9 +463,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
 
       <CardActions 
         sx={{ 
-          p: 2, 
-          pt: 1.5,
-          mt: 1,
+          p: 1, 
+          pt: 0.5,
+          mt: 0.5,
           bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(13, 17, 23, 0.3)' : 'rgba(246, 248, 250, 0.5)',
           borderTop: (theme: Theme) => `1px solid ${theme.palette.mode === 'dark' ? '#21262d' : '#eaecef'}`
         }}
