@@ -216,7 +216,7 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
       `INSERT INTO project_updates 
        (id, projectId, content, demoLink, isVersion, versionName, createdAt) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [updateId, id, '初始版本', projectData.demoLink || '', true, 'v1.0', mysqlDateFormat]
+      [updateId, id, '立项！一切故事将从一个大胆的梦想开始~', projectData.demoLink || '', true, 'v0.0', mysqlDateFormat]
     );
     
     // 创建贡献度配置

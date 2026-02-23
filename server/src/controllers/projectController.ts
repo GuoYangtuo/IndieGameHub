@@ -265,7 +265,7 @@ export const createNewProject = async (req: Request, res: Response): Promise<voi
     if (demoLink) {
       await addProjectUpdate(
         project.id,
-        "初始版本",
+        "初始版本！",
         demoLink,
         true,
         "v1.0"

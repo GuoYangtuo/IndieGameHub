@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Typography,
   Box,
@@ -22,6 +22,7 @@ import {
   Collapse,
   Divider
 } from '@mui/material';
+import { Masonry } from '@mui/lab';
 import { ExpandMore, ExpandLess, Lock, PlaylistAdd, Add, Description, Sort, TrendingUp, ViewModule, ViewList, Shuffle, Schedule } from '@mui/icons-material';
 import ProposalCard from '../../components/ProposalCard';
 
@@ -430,12 +431,12 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
               sx={{ 
                 mb: 4, 
                 p: 2, 
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+                border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#30363d' : '#d0d7de'}`,
                 borderRadius: 2
               }}
             >
               <Typography variant="h6" sx={{ mb: 2 }}>我创建的提案</Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
+              <Masonry columns={{ xs: 1, sm: 2, md: 3 }} spacing={1}>
                 {proposals
                   .filter(p => p.createdBy === user.id)
                   .map(proposal => (
@@ -466,14 +467,14 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
                     />
                   ))
                 }
-              </Box>
+              </Masonry>
             </Box>
           )}
           
           {/* 所有提案区域 - 许愿池 */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
+          <Masonry columns={{ xs: 1, sm: 2, md: 3 }} spacing={1}>
             {getFilteredProposals()
-              .filter(p => !user || p.createdBy !== user.id) // 不再显示用户自己创建的提案
+              .filter(p => !user || p.createdBy !== user.id)
               .map((proposal) => (
                 <ProposalCard
                   key={proposal.id}
@@ -502,7 +503,7 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
                 />
               ))
             }
-          </Box>
+          </Masonry>
         </Box>
       ) : (
         <Box>
@@ -512,7 +513,7 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
               sx={{ 
                 mb: 4, 
                 p: 2, 
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)',
+                border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#30363d' : '#d0d7de'}`,
                 borderRadius: 2
               }}
             >

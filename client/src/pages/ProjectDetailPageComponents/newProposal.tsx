@@ -185,7 +185,7 @@ const NewProposalDialog: React.FC<Props> = ({ isDarkMode, projectId, open, onClo
       case 'bug反馈':
         return '发现异常情况';
       case '艺术性相关':
-        return '请附带你认为更好的美术/音乐/剧情素材';
+        return '可以附带你认为更好的美术/音乐/剧情素材';
       default:
         return '请选择合适的分类';
     }

@@ -3,7 +3,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import {
   Card,
   CardContent,
-  CardActions,
   Typography,
   Button,
   Box,
@@ -361,10 +360,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   return (
     <Card 
       sx={{ 
-        height: '100%', 
         display: 'flex', 
         flexDirection: 'column',
-        borderTop: `3px solid ${getCategoryBorderColor()}`,
         opacity: isInactiveProposal ? 0.7 : 1,
         filter: isInactiveProposal ? 'grayscale(40%)' : 'none',
         transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease',
@@ -377,7 +374,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
       }}
       onClick={handleCardClick}
     >
-      <CardContent sx={{ p: 2, flexGrow: 1 }}>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 1.5 } }}>
         <Typography 
           variant="h6" 
           component="h3" 
@@ -402,85 +399,25 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
           variant="body2" 
           color="text.secondary"
           sx={{ 
-            mb: 0.5,
-            flex: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 4,
-            WebkitBoxOrient: 'vertical',
-            whiteSpace: 'pre-line'
+            mb: 1,
+            whiteSpace: 'pre-line',
+            wordBreak: 'break-word'
           }}
         >
-          {description.length > 160 ? `${description.substring(0, 160)}...` : description}
+          {description.length > 300 ? `${description.substring(0, 300)}...` : description}
         </Typography>
-      </CardContent>
 
-      <CardActions 
-        sx={{ 
-          p: 1, 
-          pt: 1,
-          mt: 0,
-          bgcolor: (theme: Theme) => theme.palette.mode === 'dark' ? 'rgba(13, 17, 23, 0.3)' : 'rgba(246, 248, 250, 0.5)',
-          borderTop: (theme: Theme) => `1px solid ${theme.palette.mode === 'dark' ? '#21262d' : '#eaecef'}`
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
             {bountyTotal > 0 && (
               <Chip 
                 icon={<MonetizationOn fontSize="small" />} 
                 label={`${bountyTotal} 金币`}
                 color="primary"
                 size="small"
-                sx={{ 
-                  fontWeight: 500,
-                  height: 24
-                }}
+                sx={{ fontWeight: 500, height: 22 }}
               />
             )}
-            
-            {user && isMember && status === 'open' && (
-              <Tooltip title="添加到任务队列">
-                <IconButton
-                  size="small"
-                  color="info"
-                  onClick={handleAddToQueue}
-                  sx={{ ml: 1, p: 0.5 }}
-                >
-                  <PlaylistAdd fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-            
-            {user && isMember && status === 'open' && (
-              <Tooltip title="关闭提案">
-                <IconButton 
-                  size="small"
-                  onClick={handleClose}
-                  sx={{ ml: 1, p: 0.5 }}
-                >
-                  <Lock fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-            
-            {/* 修改为允许创建者删除已关闭的提案 */}
-            {user && isCreator && (status === 'open' || status === 'closed') && (
-              <Tooltip title="删除提案">
-                <IconButton 
-                  size="small"
-                  color="error"
-                  onClick={handleDelete}
-                  sx={{ ml: 1, p: 0.5 }}
-                >
-                  <Delete fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {category && (
               <Chip 
                 size="small"
@@ -489,13 +426,36 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
                 sx={{ 
                   height: 22, 
                   fontSize: '0.7rem',
-                  mr: 1,
                   borderColor: getCategoryBorderColor(),
                   color: getCategoryBorderColor()
                 }}
               />
             )}
-            <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+            {user && isMember && status === 'open' && (
+              <Tooltip title="添加到任务队列">
+                <IconButton size="small" color="info" onClick={handleAddToQueue} sx={{ p: 0.5 }}>
+                  <PlaylistAdd fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {user && isMember && status === 'open' && (
+              <Tooltip title="关闭提案">
+                <IconButton size="small" onClick={handleClose} sx={{ p: 0.5 }}>
+                  <Lock fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {user && isCreator && (status === 'open' || status === 'closed') && (
+              <Tooltip title="删除提案">
+                <IconButton size="small" color="error" onClick={handleDelete} sx={{ p: 0.5 }}>
+                  <Delete fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5, mr: 0.25 }}>
               {likes.length}
             </Typography>
             <Tooltip title={hasLiked ? "取消感兴趣" : "感兴趣"}>
@@ -519,7 +479,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
             </Tooltip>
           </Box>
         </Box>
-      </CardActions>
+      </CardContent>
     </Card>
   );
 };

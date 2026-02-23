@@ -131,7 +131,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
     if (proposal) {
       setEditProposalTitle(proposal.title);
       setEditProposalDescription(proposal.description);
-      setIsEditingProposal(!!(user && proposal.createdBy === user.id));
+      setIsEditingProposal(!!(user && proposal.createdBy === user.id && proposal.status === 'open'));
       
       // 初始化评论
       setProposalComments(proposal.comments as Comment[] || []);
@@ -196,8 +196,10 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
         onProposalUpdate(response.data);
         setIsEditingProposal(false);
       }
-    } catch (error) {
-      console.error('更新提案失败:', error);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || '更新提案失败';
+      console.error('更新提案失败:', msg);
+      alert(msg);
     } finally {
       setIsSavingEdit(false);
     }

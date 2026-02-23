@@ -236,7 +236,7 @@ const CreateProjectPage: React.FC = () => {
               />
             </Box>
             <Typography variant="caption" color="text.secondary">
-              详细描述您的项目，支持Markdown格式
+              详细描述这个项目，它现在处在哪一步？你（们）对它的愿景是什么？（支持Markdown格式）
             </Typography>
           </Box>
           
