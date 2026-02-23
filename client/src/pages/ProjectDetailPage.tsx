@@ -239,13 +239,6 @@ const ProjectDetailPage: React.FC = () => {
   // 项目信息对话框状态
   const [showInfoDialog, setShowInfoDialog] = useState(false);
 
-  // 项目资金管理相关状态
-  const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
-  const [withdrawLoading, setWithdrawLoading] = useState(false);
-  const [withdrawError, setWithdrawError] = useState<string | null>(null);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
-  const [expandWithdrawals, setExpandWithdrawals] = useState(false);
 
   // 项目贡献度列表相关状态
   const [contributors, setContributors] = useState<{ id: string; username: string; avatarUrl?: string; contribution: number }[]>([]);
@@ -356,10 +349,6 @@ const ProjectDetailPage: React.FC = () => {
           userContribution: currentUserContribution,
         });
         
-        // 如果有提款记录，设置提款记录
-        if (data.withdrawals) {
-          setWithdrawals(data.withdrawals);
-        }
         
         // 如果有贡献度数据，设置贡献者列表
         if (data.contributors) {
@@ -864,44 +853,6 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, [location.search, project]);
 
-  // 处理提款
-  const handleWithdraw = async () => {
-    if (!project || withdrawAmount <= 0) return;
-    
-    try {
-      setWithdrawLoading(true);
-      setWithdrawError(null);
-      
-      await projectAPI.withdrawFromProject(project.id, withdrawAmount);
-      
-      // 提款成功后刷新项目数据和提款记录
-      const updatedProject = await projectAPI.getProjectBySlug(slug || '');
-      setProject(updatedProject.data);
-      
-      // 不再需要单独获取提款记录了，使用整合API
-      // fetchWithdrawals();
-      
-      // 刷新整合API数据
-      const response = await projectAPI.getProjectDetailComplete(slug || '');
-      if (response.data.withdrawals) {
-        setWithdrawals(response.data.withdrawals);
-      }
-      
-      // 清空提款金额
-      setWithdrawAmount(0);
-    } catch (err: any) {
-      console.error('提款失败:', err);
-      setWithdrawError(err.response?.data?.message || '提款失败，请稍后再试');
-    } finally {
-      setWithdrawLoading(false);
-    }
-  };
-  
-  // 格式化用户名
-  const formatUsername = (userId: string) => {
-    const member = members.find(m => m.id === userId);
-    return member ? member.username : '未知用户';
-  };
   
   // 获取项目贡献者列表
   const fetchProjectContributors = async (projectId: string) => {
@@ -1097,18 +1048,6 @@ const ProjectDetailPage: React.FC = () => {
                   <ProjectSidebarBottom
                     project={project}
                     members={members}
-                    isMember={isMember}
-                    user={user}
-                    withdrawAmount={withdrawAmount}
-                    withdrawLoading={withdrawLoading}
-                    withdrawError={withdrawError}
-                    withdrawals={withdrawals}
-                    loadingWithdrawals={loadingWithdrawals}
-                    expandWithdrawals={expandWithdrawals}
-                    onWithdrawAmountChange={(amount) => setWithdrawAmount(amount)}
-                    onWithdraw={handleWithdraw}
-                    onToggleWithdrawals={() => setExpandWithdrawals(!expandWithdrawals)}
-                    formatUsername={formatUsername}
                     contributors={contributors}
                     loadingContributors={loadingContributors}
                   />
@@ -1120,19 +1059,7 @@ const ProjectDetailPage: React.FC = () => {
                 <ProjectSidebar
                   project={project}
                   members={members}
-                  isMember={isMember}
-                  user={user}
-                  withdrawAmount={withdrawAmount}
-                  withdrawLoading={withdrawLoading}
-                  withdrawError={withdrawError}
-                  withdrawals={withdrawals}
-                  loadingWithdrawals={loadingWithdrawals}
-                  expandWithdrawals={expandWithdrawals}
                   onOpenInfoDialog={() => setShowInfoDialog(true)}
-                  onWithdrawAmountChange={(amount) => setWithdrawAmount(amount)}
-                  onWithdraw={handleWithdraw}
-                  onToggleWithdrawals={() => setExpandWithdrawals(!expandWithdrawals)}
-                  formatUsername={formatUsername}
                   contributors={contributors}
                   loadingContributors={loadingContributors}
                 />
