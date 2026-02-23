@@ -378,32 +378,6 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
       onClick={handleCardClick}
     >
       <CardContent sx={{ p: 2, flexGrow: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0 }}>
-          <Chip 
-            size="small"
-            label={getStatusText()}
-            color={getStatusColor()}
-            sx={{ 
-              height: 22,
-              fontSize: '0.7rem',
-              fontWeight: 'medium'
-            }}
-          />
-          {category && (
-            <Chip 
-              size="small"
-              label={category}
-              variant="outlined"
-              sx={{ 
-                height: 22, 
-                fontSize: '0.7rem',
-                borderColor: getCategoryBorderColor(),
-                color: getCategoryBorderColor()
-              }}
-            />
-          )}
-        </Box>
-        
         <Typography 
           variant="h6" 
           component="h3" 
@@ -429,36 +403,17 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
           color="text.secondary"
           sx={{ 
             mb: 0.5,
-            height: '3rem',
+            flex: 1,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical'
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: 'vertical',
+            whiteSpace: 'pre-line'
           }}
         >
-          {description.length > 80 ? `${description.substring(0, 80)}...` : description}
+          {description.length > 160 ? `${description.substring(0, 160)}...` : description}
         </Typography>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-          <Person 
-            fontSize="small" 
-            sx={{ 
-              mr: 0.5, 
-              color: 'text.secondary',
-              fontSize: '0.9rem'
-            }} 
-          />
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: 'text.secondary',
-              fontSize: '0.75rem'
-            }}
-          >
-            {creatorNickname} • {formatDate(createdAt)}
-          </Typography>
-        </Box>
       </CardContent>
 
       <CardActions 
@@ -526,6 +481,20 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {category && (
+              <Chip 
+                size="small"
+                label={category}
+                variant="outlined"
+                sx={{ 
+                  height: 22, 
+                  fontSize: '0.7rem',
+                  mr: 1,
+                  borderColor: getCategoryBorderColor(),
+                  color: getCategoryBorderColor()
+                }}
+              />
+            )}
             <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
               {likes.length}
             </Typography>
