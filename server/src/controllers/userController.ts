@@ -296,7 +296,7 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
       email: user.email,
       coins: user.coins,
       bio: user.bio || '',
-      avatarUrl: user.avatarUrl || '',
+      avatarUrl: (user as any).avatar_url || '',
       favoriteProjects
     });
   } catch (error) {
@@ -369,7 +369,7 @@ export const getBatchUsers = async (req: Request, res: Response): Promise<void> 
     const safeUsers = users.map(user => ({
       id: user.id,
       username: user.username,
-      avatarUrl: user.avatarUrl || ''
+      avatarUrl: (user as any).avatar_url || ''
     }));
     
     res.status(200).json(safeUsers);
@@ -396,7 +396,7 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
     const safeUsers = users.map(user => ({
       id: user.id,
       username: user.username,
-      avatarUrl: user.avatarUrl || ''
+      avatarUrl: (user as any).avatar_url || ''
     }));
     
     res.status(200).json(safeUsers);
@@ -508,7 +508,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
       id: user.id,
       username: user.username,
       bio: user.bio || '',
-      avatarUrl: user.avatarUrl || ''
+      avatarUrl: (user as any).avatar_url || ''
     });
   } catch (error) {
     console.error('获取用户信息失败:', error);
@@ -942,7 +942,7 @@ export const getUserActivities = async (req: Request, res: Response) => {
         p.slug as projectSlug
       FROM donations d
       JOIN projects p ON d.projectId = p.id
-      WHERE d.userId = ?
+      WHERE d.from_userId = ?
       ORDER BY d.createdAt DESC
       LIMIT 10
     `;

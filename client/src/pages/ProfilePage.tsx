@@ -74,6 +74,7 @@ const ProfilePage: React.FC = () => {
   
   // 增加用户活动和贡献度数据
   const [userActivities, setUserActivities] = useState<{
+    id: string;
     date: string;
     type: 'proposal' | 'comment' | 'donation' | 'project';
     projectName?: string;
@@ -291,27 +292,16 @@ const ProfilePage: React.FC = () => {
       
       const response = await userAPI.uploadAvatar(formData);
       
-      // 更新用户信息
-      if (response.data.user) {
-        updateUser(response.data.user);
-        setProfileUser(response.data.user);
-        
+      // 获取头像URL - 兼容不同返回格式
+      const avatarUrl = (response.data as any)?.avatarUrl || (response as any).avatarUrl;
+      
+      if (avatarUrl && user) {
         // 创建临时URL并立即更新界面显示
         const tempUrl = URL.createObjectURL(file);
-        if (profileUser) {
-          setProfileUser({
-            ...profileUser,
-            avatarUrl: tempUrl
-          });
-        }
-        if (user) {
-          updateUser({
-            ...user,
-            avatarUrl: tempUrl
-          });
-        }
-      } else if (response.data.avatarUrl) {
-        updateUserAvatar(response.data.avatarUrl);
+        
+        const updatedUser = { ...user, avatarUrl: tempUrl };
+        updateUser(updatedUser);
+        setProfileUser(updatedUser);
       }
       
       // 重置文件输入
@@ -351,6 +341,7 @@ const ProfilePage: React.FC = () => {
   }
   
   const displayUser = profileUser || user;
+  console.log(displayUser);
   
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
@@ -595,9 +586,9 @@ const ProfilePage: React.FC = () => {
             <Alert severity="info">暂无活动记录</Alert>
           ) : (
             <List>
-              {userActivities.map((activity, index) => (
+              {userActivities.map((activity) => (
                 <ListItem 
-                  key={index}
+                  key={`${activity.type}-${activity.id}`}
                   divider
                 >
                   <ListItemText 
@@ -631,14 +622,14 @@ const ProfilePage: React.FC = () => {
                       </Box>
                     }
                     secondary={
-                      <Box>
-                        <Typography variant="body2" color="text.primary">
+                      <Box component="span" sx={{ display: 'block' }}>
+                        <Typography variant="body2" color="text.primary" component="span">
                           {activity.type === 'donation'
                             ? `捐赠了 ${activity.amount} 金币`
                             : activity.content
                           }
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" component="span" sx={{ display: 'block' }}>
                           {new Date(activity.date).toLocaleString()}
                         </Typography>
                       </Box>
@@ -678,11 +669,11 @@ const ProfilePage: React.FC = () => {
                       </Typography>
                     }
                     secondary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                      <Box component="span" sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Typography variant="body2" color="text.secondary" component="span" sx={{ mr: 1 }}>
                           贡献度:
                         </Typography>
-                        <Typography variant="body2" color="primary" fontWeight="medium">
+                        <Typography variant="body2" color="primary" fontWeight="medium" component="span">
                           {project.contribution}
                         </Typography>
                       </Box>
