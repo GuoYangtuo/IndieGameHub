@@ -254,7 +254,38 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         styleOverrides: {
           paper: {
             borderRadius: 6,
-            boxShadow: '0 8px 24px rgba(149, 157, 165, 0.2)',
+            boxShadow: isDarkMode 
+              ? '0 8px 24px rgba(0, 0, 0, 0.4)' 
+              : '0 8px 24px rgba(149, 157, 165, 0.2)',
+            border: `1px solid ${isDarkMode ? '#30363d' : '#d0d7de'}`,
+          },
+          title: {
+            fontWeight: 600,
+            color: isDarkMode ? '#c9d1d9' : '#24292f',
+          },
+        },
+      },
+      MuiDialogTitle: {
+        styleOverrides: {
+          root: {
+            fontWeight: 600,
+            padding: '16px 24px',
+            borderBottom: `1px solid ${isDarkMode ? '#30363d' : '#d0d7de'}`,
+          },
+        },
+      },
+      MuiDialogContent: {
+        styleOverrides: {
+          root: {
+            padding: '20px 24px',
+          },
+        },
+      },
+      MuiDialogActions: {
+        styleOverrides: {
+          root: {
+            padding: '12px 24px',
+            borderTop: `1px solid ${isDarkMode ? '#30363d' : '#d0d7de'}`,
           },
         },
       },

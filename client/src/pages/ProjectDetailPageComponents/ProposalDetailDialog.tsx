@@ -13,13 +13,13 @@ import {
   List,
   ListItem,
   ListItemText,
-  Tooltip,
   Alert,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Paper,
+  useTheme,
 } from '@mui/material';
 import {
   Delete,
@@ -125,6 +125,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
   onCommentAdded,
   onCommentDeleted,
 }) => {
+  const theme = useTheme();
   const { user, updateUser } = useAuth();
 
   const isProposalOwner = useMemo(() => {
@@ -132,6 +133,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
   }, [user, proposal]);
 
   const isClosed = proposal?.status === 'closed' || proposal?.status === 'completed';
+  const canEdit = isProposalOwner && proposal?.status === 'open';
 
   const [commentText, setCommentText] = useState('');
   const [addingComment, setAddingComment] = useState(false);
@@ -152,10 +154,10 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
     if (proposal) {
       setEditProposalTitle(proposal.title);
       setEditProposalDescription(proposal.description);
-      setIsEditingProposal(isProposalOwner && proposal.status === 'open');
+      setIsEditingProposal(canEdit);
       setProposalComments(proposal.comments as Comment[] || []);
     }
-  }, [proposal, isProposalOwner]);
+  }, [proposal, canEdit]);
 
   useEffect(() => {
     const fetchBountyUserNames = async () => {
@@ -288,7 +290,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
 
   const getCategoryStyle = (category?: string) => {
     const config = CATEGORY_CONFIG[category || ''];
-    return config || { color: '#d0d7de', icon: <Category /> };
+    return config || { color: theme.palette.text.secondary, icon: <Category /> };
   };
 
   const getStatusStyle = (status?: string) => {
@@ -334,16 +336,40 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
     color: isClosed ? 'text.secondary' : isDarkMode ? '#c9d1d9' : 'text.primary',
   }), [isDarkMode, isClosed]);
 
+  const sectionPaperSx = {
+    p: 2.5,
+    mb: 3,
+    borderRadius: 2,
+    border: '1px solid',
+    borderColor: 'divider',
+    backgroundColor: isDarkMode ? 'rgba(22, 27, 34, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+  };
+
+  const sectionTitleSx = {
+    display: 'flex',
+    alignItems: 'center',
+    mb: 2,
+    fontWeight: 600,
+    color: 'text.primary',
+  };
+
+  const iconColorSx = { mr: 1, color: 'primary.main' };
+
   const renderEditTitle = () => (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 2 }}>
       <TextField
         fullWidth
         value={editProposalTitle}
         onChange={(e) => setEditProposalTitle(e.target.value)}
         variant="outlined"
         placeholder="提案标题"
-        sx={{ mr: 2 }}
         size="small"
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            fontSize: '1.1rem',
+            fontWeight: 500,
+          },
+        }}
       />
       {proposal && renderStatusChip(proposal.status)}
     </Box>
@@ -351,18 +377,24 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
 
   const renderNormalTitle = () => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Description sx={{ mr: 1, color: 'primary.main' }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+        <Description sx={{ mr: 1.5, color: 'primary.main', fontSize: 22 }} />
         <Typography
           variant="h6"
-          sx={{ color: isClosed ? 'text.secondary' : 'text.primary' }}
+          sx={{
+            color: isClosed ? 'text.secondary' : 'text.primary',
+            fontWeight: 600,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
         >
           {proposal?.title || '提案详情'}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         {proposal && renderStatusChip(proposal.status, { mr: 1 })}
-        <IconButton onClick={handleClose} size="small">
+        <IconButton onClick={handleClose} size="small" edge="end">
           <Close fontSize="small" />
         </IconButton>
       </Box>
@@ -375,15 +407,18 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
         <MDEditor
           value={editProposalDescription}
           onChange={(value) => setEditProposalDescription(value || '')}
-          height={300}
+          height={350}
           preview="edit"
         />
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2.5, gap: 1.5 }}>
         <Button
           variant="outlined"
-          onClick={() => setIsEditingProposal(false)}
-          sx={{ mr: 1 }}
+          onClick={() => {
+            setEditProposalTitle(proposal!.title);
+            setEditProposalDescription(proposal!.description);
+            setIsEditingProposal(false);
+          }}
         >
           取消
         </Button>
@@ -403,20 +438,23 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
 
     return (
       <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5, justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Box sx={{ mr: 1, color: categoryStyle.color }}>{categoryStyle.icon}</Box>
+            <Box sx={{ mr: 1, color: categoryStyle.color, display: 'flex', alignItems: 'center' }}>
+              {categoryStyle.icon}
+            </Box>
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 500, color: isClosed ? 'text.secondary' : 'text.primary' }}
+              sx={{ fontWeight: 600, color: isClosed ? 'text.secondary' : 'text.primary' }}
             >
               {proposal?.category || '提案内容'}
             </Typography>
           </Box>
-          {isProposalOwner && (
+          {canEdit && (
             <Button
               startIcon={<Edit />}
               size="small"
+              variant="outlined"
               onClick={() => {
                 setEditProposalTitle(proposal!.title);
                 setEditProposalDescription(proposal!.description);
@@ -434,7 +472,9 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
 
         {proposal?.attachments && proposal.attachments.length > 0 && (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>附件</Typography>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary', fontWeight: 500 }}>
+              附件
+            </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {proposal.attachments.map((attachment, index) => (
                 <Chip
@@ -450,11 +490,11 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
           </Box>
         )}
 
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Person fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
             <Typography variant="body2" color="text.secondary">
-              {proposal?.creatorNickname || '匿名用户'} • {proposal ? formatDate(proposal.createdAt) : ''}
+              {proposal?.creatorNickname || '匿名用户'} · {proposal ? formatDate(proposal.createdAt) : ''}
             </Typography>
           </Box>
           {proposal?.bountyTotal && proposal.bountyTotal > 0 && (
@@ -462,7 +502,8 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
               icon={<MonetizationOn fontSize="small" />}
               label={`${proposal.bountyTotal} 金币`}
               color="primary"
-              size="small"
+              variant="filled"
+              sx={{ fontWeight: 500 }}
             />
           )}
         </Box>
@@ -474,15 +515,14 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
     if (!user || !proposal || proposal.status !== 'open') return null;
 
     return (
-      <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+      <Paper elevation={0} sx={sectionPaperSx}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: bountyDialogOpen ? 2 : 0 }}>
-          <MonetizationOn fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="subtitle1" sx={{ fontWeight: 500, flex: 1 }}>添加悬赏</Typography>
+          <MonetizationOn fontSize="small" sx={iconColorSx} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, flex: 1 }}>添加悬赏</Typography>
 
           {!bountyDialogOpen && (
             <Button
-              variant="outlined"
-              color="primary"
+              variant="contained"
               size="small"
               onClick={() => setBountyDialogOpen(true)}
               startIcon={<MonetizationOn />}
@@ -493,8 +533,8 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
         </Box>
 
         {bountyDialogOpen && (
-          <Box sx={{ mt: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ mt: 2.5, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, flexWrap: 'wrap' }}>
               <TextField
                 label="金额"
                 type="number"
@@ -502,9 +542,9 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                 value={bountyAmount}
                 onChange={(e) => setBountyAmount(parseFloat(e.target.value) || 0)}
                 inputProps={{ step: "0.1", min: 0.1 }}
-                sx={{ width: '100px' }}
+                sx={{ width: 120 }}
               />
-              <FormControl sx={{ width: '150px' }} size="small">
+              <FormControl sx={{ minWidth: 140 }} size="small">
                 <InputLabel id="bounty-deadline-label">截止时间</InputLabel>
                 <Select
                   labelId="bounty-deadline-label"
@@ -520,7 +560,6 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
               </FormControl>
               <Button
                 variant="contained"
-                color="primary"
                 size="small"
                 onClick={handleAddBounty}
                 disabled={addingBounty || bountyAmount <= 0}
@@ -533,14 +572,14 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
             </Box>
 
             {bountyError && (
-              <Alert severity="error" sx={{ mt: 1 }}>{bountyError}</Alert>
+              <Alert severity="error" sx={{ mt: 1.5 }}>{bountyError}</Alert>
             )}
           </Box>
         )}
 
         {proposal.bounties && proposal.bounties.length > 0 && (
           <Box sx={{ mt: bountyDialogOpen ? 2 : 0 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, display: bountyDialogOpen ? 'block' : 'none' }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary', fontWeight: 500, display: bountyDialogOpen ? 'block' : 'block' }}>
               已有悬赏
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -562,14 +601,17 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
   };
 
   const renderCommentSection = () => (
-    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Comment fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>评论</Typography>
+    <Paper elevation={0} sx={sectionPaperSx}>
+      <Box sx={sectionTitleSx}>
+        <Comment fontSize="small" sx={iconColorSx} />
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>评论</Typography>
+        {proposalComments.length > 0 && (
+          <Chip label={proposalComments.length} size="small" sx={{ ml: 1, height: 20, fontSize: '0.7rem' }} />
+        )}
       </Box>
 
       {user ? (
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2.5 }}>
           <TextField
             fullWidth
             multiline
@@ -580,10 +622,9 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
             variant="outlined"
             size="small"
           />
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
             <Button
               variant="contained"
-              color="primary"
               size="small"
               onClick={handleAddComment}
               disabled={!commentText.trim() || addingComment}
@@ -597,17 +638,18 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
       )}
 
       {proposalComments.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
           暂无评论，快来发表第一条评论吧
         </Typography>
       ) : (
-        <List>
+        <List sx={{ mt: 1 }}>
           {proposalComments.map((comment) => (
             <ListItem
               key={comment.id}
               alignItems="flex-start"
               sx={{
                 px: 0,
+                py: 1.5,
                 borderBottom: '1px solid',
                 borderColor: 'divider',
                 '&:last-child': { borderBottom: 'none' },
@@ -615,8 +657,8 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
             >
               <ListItemText
                 primary={
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                       {comment.userNickname || '匿名用户'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -627,8 +669,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                 secondary={
                   <Typography
                     variant="body2"
-                    color="text.primary"
-                    sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}
+                    sx={{ color: 'text.primary', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}
                   >
                     {comment.content}
                   </Typography>
@@ -639,7 +680,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                   edge="end"
                   size="small"
                   onClick={() => handleDeleteComment(comment.id)}
-                  sx={{ ml: 1, mt: 1 }}
+                  sx={{ ml: 1 }}
                 >
                   <Delete fontSize="small" />
                 </IconButton>
@@ -660,24 +701,17 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          opacity: isClosed ? 0.85 : 1,
+          opacity: isClosed ? 0.9 : 1,
+          maxHeight: '90vh',
         },
       }}
     >
-      <DialogTitle sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        pb: 1,
-      }}>
+      <DialogTitle sx={{ pb: 1.5 }}>
         {isEditingProposal && isProposalOwner ? renderEditTitle() : renderNormalTitle()}
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3 }}>
-        <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+      <DialogContent sx={{ pt: 2.5, pb: 0 }}>
+        <Paper elevation={0} sx={sectionPaperSx}>
           {isEditingProposal && isProposalOwner ? renderEditContent() : renderNormalContent()}
         </Paper>
 
@@ -685,9 +719,9 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
         {renderCommentSection()}
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+      <DialogActions sx={{ px: 3, py: 2 }}>
         {user && proposal && (
-          <Box sx={{ display: 'flex', mr: 'auto' }}>
+          <Box sx={{ display: 'flex', mr: 'auto', gap: 1 }}>
             {isProposalOwner && (
               <Button
                 color="error"
@@ -697,6 +731,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                 }}
                 startIcon={<Delete />}
                 variant="outlined"
+                size="small"
               >
                 删除
               </Button>
@@ -708,7 +743,7 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                 onClick={() => onProposalClose(proposal.id)}
                 startIcon={<Lock />}
                 variant="outlined"
-                sx={{ ml: 1 }}
+                size="small"
               >
                 关闭
               </Button>
