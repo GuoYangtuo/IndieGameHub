@@ -517,12 +517,38 @@ const ProposalDetailDialog: React.FC<ProposalDetailDialogProps> = ({
                 data-color-mode={isDarkMode ? "dark" : "light"} 
                 sx={{ 
                   '& .wmde-markdown': { 
-                    backgroundColor: 'transparent',
-                    p: 0
+                    backgroundColor: 'transparent !important',
+                    p: 0,
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown .wmde-markdown-color': {
+                    backgroundColor: 'transparent !important'
+                  },
+                  '& .wmde-markdown p': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown h1, & .wmde-markdown h2, & .wmde-markdown h3, & .wmde-markdown h4, & .wmde-markdown h5, & .wmde-markdown h6': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown code': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown pre': {
+                    backgroundColor: isDarkMode ? '#161b22 !important' : 'transparent',
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown a': {
+                    color: isDarkMode ? '#58a6ff !important' : 'inherit'
+                  },
+                  '& .wmde-markdown ul, & .wmde-markdown ol': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown blockquote': {
+                    color: isDarkMode ? '#8b949e !important' : 'inherit'
                   },
                   color: proposal && (proposal.status === 'closed' || proposal.status === 'completed') 
                     ? 'text.secondary' 
-                    : 'text.primary'
+                    : isDarkMode ? '#c9d1d9' : 'text.primary'
                 }} 
               >
                 <MDEditor.Markdown source={proposal?.description || ''} />

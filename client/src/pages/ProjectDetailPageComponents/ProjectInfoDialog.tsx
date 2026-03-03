@@ -619,7 +619,39 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                 border: '1px solid',
                 borderColor: 'divider'
               }}>
-                <Box data-color-mode={isDarkMode ? "dark" : "light"} sx={{ mb: 0 }}>
+                <Box data-color-mode={isDarkMode ? "dark" : "light"} sx={{ 
+                  mb: 0,
+                  '& .wmde-markdown': { 
+                    backgroundColor: 'transparent !important',
+                    p: 0,
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown .wmde-markdown-color': {
+                    backgroundColor: 'transparent !important'
+                  },
+                  '& .wmde-markdown p': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown h1, & .wmde-markdown h2, & .wmde-markdown h3, & .wmde-markdown h4, & .wmde-markdown h5, & .wmde-markdown h6': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown code': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown pre': {
+                    backgroundColor: isDarkMode ? '#161b22 !important' : 'transparent',
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown a': {
+                    color: isDarkMode ? '#58a6ff !important' : 'inherit'
+                  },
+                  '& .wmde-markdown ul, & .wmde-markdown ol': {
+                    color: isDarkMode ? '#c9d1d9 !important' : 'inherit'
+                  },
+                  '& .wmde-markdown blockquote': {
+                    color: isDarkMode ? '#8b949e !important' : 'inherit'
+                  }
+                }}>
                   <MDEditor.Markdown source={project.description || '暂无项目描述'} />
                 </Box>
               </Paper>
