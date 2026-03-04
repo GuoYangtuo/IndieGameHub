@@ -10,11 +10,13 @@ import {
   Button,
   Alert,
   Card,
-  CardContent
+  CardContent,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { userAPI } from '../services/api';
-import { MonetizationOn } from '@mui/icons-material';
+import { MonetizationOn, Payment } from '@mui/icons-material';
 
 interface RechargeDialogProps {
   open: boolean;
@@ -24,6 +26,7 @@ interface RechargeDialogProps {
 const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
   const { user, updateUserCoins } = useAuth();
   const [amount, setAmount] = useState<number>(10);
+  const [payType, setPayType] = useState<string>('alipay');
   const [recharging, setRecharging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -42,26 +45,26 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
 
       // 调用后端创建支付订单
       const response = await userAPI.createCoinRechargeOrder(amount, {
-        payType: 'alipay',
+        payType: payType,
         device: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'pc',
-        method: 'web'
+        method: 'jump'
       });
 
       const data = response.data;
 
       // 根据 pay_type 处理跳转或二维码等
-      const payType = data.pay_type;
+      const payTypeResult = data.pay_type;
       const payInfo = data.pay_info as string;
 
-      if (payType === 'jump') {
+      if (payTypeResult === 'jump') {
         window.location.href = payInfo;
-      } else if (payType === 'html') {
+      } else if (payTypeResult === 'html') {
         const win = window.open('', '_blank');
         if (win) {
           win.document.write(payInfo);
           win.document.close();
         }
-      } else if (payType === 'qrcode' || payType === 'urlscheme') {
+      } else if (payTypeResult === 'qrcode' || payTypeResult === 'urlscheme') {
         window.open(payInfo, '_blank');
       } else {
         // 其它类型（jsapi、app等）暂时统一当作跳转链接处理
@@ -85,6 +88,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
   const handleClose = () => {
     setError(null);
     setSuccess(false);
+    setPayType('alipay');
     onClose();
   };
 
@@ -164,7 +168,35 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
             sx={{ mb: 2 }}
           />
         </Box>
-        
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" gutterBottom>
+            选择支付方式
+          </Typography>
+          <ToggleButtonGroup
+            value={payType}
+            exclusive
+            onChange={(e, newPayType) => {
+              if (newPayType !== null) {
+                setPayType(newPayType);
+              }
+            }}
+            fullWidth
+          >
+            <ToggleButton value="alipay" sx={{ py: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Payment />
+                <Typography>支付宝</Typography>
+              </Box>
+            </ToggleButton>
+            <ToggleButton value="wechat" sx={{ py: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography>微信支付</Typography>
+              </Box>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
         <Typography variant="body2" color="text.secondary">
           支付说明：点击“充值”后系统会跳转到第三方支付页面。请在支付完成后返回本网站，系统会在收到支付平台回调后自动为您增加金币。
         </Typography>
