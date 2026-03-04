@@ -202,7 +202,7 @@ const ProjectUpdateForm: React.FC<ProjectUpdateFormProps> = ({
           />
           <DebouncedInput
             fullWidth
-            placeholder="Demo下载链接"
+            placeholder="Demo下载链接（在线游玩Url，网盘地址，steam商店链接等等）"
             value={updateDemoLink}
             onDebouncedChange={(value) => setUpdateDemoLink(value)}
             sx={{ mb: 2 }}

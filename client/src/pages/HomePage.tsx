@@ -332,7 +332,7 @@ const ProjectHeatmap: React.FC<{
 interface ModuleConfig {
   id: string;
   title: string;
-  icon: React.ReactNode;
+  icon: React.ReactElement | undefined;
   visible: boolean;
 }
 
