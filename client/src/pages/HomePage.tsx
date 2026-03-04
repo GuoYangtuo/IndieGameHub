@@ -9,16 +9,22 @@ import {
   Button,
   Collapse,
   IconButton,
-  Divider,
   List,
   ListItem,
   ListItemText,
   Paper,
-  Grid,
   Chip,
-  Badge
+  Fade
 } from '@mui/material';
-import { ExpandMore, ExpandLess, Favorite, CalendarToday, MonetizationOn } from '@mui/icons-material';
+import { 
+  ExpandMore, 
+  ExpandLess, 
+  Favorite, 
+  MonetizationOn,
+  SportsEsports,
+  Lightbulb,
+  AttachMoney
+} from '@mui/icons-material';
 import ProjectCard from '../components/ProjectCard';
 import { projectAPI, userAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -322,6 +328,14 @@ const ProjectHeatmap: React.FC<{
   );
 };
 
+// 模块配置接口
+interface ModuleConfig {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  visible: boolean;
+}
+
 const HomePage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [favoriteProjects, setFavoriteProjects] = useState<Project[]>([]);
@@ -334,8 +348,24 @@ const HomePage: React.FC = () => {
   const [expandProposals, setExpandProposals] = useState(false);
   const [userBounties, setUserBounties] = useState<Record<string, Bounty>>({});
   const [expandBounties, setExpandBounties] = useState(false);
+  
+  // 模块显示状态管理
+  const [modules, setModules] = useState<ModuleConfig[]>([
+    { id: 'proposals', title: '我创建的提案', icon: <Lightbulb />, visible: true },
+    { id: 'bounties', title: '我悬赏的提案', icon: <AttachMoney />, visible: true },
+    { id: 'favorites', title: '我关注的项目', icon: <Favorite />, visible: true },
+    { id: 'explore', title: '探索新的独立游戏', icon: <SportsEsports />, visible: true },
+  ]);
+  
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // 切换模块显示状态
+  const toggleModuleVisibility = (moduleId: string) => {
+    setModules(prev => prev.map(m => 
+      m.id === moduleId ? { ...m, visible: !m.visible } : m
+    ));
+  };
 
   // 处理日期选择
   const handleSelectDate = (date: string | null, projectId: string) => {
@@ -506,24 +536,33 @@ const HomePage: React.FC = () => {
     }
   };
 
-  return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* 用户创建的提案 */}
-      {user && Object.keys(createdProposals).length > 0 && (
+  // 检查模块是否有内容
+  const hasProposalsContent = user && Object.keys(createdProposals).length > 0;
+  const hasBountiesContent = user && Object.keys(userBounties).length > 0;
+  const hasFavoritesContent = user && projectsWithUpdates.length > 0;
+  const hasExploreContent = !error && projects.length > 0;
+
+  // 模块渲染函数
+  const renderProposalsModule = () => {
+    if (!modules.find(m => m.id === 'proposals')?.visible || !hasProposalsContent) return null;
+    return (
+      <Fade in={true} timeout={300}>
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5" sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, borderRadius: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+            <Lightbulb sx={{ mr: 1 }} />
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
               我创建的提案
             </Typography>
             <IconButton 
+              size="small"
               onClick={() => setExpandProposals(!expandProposals)}
+              sx={{ color: 'inherit' }}
             >
               {expandProposals ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
           </Box>
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
-            {/* 默认最多显示3个提案，展开后显示全部 */}
             {Object.entries(createdProposals)
               .slice(0, expandProposals ? undefined : 3)
               .map(([proposalId, proposal]) => (
@@ -531,7 +570,8 @@ const HomePage: React.FC = () => {
                   <Card 
                     sx={{ 
                       cursor: 'pointer',
-                      '&:hover': { boxShadow: 3 } 
+                      transition: 'all 0.2s ease',
+                      '&:hover': { boxShadow: 4, transform: 'translateY(-2px)' } 
                     }}
                     onClick={() => navigate(`/projects/${
                       projects.find(p => p.id === proposal.projectId)?.slug || proposal.projectId
@@ -539,7 +579,7 @@ const HomePage: React.FC = () => {
                   >
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="body1" fontWeight="bold" noWrap>
+                        <Typography variant="body1" fontWeight="bold" noWrap sx={{ maxWidth: '70%' }}>
                           {proposal.title}
                         </Typography>
                         <Chip 
@@ -548,7 +588,7 @@ const HomePage: React.FC = () => {
                           color={getProposalStatusColor(proposal.status) as "info" | "warning" | "success" | "default" | "primary" | "secondary" | "error"}
                         />
                       </Box>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary" noWrap>
                         所属项目: {projects.find(p => p.id === proposal.projectId)?.name || '未知项目'}
                       </Typography>
                     </CardContent>
@@ -556,27 +596,31 @@ const HomePage: React.FC = () => {
                 </Box>
               ))}
           </Box>
-          
-          <Divider sx={{ my: 3 }} />
         </Box>
-      )}
-      
-      {/* 用户悬赏的提案 */}
-      {user && Object.keys(userBounties).length > 0 && (
+      </Fade>
+    );
+  };
+
+  const renderBountiesModule = () => {
+    if (!modules.find(m => m.id === 'bounties')?.visible || !hasBountiesContent) return null;
+    return (
+      <Fade in={true} timeout={400}>
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5" sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, borderRadius: 2, bgcolor: 'secondary.main', color: 'secondary.contrastText' }}>
+            <AttachMoney sx={{ mr: 1 }} />
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
               我悬赏的提案
             </Typography>
             <IconButton 
+              size="small"
               onClick={() => setExpandBounties(!expandBounties)}
+              sx={{ color: 'inherit' }}
             >
               {expandBounties ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
           </Box>
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
-            {/* 默认最多显示3个悬赏，展开后显示全部 */}
             {Object.entries(userBounties)
               .slice(0, expandBounties ? undefined : 3)
               .map(([bountyId, bounty]) => (
@@ -584,7 +628,8 @@ const HomePage: React.FC = () => {
                   <Card 
                     sx={{ 
                       cursor: 'pointer',
-                      '&:hover': { boxShadow: 3 },
+                      transition: 'all 0.2s ease',
+                      '&:hover': { boxShadow: 4, transform: 'translateY(-2px)' },
                       borderLeft: bounty.status === 'pending' ? '3px solid #ff9800' : undefined
                     }}
                     onClick={() => navigate(`/projects/${
@@ -593,7 +638,7 @@ const HomePage: React.FC = () => {
                   >
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="body1" fontWeight="bold" noWrap>
+                        <Typography variant="body1" fontWeight="bold" noWrap sx={{ maxWidth: '60%' }}>
                           {bounty.proposalTitle}
                         </Typography>
                         <Chip 
@@ -604,8 +649,8 @@ const HomePage: React.FC = () => {
                         />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" color="text.secondary">
-                          所属项目: {projects.find(p => p.id === bounty.projectId)?.name || '未知项目'}
+                        <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: '60%' }}>
+                          {projects.find(p => p.id === bounty.projectId)?.name || '未知项目'}
                         </Typography>
                         <Chip 
                           size="small" 
@@ -638,20 +683,25 @@ const HomePage: React.FC = () => {
                 </Box>
               ))}
           </Box>
-          
-          <Divider sx={{ my: 3 }} />
         </Box>
-      )}
-      
-      {/* 关注的项目 */}
-      {user && projectsWithUpdates.length > 0 && (
+      </Fade>
+    );
+  };
+
+  const renderFavoritesModule = () => {
+    if (!modules.find(m => m.id === 'favorites')?.visible || !hasFavoritesContent) return null;
+    return (
+      <Fade in={true} timeout={500}>
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5" sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, borderRadius: 2, bgcolor: 'error.main', color: 'error.contrastText' }}>
+            <Favorite sx={{ mr: 1 }} />
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
               我关注的项目
             </Typography>
             <IconButton 
+              size="small"
               onClick={() => setExpandFavorites(!expandFavorites)}
+              sx={{ color: 'inherit' }}
             >
               {expandFavorites ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -661,7 +711,6 @@ const HomePage: React.FC = () => {
             <Alert severity="info" sx={{ mb: 2 }}>关注的项目暂无更新</Alert>
           ) : (
             <>
-              {/* 默认显示前两个项目 */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 {projectsWithUpdates.slice(0, 2).map((item) => (
                   <Box 
@@ -681,7 +730,6 @@ const HomePage: React.FC = () => {
                 ))}
               </Box>
               
-              {/* 展开后显示其余项目 */}
               <Collapse in={expandFavorites}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
                   {projectsWithUpdates.slice(2).map((item) => (
@@ -704,39 +752,102 @@ const HomePage: React.FC = () => {
               </Collapse>
             </>
           )}
-          
-          <Divider sx={{ my: 3 }} />
         </Box>
+      </Fade>
+    );
+  };
+
+  const renderExploreModule = () => {
+    if (!modules.find(m => m.id === 'explore')?.visible) return null;
+    return (
+      <Fade in={true} timeout={600}>
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, borderRadius: 2, bgcolor: 'success.main', color: 'success.contrastText' }}>
+            <SportsEsports sx={{ mr: 1 }} />
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+              探索新的独立游戏
+            </Typography>
+          </Box>
+          
+          {error ? (
+            <Alert severity="error">{error}</Alert>
+          ) : projects.length === 0 ? (
+            <Alert severity="info">暂无项目</Alert>
+          ) : (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
+              {projects.map((project) => (
+                <Box key={project.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' }, p: 1.5 }}>
+                  <ProjectCard
+                    id={project.id}
+                    name={project.name}
+                    slug={project.slug}
+                    description={project.description}
+                    demoLink={project.demoLink}
+                    updates={project.updates}
+                    createdAt={project.createdAt}
+                    coverImage={project.coverImage}
+                  />
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      </Fade>
+    );
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* 模块管理面板 */}
+      {user && (
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 2, 
+            mb: 3, 
+            borderRadius: 2,
+            background: theme => theme.palette.mode === 'dark' 
+              ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+              : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+            <SportsEsports sx={{ mr: 0.5, fontSize: 20 }} />
+            模块管理
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {modules.map((module) => {
+              const hasContent = 
+                (module.id === 'proposals' && hasProposalsContent) ||
+                (module.id === 'bounties' && hasBountiesContent) ||
+                (module.id === 'favorites' && hasFavoritesContent) ||
+                (module.id === 'explore' && hasExploreContent);
+              
+              return (
+                <Chip
+                  key={module.id}
+                  icon={module.visible ? module.icon : undefined}
+                  label={module.title}
+                  onClick={() => toggleModuleVisibility(module.id)}
+                  color={module.visible ? 'primary' : 'default'}
+                  variant={module.visible ? 'filled' : 'outlined'}
+                  sx={{ 
+                    opacity: module.visible ? 1 : 0.6,
+                    transition: 'all 0.2s ease',
+                    '&:hover': { opacity: 0.8 }
+                  }}
+                />
+              );
+            })}
+          </Box>
+        </Paper>
       )}
 
-      {/* 所有项目列表 */}
-      <Typography variant="h5" gutterBottom>
-        探索新的独立游戏
-      </Typography>
-      {/* 此功能暂不开放 */}
-      <Alert severity="info">此功能暂不开放</Alert>
-      <Divider sx={{ my: 3 }} />
-      {error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : projects.length === 0 ? (
-        <Alert severity="info">暂无项目</Alert>
-      ) : (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
-          {projects.map((project) => (
-            <Box key={project.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' }, p: 1.5 }}>
-              <ProjectCard
-                id={project.id}
-                name={project.name}
-                slug={project.slug}
-                description={project.description}
-                demoLink={project.demoLink}
-                updates={project.updates}
-                createdAt={project.createdAt}
-              />
-            </Box>
-          ))}
-        </Box>
-      )}
+      {/* 渲染各个模块 */}
+      {renderProposalsModule()}
+      {renderBountiesModule()}
+      {renderFavoritesModule()}
+      {renderExploreModule()}
     </Container>
   );
 };

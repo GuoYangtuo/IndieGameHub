@@ -7,9 +7,10 @@ import { query } from '../utils/dbTools';
 import { findUserByUsername } from '../models/userModel';
 
 async function main() {
-  const user = await findUserByUsername('GuoYangtuo');
+  const user_name = 'admin';
+  const user = await findUserByUsername(user_name);
   if (!user) {
-    console.error('未找到用户 GuoYangtuo');
+    console.error('未找到用户');
     process.exit(1);
   }
 
@@ -17,10 +18,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   await query('UPDATE users SET password = ? WHERE username = ?', [
     hashedPassword,
-    'GuoYangtuo',
+    user_name,
   ]);
 
-  console.log('GuoYangtuo 用户密码已更新为 aaaaaa');
+  console.log('用户密码已更新为 aaaaaa');
   process.exit(0);
 }
 

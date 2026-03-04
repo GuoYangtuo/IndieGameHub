@@ -204,7 +204,7 @@ export const getProjectBySlug = async (req: Request, res: Response): Promise<voi
 };
 
 // 创建项目
-export const createNewProject = async (req: Request, res: Response): Promise<void> => {
+export const createNewProject = async (req: Request & { file?: Express.Multer.File }, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -213,6 +213,12 @@ export const createNewProject = async (req: Request, res: Response): Promise<voi
     }
 
     const { name, description, demoLink, githubRepoUrl, githubAccessToken } = req.body;
+
+    // 处理封面上传
+    let coverImage: string | undefined;
+    if (req.file) {
+      coverImage = `/uploads/${req.file.filename}`;
+    }
 
     // 验证请求数据
     if (!name || !description) {
@@ -253,7 +259,8 @@ export const createNewProject = async (req: Request, res: Response): Promise<voi
       demoLink,
       createdBy: userId,
       githubRepoUrl,
-      githubAccessToken
+      githubAccessToken,
+      coverImage
     });
 
     if (!project) {

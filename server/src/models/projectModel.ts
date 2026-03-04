@@ -45,6 +45,7 @@ export interface CreateProjectData {
   createdBy: string;
   githubRepoUrl?: string;
   githubAccessToken?: string;
+  coverImage?: string;
 }
 
 // 更新项目接口
@@ -199,9 +200,9 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
     
     await query(
       `INSERT INTO projects 
-       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, projectData.name, uniqueSlug, projectData.description, projectData.demoLink || '', projectData.createdBy, mysqlDateFormat, 0, projectData.githubRepoUrl || null, projectData.githubAccessToken || null]
+       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken, coverImage) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, projectData.name, uniqueSlug, projectData.description, projectData.demoLink || '', projectData.createdBy, mysqlDateFormat, 0, projectData.githubRepoUrl || null, projectData.githubAccessToken || null, projectData.coverImage || null]
     );
     
     // 添加创建者为成员

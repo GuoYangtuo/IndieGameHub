@@ -257,7 +257,7 @@ const CreateProjectPage: React.FC = () => {
               </Button>
             </label>
             <Typography variant="caption" sx={{ ml: 2 }}>
-              选择一张项目封面图片，最大5MB
+              选择一张项目封面图片，最大5MB，之后在项目详情页可以上传更多图片
             </Typography>
             
             {coverImagePreview && (

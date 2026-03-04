@@ -30,21 +30,22 @@ interface ProjectCardProps {
   demoLink?: string;
   updates?: ProjectUpdate[];
   createdAt: string;
+  coverImage?: string;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
-  id,
   name,
   slug,
   description = '',
   demoLink,
   updates = [],
-  createdAt
+  createdAt,
+  coverImage
 }) => {
   const navigate = useNavigate();
 
-  // 查找是否有项目图片
-  const projectImage = updates?.find(update => update.imageUrl)?.imageUrl;
+  // 优先使用项目封面图片，如果没有则查找更新中的图片
+  const projectImage = coverImage || updates?.find(update => update.imageUrl)?.imageUrl;
 
   const handleCardClick = () => {
     // 打开新标签页并带上showInfo=true参数
