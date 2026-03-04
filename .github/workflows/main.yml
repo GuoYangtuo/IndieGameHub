@@ -59,4 +59,4 @@ jobs:
             # 安装后端依赖并重启服务
             echo "Restarting backend..."
             cd /root/server
-            systemctl restart mybackend
+            pm2 restart indiegamehub_server

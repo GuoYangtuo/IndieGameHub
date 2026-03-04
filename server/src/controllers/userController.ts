@@ -423,6 +423,11 @@ export const createCoinRechargeOrder = async (req: Request, res: Response): Prom
         timeout: 10000,
       }
     );
+    console.log(process.env.ZBL_PAY_PID);
+    console.log(process.env.ZBL_PAY_PRIVATE_KEY);
+    console.log(process.env.ZBL_PAY_PUBLIC_KEY);
+    console.log(process.env.ZBL_PAY_NOTIFY_URL);
+    console.log(process.env.ZBL_PAY_RETURN_URL);
 
     const data = response.data;
 
