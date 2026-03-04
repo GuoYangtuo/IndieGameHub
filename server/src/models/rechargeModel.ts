@@ -12,8 +12,8 @@ export interface RechargeOrder {
   pay_type?: string;
   status: RechargeStatus;
   raw_notify?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const generateId = (): string => {
@@ -50,7 +50,7 @@ export const getRechargeOrderByOutTradeNo = async (
   out_trade_no: string
 ): Promise<RechargeOrder | null> => {
   const rows = await query(
-    `SELECT id, userId, out_trade_no, trade_no, money, coins, pay_type, status, raw_notify, created_at, updated_at
+    `SELECT id, userId, out_trade_no, trade_no, money, coins, pay_type, status, raw_notify, createdAt, updatedAt
      FROM recharge_orders
      WHERE out_trade_no = ?`,
     [out_trade_no]
