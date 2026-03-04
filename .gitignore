@@ -9,3 +9,4 @@ server/uploads
 testMySQL
 databaseDesign.mwb
 server/src/data
+server/.env
