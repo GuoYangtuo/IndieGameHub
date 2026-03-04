@@ -42,6 +42,13 @@ import fs from 'fs';
 import { generateVerificationCode, sendVerificationCode } from '../utils/emailService';
 import { query } from '../utils/dbTools';
 import bcrypt from 'bcryptjs';
+import axios from 'axios';
+import { rsaSign, rsaVerify } from '../utils/zblPay';
+import {
+  createRechargeOrder,
+  getRechargeOrderByOutTradeNo,
+  markRechargeOrderPaid,
+} from '../models/rechargeModel';
 
 // 初始化全局变量
 global.tempUsers = global.tempUsers || {};
@@ -341,6 +348,180 @@ export const updateCoins = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: '服务器错误' });
   }
 };
+
+// 金币充值 - 创建支付订单
+export const createCoinRechargeOrder = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { coins, payType = 'alipay', device = 'pc', method = 'web' } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: '未授权' });
+      return;
+    }
+
+    const coinsNumber = Number(coins);
+    if (!coinsNumber || coinsNumber <= 0 || !Number.isInteger(coinsNumber)) {
+      res.status(400).json({ message: '无效的金币数量' });
+      return;
+    }
+
+    // 金币与金额的兑换比例，后续可按需调整
+    const COINS_PER_YUAN = 100;
+    const money = (coinsNumber / COINS_PER_YUAN).toFixed(2);
+
+    const pid = process.env.ZBL_PAY_PID;
+    const privateKey = process.env.ZBL_PAY_PRIVATE_KEY;
+    const publicKey = process.env.ZBL_PAY_PUBLIC_KEY;
+    const notifyUrl = process.env.ZBL_PAY_NOTIFY_URL;
+    const returnUrl = process.env.ZBL_PAY_RETURN_URL;
+
+    if (!pid || !privateKey || !publicKey || !notifyUrl || !returnUrl) {
+      res.status(500).json({ message: '支付配置未完成，请联系管理员配置环境变量' });
+      return;
+    }
+
+    const outTradeNo = Date.now().toString() + Math.floor(Math.random() * 1000).toString();
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+
+    const requestParams: Record<string, any> = {
+      pid,
+      method,
+      device,
+      type: payType,
+      out_trade_no: outTradeNo,
+      notify_url: notifyUrl,
+      return_url: returnUrl,
+      name: '金币充值',
+      money,
+      clientip: (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+        (req.socket.remoteAddress ?? ''),
+      param: userId,
+      timestamp,
+      sign_type: 'RSA',
+    };
+
+    const sign = rsaSign(requestParams, privateKey);
+    requestParams.sign = sign;
+
+    // 在本地记录充值订单
+    await createRechargeOrder({
+      userId,
+      out_trade_no: outTradeNo,
+      money: Number(money),
+      coins: coinsNumber,
+      pay_type: payType,
+    });
+
+    const response = await axios.post(
+      'https://pay.zhenbianli.cn/api/pay/create',
+      new URLSearchParams(requestParams as Record<string, string>).toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        timeout: 10000,
+      }
+    );
+
+    const data = response.data;
+
+    if (!data || typeof data !== 'object') {
+      res.status(502).json({ message: '支付平台响应异常' });
+      return;
+    }
+
+    if (data.code !== 0) {
+      res.status(400).json({ message: data.msg || '创建支付订单失败', detail: data });
+      return;
+    }
+
+    // 校验平台返回签名（如果返回了 sign）
+    if (data.sign) {
+      const verifyParams = { ...data };
+      const valid = rsaVerify(verifyParams, data.sign, publicKey);
+      if (!valid) {
+        res.status(502).json({ message: '支付平台返回签名校验失败' });
+        return;
+      }
+    }
+
+    res.status(200).json({
+      out_trade_no: outTradeNo,
+      trade_no: data.trade_no,
+      pay_type: data.pay_type,
+      pay_info: data.pay_info,
+      timestamp: data.timestamp,
+      sign: data.sign,
+      sign_type: data.sign_type,
+    });
+  } catch (error) {
+    console.error('创建金币充值订单失败:', error);
+    res.status(500).json({ message: '创建金币充值订单失败' });
+  }
+};
+
+// 支付异步/同步通知处理（notify_url / return_url）
+export const handleCoinRechargeNotify = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const publicKey = process.env.ZBL_PAY_PUBLIC_KEY;
+    if (!publicKey) {
+      res.status(500).send('配置错误');
+      return;
+    }
+
+    // 通知为 GET 请求，参数在 query 中
+    const params: Record<string, any> = {};
+    Object.keys(req.query).forEach((key) => {
+      const value = req.query[key];
+      params[key] = Array.isArray(value) ? value[0] : value;
+    });
+
+    const sign = params.sign as string | undefined;
+    if (!sign) {
+      res.status(400).send('missing sign');
+      return;
+    }
+
+    const isValid = rsaVerify(params, sign, publicKey);
+    if (!isValid) {
+      res.status(400).send('invalid sign');
+      return;
+    }
+
+    const tradeStatus = params.trade_status;
+    const outTradeNo = params.out_trade_no as string | undefined;
+    const tradeNo = params.trade_no as string | undefined;
+
+    if (!outTradeNo) {
+      res.status(400).send('missing out_trade_no');
+      return;
+    }
+
+    const order = await getRechargeOrderByOutTradeNo(outTradeNo);
+    if (!order) {
+      res.status(404).send('order not found');
+      return;
+    }
+
+    // 只有首次成功支付需要加金币，幂等处理
+    if (order.status !== 'paid' && tradeStatus === 'TRADE_SUCCESS') {
+      await updateUserCoins(order.userId, order.coins);
+      await markRechargeOrderPaid({
+        out_trade_no: outTradeNo,
+        trade_no: tradeNo || '',
+        raw_notify: JSON.stringify(params),
+      });
+    }
+
+    // 按文档要求返回 success 表示已接收通知
+    res.send('success');
+  } catch (error) {
+    console.error('处理金币充值通知失败:', error);
+    res.status(500).send('error');
+  }
+};
+
 
 // 批量获取用户信息
 export const getBatchUsers = async (req: Request, res: Response): Promise<void> => {

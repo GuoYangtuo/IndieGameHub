@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getCurrentUser, getBatchUsers, searchUsers, updateCoins, deleteUser, updateUserBio, uploadAvatar, getUserById, addFavoriteProjectController, removeFavoriteProjectController, getFavoriteProjectsController, getFavoriteProjectsUpdatesController, verifyEmail, resendVerificationCode, donate, subscribe, unsubscribe, getUserDonationsController, getUserReceivedDonationsController, getCreatedProposalsController, getUserBountiesController, adminGetAllUsers, adminGetAllProjects, adminUpdateUserCoins, adminDeleteProject, getUserActivities, getUserContributedProjects, getUserPublicProjects, adminCreateUser } from '../controllers/userController';
+import { register, login, getCurrentUser, getBatchUsers, searchUsers, updateCoins, deleteUser, updateUserBio, uploadAvatar, getUserById, addFavoriteProjectController, removeFavoriteProjectController, getFavoriteProjectsController, getFavoriteProjectsUpdatesController, verifyEmail, resendVerificationCode, donate, subscribe, unsubscribe, getUserDonationsController, getUserReceivedDonationsController, getCreatedProposalsController, getUserBountiesController, adminGetAllUsers, adminGetAllProjects, adminUpdateUserCoins, adminDeleteProject, getUserActivities, getUserContributedProjects, getUserPublicProjects, adminCreateUser, createCoinRechargeOrder, handleCoinRechargeNotify } from '../controllers/userController';
 import { verifyToken } from '../middleware/authMiddleware';
 import multer from 'multer';
 import path from 'path';
@@ -51,6 +51,11 @@ userRouter.get('/search', searchUsers);
 
 // 更新用户金币
 userRouter.post('/coins', verifyToken, updateCoins);
+// 金币充值 - 创建支付订单
+userRouter.post('/coins/recharge/create', verifyToken, createCoinRechargeOrder);
+// 支付平台异步/同步通知回调（需要在支付平台后台配置到该地址）
+userRouter.get('/coins/recharge/notify', handleCoinRechargeNotify);
+userRouter.get('/coins/recharge/return', handleCoinRechargeNotify);
 
 // 删除用户
 userRouter.delete('/account', verifyToken, deleteUser);

@@ -43,8 +43,14 @@ export const userAPI = {
   // 获取当前用户
   getCurrentUser: () => api.get('/users/me'),
   
-  // 充值金币
-  rechargeCoins: (amount: number) => api.post('/users/recharge', { amount }),
+  // 创建金币充值订单（接入支付）
+  createCoinRechargeOrder: (coins: number, options?: { payType?: string; device?: string; method?: string }) =>
+    api.post('/users/coins/recharge/create', {
+      coins,
+      payType: options?.payType ?? 'alipay',
+      device: options?.device ?? 'pc',
+      method: options?.method ?? 'web'
+    }),
   
   // 更新金币
   updateCoins: (amount: number) => api.post('/users/coins', { amount }),

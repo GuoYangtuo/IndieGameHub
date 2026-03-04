@@ -40,11 +40,34 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
       setError(null);
       setSuccess(false);
 
-      const response = await userAPI.updateCoins(amount);
-      
-      // 更新用户金币
-      updateUserCoins(response.data.coins);
-      
+      // 调用后端创建支付订单
+      const response = await userAPI.createCoinRechargeOrder(amount, {
+        payType: 'alipay',
+        device: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'pc',
+        method: 'web'
+      });
+
+      const data = response.data;
+
+      // 根据 pay_type 处理跳转或二维码等
+      const payType = data.pay_type;
+      const payInfo = data.pay_info as string;
+
+      if (payType === 'jump') {
+        window.location.href = payInfo;
+      } else if (payType === 'html') {
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(payInfo);
+          win.document.close();
+        }
+      } else if (payType === 'qrcode' || payType === 'urlscheme') {
+        window.open(payInfo, '_blank');
+      } else {
+        // 其它类型（jsapi、app等）暂时统一当作跳转链接处理
+        window.open(payInfo, '_blank');
+      }
+
       setSuccess(true);
       setAmount(10); // 重置金额
     } catch (err: any) {
@@ -101,7 +124,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
         
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            充值成功！您的金币已更新。
+            已发起支付，请在新打开的页面完成支付。支付成功后，稍等几秒刷新页面即可看到最新金币余额。
           </Alert>
         )}
         
@@ -143,7 +166,7 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
         </Box>
         
         <Typography variant="body2" color="text.secondary">
-          注意：当前为演示系统，充值不会产生实际费用。在实际应用中，这里将接入支付系统。
+          支付说明：点击“充值”后系统会跳转到第三方支付页面。请在支付完成后返回本网站，系统会在收到支付平台回调后自动为您增加金币。
         </Typography>
       </DialogContent>
       

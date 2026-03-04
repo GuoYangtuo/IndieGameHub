@@ -1,4 +1,4 @@
-﻿import mysql from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -249,6 +249,24 @@ const createTables = async (): Promise<void> => {
         amount INT NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES users(id)
+      );
+    `);
+
+    // 金币充值订单表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS recharge_orders (
+        id VARCHAR(36) PRIMARY KEY,
+        userId VARCHAR(36) NOT NULL,
+        out_trade_no VARCHAR(64) NOT NULL UNIQUE,
+        trade_no VARCHAR(64),
+        money DECIMAL(10,2) NOT NULL,
+        coins INT NOT NULL,
+        pay_type VARCHAR(32),
+        status ENUM('pending', 'paid', 'closed', 'failed') DEFAULT 'pending',
+        raw_notify TEXT,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id)
       );
     `);
