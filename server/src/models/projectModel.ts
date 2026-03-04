@@ -72,6 +72,7 @@ export interface ProjectImage {
   projectId: string;
   url: string;
   order: number;
+  image_order?: number;
 }
 
 // 项目提款记录接口
@@ -382,10 +383,28 @@ export const updateProject = async (
       'UPDATE projects SET name = ?, description = ?, demoLink = ?, githubRepoUrl = ?, githubAccessToken = ? WHERE id = ?',
       [name, description, demoLink || null, githubRepoUrl || null, githubAccessToken || null, id]
     );
-    
+
     return await findProjectById(id);
   } catch (error) {
     console.error('更新项目信息失败:', error);
+    return null;
+  }
+};
+
+// 更新项目封面图片
+export const updateProjectCoverImage = async (
+  id: string,
+  coverImage: string
+): Promise<Project | null> => {
+  try {
+    await query(
+      'UPDATE projects SET coverImage = ? WHERE id = ?',
+      [coverImage, id]
+    );
+
+    return await findProjectById(id);
+  } catch (error) {
+    console.error('更新项目封面图片失败:', error);
     return null;
   }
 };

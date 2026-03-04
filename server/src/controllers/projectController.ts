@@ -11,6 +11,7 @@ import {
   deleteProject,
   findProjectsByUserId,
   updateProject,
+  updateProjectCoverImage,
   withdrawFromProject,
   getProjectWithdrawals,
   getUserContribution,
@@ -266,6 +267,11 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
     if (!project) {
       res.status(500).json({ message: '创建项目失败' });
       return;
+    }
+
+    // 如果提供了封面图片，将其添加到projectImage表中作为第一张图片
+    if (coverImage) {
+      await addProjectImage(project.id, coverImage, 0);
     }
 
     // 如果提供了demoLink，自动创建一个初始版本更新
@@ -615,6 +621,58 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
   }
 };
 
+// 更新项目封面图片
+export const updateProjectCover = async (req: Request & { file?: Express.Multer.File }, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: '未授权' });
+      return;
+    }
+
+    const { projectId } = req.params;
+    const image = req.file;
+
+    if (!image) {
+      res.status(400).json({ message: '请选择要上传的图片' });
+      return;
+    }
+
+    // 获取项目
+    const project = await findProjectById(projectId);
+    if (!project) {
+      res.status(404).json({ message: '项目不存在' });
+      return;
+    }
+
+    // 检查用户是否有权限（创建者或成员）
+    const projectMembers = await getProjectMembers(projectId);
+    const isMember = projectMembers.some(member => member.userId === userId);
+    const isOwner = project.createdBy === userId;
+
+    if (!isMember && !isOwner) {
+      res.status(403).json({ message: '您没有权限执行此操作' });
+      return;
+    }
+
+    // 获取图片的路径（相对路径）
+    const imageUrl = `/uploads/${path.basename(image.path)}`;
+
+    // 更新项目封面图片
+    const updatedProject = await updateProjectCoverImage(projectId, imageUrl);
+
+    if (!updatedProject) {
+      res.status(500).json({ message: '更新封面图片失败' });
+      return;
+    }
+
+    res.status(200).json(updatedProject);
+  } catch (error) {
+    console.error('更新项目封面图片失败:', error);
+    res.status(500).json({ message: '服务器错误' });
+  }
+};
+
 // 添加带图片的项目更新
 export const addUpdateWithImage = (req: Request & { file?: Express.Multer.File }, res: Response): void => {
   try {
@@ -736,27 +794,46 @@ export const deleteProjectDisplayImage = async (req: Request, res: Response): Pr
     const projectMembers = await getProjectMembers(projectId);
     const isMember = projectMembers.some(member => member.userId === userId);
     const isOwner = project.createdBy === userId;
-    
+
     if (!isMember && !isOwner) {
       res.status(403).json({ message: '您没有权限执行此操作' });
       return;
     }
 
-    // 检查图片是否存在
+    // 获取所有图片
     const projectImages = await getProjectImages(projectId);
-    const imageExists = projectImages.some(img => img.id === imageId);
-    
-    if (!imageExists) {
+    const targetImage = projectImages.find(img => img.id === imageId);
+
+    if (!targetImage) {
       res.status(404).json({ message: '图片不存在' });
       return;
     }
 
-    // 删除图片
+    // 判断是否删除的是第一张图片（order为0），这张图片同时也是封面
+    const isFirstImage = targetImage.image_order === 0;
+
+    // 删除图片源文件
+    try {
+      const imagePath = path.join(__dirname, '../../..', targetImage.url);
+      const fs = await import('fs');
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    } catch (fileError) {
+      console.error('删除图片文件失败:', fileError);
+    }
+
+    // 删除图片表记录
     const success = await deleteProjectImage(imageId);
-    
+
     if (!success) {
       res.status(500).json({ message: '删除图片失败' });
       return;
+    }
+
+    // 如果删除的是第一张图片（封面），清除projects表的coverImage字段
+    if (isFirstImage) {
+      await updateProjectCoverImage(projectId, '');
     }
 
     res.status(200).json({ message: '图片已删除' });

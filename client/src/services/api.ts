@@ -173,6 +173,14 @@ export const projectAPI = {
   // 更新项目信息
   updateProject: (projectId: string, name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string) => 
     api.put(`/projects/${projectId}`, { name, description, demoLink, githubRepoUrl, githubAccessToken }),
+
+  // 更新项目封面图片
+  updateProjectCover: (projectId: string, formData: FormData) =>
+    api.put(`/projects/${projectId}/cover`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
   
   // 通过用户名添加项目成员
   addMemberByUsername: (projectId: string, username: string) => 

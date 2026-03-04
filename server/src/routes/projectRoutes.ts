@@ -24,7 +24,8 @@ import {
   getProjectDetailComplete,
   getProjectContributors,
   checkProjectName,
-  validateGitHubRepository
+  validateGitHubRepository,
+  updateProjectCover
 } from '../controllers/projectController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { createNewProjectComment } from '../controllers/commentController';
@@ -60,6 +61,9 @@ projectRouter.post('/with-cover', verifyToken, upload.single('coverImage'), crea
 
 // 更新项目信息
 projectRouter.put('/:projectId', verifyToken, updateProjectInfo);
+
+// 更新项目封面图片
+projectRouter.put('/:projectId/cover', verifyToken, upload.single('coverImage'), updateProjectCover);
 
 // 添加项目更新
 projectRouter.post('/:projectId/updates', verifyToken, addUpdate);

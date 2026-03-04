@@ -332,35 +332,59 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
   // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files.length || !project) return;
-    
+
     const file = e.target.files[0];
-    
+
     // 验证文件类型和大小
     if (!file.type.match('image.*')) {
       alert('请选择图片文件');
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) {
       alert('图片大小不能超过5MB');
       return;
     }
-    
+
     setIsUploading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('projectId', project.id);
       formData.append('order', displayImages.length.toString());
-      
+
       const response = await projectAPI.addProjectDisplayImage(formData);
-      
+
       if (response.data) {
         const newImages = [...displayImages, response.data];
         setDisplayImages(newImages);
-        
-        if (onProjectUpdate) {
+
+        // 如果项目没有封面图片，将上传的第一张设置为封面
+        if (!project.coverImage) {
+          try {
+            const coverFormData = new FormData();
+            coverFormData.append('coverImage', file);
+            const coverResponse = await projectAPI.updateProjectCover(project.id, coverFormData);
+
+            if (coverResponse.data && onProjectUpdate) {
+              onProjectUpdate({
+                ...project,
+                displayImages: newImages,
+                coverImage: coverResponse.data.coverImage
+              });
+            }
+          } catch (coverErr) {
+            console.error('设置封面图片失败:', coverErr);
+            // 即使设置封面失败，也更新图片列表
+            if (onProjectUpdate) {
+              onProjectUpdate({
+                ...project,
+                displayImages: newImages
+              });
+            }
+          }
+        } else if (onProjectUpdate) {
           onProjectUpdate({
             ...project,
             displayImages: newImages
@@ -376,26 +400,31 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
       }
     }
   };
-  
+
   // 处理删除图片
   const handleDeleteImage = async (imageId: string) => {
     if (!project) return;
-    
+
+    // 判断删除的是否是第一张图片（封面）
+    const deletedImage = displayImages.find(img => img.id === imageId);
+    const isFirstImage = deletedImage && deletedImage.order === 0;
+
     try {
       await projectAPI.deleteProjectDisplayImage(project.id, imageId);
-      
+
       const newImages = displayImages.filter(img => img.id !== imageId);
       setDisplayImages(newImages);
-      
+
       if (currentImageIndex >= newImages.length) {
         setCurrentImageIndex(Math.max(0, newImages.length - 1));
       }
-      
+
       if (onProjectUpdate) {
-        onProjectUpdate({
-          ...project,
-          displayImages: newImages
-        });
+        // 如果删除的是第一张图片，清除封面图片
+        const updatedProject = isFirstImage
+          ? { ...project, displayImages: newImages, coverImage: undefined }
+          : { ...project, displayImages: newImages };
+        onProjectUpdate(updatedProject);
       }
     } catch (err) {
       console.error('删除图片失败:', err);
