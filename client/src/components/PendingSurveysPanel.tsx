@@ -41,13 +41,15 @@ interface PendingSurveysProps {
   projectSlug: string;
   isLoggedIn: boolean;
   onSurveysCompleted: () => void;
+  surveyIdFromUrl?: string | null;
 }
 
 const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
   projectId,
   projectSlug,
   isLoggedIn,
-  onSurveysCompleted
+  onSurveysCompleted,
+  surveyIdFromUrl
 }) => {
   const navigate = useNavigate();
   
@@ -68,10 +70,21 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
     loadPendingSurveys();
   }, [projectId]);
 
+  // 当surveyIdFromUrl变化时，调整当前显示的征询索引
+  useEffect(() => {
+    if (surveyIdFromUrl && surveys.length > 0) {
+      const targetIndex = surveys.findIndex(s => s.id === surveyIdFromUrl);
+      if (targetIndex !== -1) {
+        setCurrentIndex(targetIndex);
+      }
+    }
+  }, [surveyIdFromUrl]);
+
   const loadPendingSurveys = async () => {
     try {
       setLoading(true);
-      
+
+      // 原逻辑：加载所有待处理/进行中的征询
       let response;
       if (isLoggedIn) {
         // 登录用户：获取未提交的征询
@@ -88,6 +101,14 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
         
         if (response.data.length === 0) {
           setCompleted(true);
+        }
+      }
+
+      // 如果URL中有surveyId参数，找到对应的征询并设为当前显示
+      if (surveyIdFromUrl && response.data.length > 0) {
+        const targetIndex = response.data.findIndex((s: Survey) => s.id === surveyIdFromUrl);
+        if (targetIndex !== -1) {
+          setCurrentIndex(targetIndex);
         }
       }
     } catch (err) {
@@ -215,7 +236,7 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
               )}
 
               {/* 投票 */}
-              {currentSurvey.useVoting && currentSurvey.options && (
+              {currentSurvey.useVoting == true && currentSurvey.options && currentSurvey.options.length > 0 && (
                 <Box sx={{ mb: 2 }}>
                   <RadioGroup
                     value={selectedOption}
@@ -244,7 +265,7 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
               )}
 
               {/* 自由发言 */}
-              {currentSurvey.allowFreeResponse && (
+              {currentSurvey.allowFreeResponse == true && (
                 <Box sx={{ mb: 2 }}>
                   <TextField
                     fullWidth

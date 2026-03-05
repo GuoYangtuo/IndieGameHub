@@ -7,11 +7,8 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Chip,
-  Divider,
   IconButton,
-  CircularProgress,
-  Link
+  CircularProgress
 } from '@mui/material';
 import { 
   Poll, 
@@ -19,9 +16,10 @@ import {
   Add, 
   History, 
   CheckCircle,
-  Schedule
+  Share
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { surveyAPI } from '../services/api';
 
 interface SurveySidebarProps {
@@ -30,6 +28,7 @@ interface SurveySidebarProps {
   isMember: boolean;
   onCreateSurvey: () => void;
   onRefresh: () => void;
+  currentUsername?: string;
 }
 
 interface Survey {
@@ -48,11 +47,15 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   projectSlug,
   isMember,
   onCreateSurvey,
-  onRefresh
+  onRefresh,
+  currentUsername
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const username = currentUsername || user?.username || '匿名用户';
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // 加载征询列表
   useEffect(() => {
@@ -75,6 +78,20 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
       console.error('加载征询失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 复制征询分享链接到剪贴板
+  const handleShare = async (survey: Survey, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareText = `${username}邀请您参与意见征询"${survey.title}"\nhttp://indiegamehub.xyz/projects/${projectSlug}?surveyId=${survey.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopiedId(survey.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
     }
   };
 
@@ -123,6 +140,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
               <ListItem
                 key={survey.id}
                 sx={{
+                  px: 1.5,
                   borderRadius: 1,
                   mb: 0.5,
                   bgcolor: 'action.hover',
@@ -145,12 +163,18 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
                     fontSize: '0.875rem'
                   }}
                 />
-                <Chip
-                  icon={survey.endTime ? <Schedule fontSize="small" /> : undefined}
-                  label={survey.endTime ? '定时' : '手动'}
+                <IconButton
                   size="small"
+                  onClick={(e) => handleShare(survey, e)}
+                  title={copiedId === survey.id ? '已复制!' : '分享'}
                   sx={{ ml: 1 }}
-                />
+                >
+                  {copiedId === survey.id ? (
+                    <CheckCircle fontSize="small" color="success" />
+                  ) : (
+                    <Share fontSize="small" />
+                  )}
+                </IconButton>
               </ListItem>
             ))}
           </List>

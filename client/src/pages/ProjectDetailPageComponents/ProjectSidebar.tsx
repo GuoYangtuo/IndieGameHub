@@ -169,6 +169,7 @@ interface ProjectSidebarBottomProps {
   isMember?: boolean;
   onCreateSurvey?: () => void;
   onRefreshSurvey?: () => void;
+  currentUsername?: string;
 }
 
 export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
@@ -178,7 +179,8 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
   loadingContributors = false,
   isMember = false,
   onCreateSurvey,
-  onRefreshSurvey
+  onRefreshSurvey,
+  currentUsername
 }) => {
   const navigate = useNavigate();
   
@@ -303,6 +305,7 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
           isMember={isMember}
           onCreateSurvey={onCreateSurvey || (() => {})}
           onRefresh={onRefreshSurvey || (() => {})}
+          currentUsername={currentUsername}
         />
       )}
       
@@ -330,6 +333,7 @@ interface ProjectSidebarProps {
   isMember?: boolean;
   onCreateSurvey?: () => void;
   onRefreshSurvey?: () => void;
+  currentUsername?: string;
 }
 
 const ProjectSidebar: React.FC<ProjectSidebarProps> = (props) => {
@@ -347,6 +351,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = (props) => {
         isMember={props.isMember}
         onCreateSurvey={props.onCreateSurvey}
         onRefreshSurvey={props.onRefreshSurvey}
+        currentUsername={props.currentUsername}
       />
     </Box>
   );

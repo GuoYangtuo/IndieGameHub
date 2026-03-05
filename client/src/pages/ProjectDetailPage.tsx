@@ -148,6 +148,8 @@ const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const surveyIdFromUrl = searchParams.get('surveyId');
   const { user, updateUserCoins } = useAuth();
   const { setProjectTitle, setProjectSlug, setDemoLink, setSharedProjectData } = useProjectTitle();
   const { isDarkMode } = useTheme();
@@ -968,6 +970,7 @@ const ProjectDetailPage: React.FC = () => {
                     projectId={project.id}
                     projectSlug={slug || ''}
                     isLoggedIn={!!user}
+                    surveyIdFromUrl={surveyIdFromUrl}
                     onSurveysCompleted={() => setSurveyRefreshKey(prev => prev + 1)}
                   />
                 )}
@@ -1082,6 +1085,7 @@ const ProjectDetailPage: React.FC = () => {
                   isMember={isMember}
                   onCreateSurvey={() => setCreateSurveyDialogOpen(true)}
                   onRefreshSurvey={() => setSurveyRefreshKey(prev => prev + 1)}
+                  currentUsername={user?.username}
                 />
               </Box>
             </Box>
