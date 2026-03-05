@@ -7,7 +7,7 @@ import { query } from '../utils/dbTools';
 import { findUserByUsername } from '../models/userModel';
 
 async function main() {
-  const user_name = 'admin';
+  const user_name = 'q';
   const user = await findUserByUsername(user_name);
   if (!user) {
     console.error('未找到用户');

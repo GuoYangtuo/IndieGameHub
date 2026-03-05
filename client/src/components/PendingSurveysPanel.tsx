@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  IconButton,
   Radio,
   RadioGroup,
   FormControlLabel,
@@ -12,20 +11,12 @@ import {
   Paper,
   ImageList,
   ImageListItem,
-  Slide,
-  Collapse,
   Link
 } from '@mui/material';
 import {
   Poll,
-  TextFields,
-  ChevronLeft,
-  ChevronRight,
   Send,
-  Close,
   History,
-  ExpandMore,
-  ExpandLess,
   Login
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -42,6 +33,7 @@ interface Survey {
   createdAt: string;
   images?: { id: string; url: string }[];
   options?: { id: string; optionText: string; optionOrder: number }[];
+  creatorUsername?: string;
 }
 
 interface PendingSurveysProps {
@@ -62,7 +54,6 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [collapsed, setCollapsed] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   
@@ -189,78 +180,10 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
         borderColor: 'primary.main'
       }}
     >
-      {/* 面板头部 */}
-      <Box
-        sx={{
-          p: 1.5,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          cursor: collapsed ? 'pointer' : 'default'
-        }}
-        onClick={() => !collapsed && setCollapsed(true)}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            意见征询
-          </Typography>
-          <Typography variant="body2">
-            ({currentIndex + 1}/{surveys.length})
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {collapsed ? (
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCollapsed(false);
-              }}
-              sx={{ color: 'inherit' }}
-            >
-              <ExpandLess />
-            </IconButton>
-          ) : (
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCollapsed(true);
-              }}
-              sx={{ color: 'inherit' }}
-            >
-              <ExpandMore />
-            </IconButton>
-          )}
-        </Box>
-      </Box>
-
       {/* 面板内容 */}
-      <Collapse in={!collapsed}>
-        <Box sx={{ p: 3 }}>
-          {currentSurvey && (
+      <Box sx={{ p: 3 }}>
+        {currentSurvey && (
             <>
-              {/* 进度指示 */}
-              {surveys.length > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2 }}>
-                  {surveys.map((_, idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: idx === currentIndex ? 'primary.main' : 'grey.300',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => setCurrentIndex(idx)}
-                    />
-                  ))}
-                </Box>
-              )}
 
               {/* 标题 */}
               <Typography variant="h6" gutterBottom>
@@ -310,7 +233,7 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
                           borderRadius: 1,
                           border: '1px solid',
                           borderColor: selectedOption === option.id ? 'primary.main' : 'divider',
-                          bgcolor: selectedOption === option.id ? 'primary.light' : 'transparent',
+                          bgcolor: 'transparent',
                           width: '100%',
                           m: 0
                         }}
@@ -348,17 +271,36 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
                 </Alert>
               )}
 
-              {/* 按钮 */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={handleViewHistory}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                >
-                  <History fontSize="small" />
-                  查看历史征询
-                </Link>
+              {/* 按钮区域：包含进度指示、计数和按钮 */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    开发者 {currentSurvey.creatorUsername || '未知'} 想要征询你的意见
+                  </Typography>
+                  
+                  {/* 进度指示 */}
+                  {surveys.length > 1 && (
+                    <Box sx={{ display: 'flex', gap: 0.5, ml: 2 }}>
+                      {surveys.map((_, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor: idx === currentIndex ? 'primary.main' : 'grey.300',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setCurrentIndex(idx)}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  
+                  <Typography variant="body2" color="text.secondary">
+                    ({currentIndex + 1}/{surveys.length})
+                  </Typography>
+                </Box>
                 
                 <Button
                   variant="contained"
@@ -372,38 +314,6 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
             </>
           )}
         </Box>
-      </Collapse>
-
-      {/* 收起状态 */}
-      {collapsed && (
-        <Box
-          sx={{
-            p: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            bgcolor: 'grey.100',
-            cursor: 'pointer'
-          }}
-          onClick={() => setCollapsed(false)}
-        >
-          <Typography variant="body2">
-            感谢您的参与！
-          </Typography>
-          <Link
-            component="button"
-            variant="body2"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewHistory();
-            }}
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            <History fontSize="small" />
-            查看历史
-          </Link>
-        </Box>
-      )}
 
       {/* 登录对话框 */}
       <AuthDialog
