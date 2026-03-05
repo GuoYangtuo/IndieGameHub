@@ -52,15 +52,20 @@ const ScrollbarStyles = () => {
 };
 
 // 创建布局组件，包含Navbar和子组件
-const Layout = ({ children }: { children: React.ReactNode }) => {
+interface LayoutProps {
+  children: React.ReactNode;
+  disablePadding?: boolean;
+}
+
+const Layout = ({ children, disablePadding = false }: LayoutProps) => {
   return (
     <>
       <Navbar />
-      <Box 
-        sx={{ 
-          minHeight: 'calc(100vh - 64px)', 
-          py: 3, 
-          px: { xs: 2, sm: 3, md: 4 },
+      <Box
+        sx={{
+          minHeight: 'calc(100vh - 64px)',
+          py: disablePadding ? 0 : 3,
+          px: disablePadding ? 0 : { xs: 2, sm: 3, md: 4 },
           bgcolor: theme => theme.palette.background.default
         }}
       >
@@ -81,8 +86,8 @@ const AppRoutes = () => {
       <Route path="/projects/:slug/donate" element={<Layout><DonatePage /></Layout>} />
       <Route path="/projects/:slug" element={<Layout><ProjectDetailPage /></Layout>} />
       <Route path="/projects/:slug/settings" element={<Layout><ProjectSettingsPage /></Layout>} />
-      <Route path="/projects/:slug/surveys" element={<Layout><SurveyHistoryPage /></Layout>} />
-      <Route path="/project/:projectId/surveys" element={<Layout><SurveyHistoryPage /></Layout>} />
+      <Route path="/projects/:slug/surveys" element={<Layout disablePadding><SurveyHistoryPage /></Layout>} />
+      <Route path="/project/:projectId/surveys" element={<Layout disablePadding><SurveyHistoryPage /></Layout>} />
       <Route path="/verify-email" element={<Layout><EmailVerificationPage /></Layout>} />
       <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
