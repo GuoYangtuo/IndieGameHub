@@ -201,7 +201,7 @@ const Navbar: React.FC = () => {
         <Button
           ref={projectsAnchorRef}
           onClick={handleProjectsMenuToggle}
-          sx={{ my: 2, color: 'white', display: 'flex', alignItems: 'center' }}
+          sx={{ color: 'white', display: 'flex', alignItems: 'center' }}
           endIcon={<KeyboardArrowDown />}
         >
           我的项目

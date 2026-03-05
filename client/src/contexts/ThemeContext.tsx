@@ -177,10 +177,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       MuiAppBar: {
         styleOverrides: {
           root: {
+            '--Paper-overlay': 'transparent !important',
             backgroundColor: isDarkMode ? '#161b22' : '#ffffff',
             color: isDarkMode ? '#c9d1d9' : '#24292f',
             boxShadow: 'none',
-            borderBottom: `1px solid ${isDarkMode ? '#30363d' : '#d0d7de'}`,
+            border: 'none !important',
           },
         },
       },
