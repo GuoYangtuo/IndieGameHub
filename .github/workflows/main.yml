@@ -59,4 +59,4 @@ jobs:
             # 安装后端依赖并重启服务
             echo "Restarting backend..."
             cd /root/server
-            pm2 restart indiegamehub_server
+            /root/.nvm/versions/node/v24.13.0/bin/pm2 restart indiegamehub_server
