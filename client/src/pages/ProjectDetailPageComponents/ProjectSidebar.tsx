@@ -18,6 +18,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import ProjectContributionList from './ProjectContributionList';
+import SurveySidebar from '../../components/SurveySidebar';
 
 interface ProjectUpdate {
   id: string;
@@ -157,6 +158,7 @@ interface ProjectSidebarBottomProps {
   project: {
     id: string;
     name: string;
+    slug: string;
     createdBy: string;
     members: string[];
     updates: ProjectUpdate[];
@@ -164,13 +166,19 @@ interface ProjectSidebarBottomProps {
   members: Member[];
   contributors?: { id: string; username: string; avatarUrl?: string; contribution: number }[];
   loadingContributors?: boolean;
+  isMember?: boolean;
+  onCreateSurvey?: () => void;
+  onRefreshSurvey?: () => void;
 }
 
 export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
   project,
   members,
   contributors = [],
-  loadingContributors = false
+  loadingContributors = false,
+  isMember = false,
+  onCreateSurvey,
+  onRefreshSurvey
 }) => {
   const navigate = useNavigate();
   
@@ -286,6 +294,17 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
           </List>
         )}
       </Box>
+
+      {/* 意见征询板块 - 仅项目成员可见 */}
+      {isMember && (
+        <SurveySidebar
+          projectId={project.id}
+          projectSlug={project.slug}
+          isMember={isMember}
+          onCreateSurvey={onCreateSurvey || (() => {})}
+          onRefresh={onRefreshSurvey || (() => {})}
+        />
+      )}
       
       {/* 项目贡献度列表 */}
       <ProjectContributionList contributors={contributors} loading={loadingContributors} />
@@ -298,6 +317,7 @@ interface ProjectSidebarProps {
   project: {
     id: string;
     name: string;
+    slug: string;
     description: string;
     createdBy: string;
     members: string[];
@@ -307,6 +327,9 @@ interface ProjectSidebarProps {
   onOpenInfoDialog: () => void;
   contributors?: { id: string; username: string; avatarUrl?: string; contribution: number }[];
   loadingContributors?: boolean;
+  isMember?: boolean;
+  onCreateSurvey?: () => void;
+  onRefreshSurvey?: () => void;
 }
 
 const ProjectSidebar: React.FC<ProjectSidebarProps> = (props) => {
@@ -321,6 +344,9 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = (props) => {
         members={props.members}
         contributors={props.contributors}
         loadingContributors={props.loadingContributors}
+        isMember={props.isMember}
+        onCreateSurvey={props.onCreateSurvey}
+        onRefreshSurvey={props.onRefreshSurvey}
       />
     </Box>
   );

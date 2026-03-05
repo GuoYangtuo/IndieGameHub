@@ -361,4 +361,66 @@ export const activityAPI = {
   // 获取项目贡献者列表
   getProjectContributors: (projectId: string) => 
     api.get(`/projects/${projectId}/contributors`)
+};
+
+// 意见征询API
+export const surveyAPI = {
+  // 获取项目的所有征询
+  getProjectSurveys: (projectId: string) =>
+    api.get(`/surveys/project/${projectId}`),
+
+  // 获取进行中的征询（无需登录）
+  getActiveSurveys: (projectId: string) =>
+    api.get(`/surveys/project/${projectId}/active`),
+
+  // 获取单个征询详情
+  getSurveyById: (surveyId: string) =>
+    api.get(`/surveys/${surveyId}`),
+
+  // 检查用户对某征询的提交状态
+  getSurveyStatus: (surveyId: string) =>
+    api.get(`/surveys/${surveyId}/status`),
+
+  // 获取用户未提交的征询（玩家视图）
+  getPendingSurveys: (projectId: string) =>
+    api.get(`/surveys/project/${projectId}/pending`),
+
+  // 创建征询（仅项目成员）
+  createSurvey: (data: {
+    projectId: string;
+    title: string;
+    description?: string;
+    useVoting: boolean;
+    allowFreeResponse: boolean;
+    endTime?: string;
+    options?: string[];
+  }) => api.post('/surveys', data),
+
+  // 上传征询图片
+  uploadSurveyImages: (surveyId: string, formData: FormData) =>
+    api.post(`/surveys/${surveyId}/images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
+
+  // 投票
+  vote: (surveyId: string, optionId: string) =>
+    api.post(`/surveys/${surveyId}/vote`, { optionId }),
+
+  // 提交自由发言
+  respond: (surveyId: string, content: string) =>
+    api.post(`/surveys/${surveyId}/respond`, { content }),
+
+  // 同时投票和自由发言
+  submit: (surveyId: string, optionId?: string, content?: string) =>
+    api.post(`/surveys/${surveyId}/submit`, { optionId, content }),
+
+  // 结束征询（仅项目成员）
+  endSurvey: (surveyId: string) =>
+    api.post(`/surveys/${surveyId}/end`),
+
+  // 删除征询（仅创建者）
+  deleteSurvey: (surveyId: string) =>
+    api.delete(`/surveys/${surveyId}`)
 }; 

@@ -296,6 +296,89 @@ const createTables = async (): Promise<void> => {
       );
     `);
 
+    // 意见征询表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS project_surveys (
+        id VARCHAR(36) PRIMARY KEY,
+        projectId VARCHAR(36) NOT NULL,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        useVoting BOOLEAN DEFAULT FALSE,
+        allowFreeResponse BOOLEAN DEFAULT FALSE,
+        endTime TIMESTAMP NULL,
+        isManualEnd BOOLEAN DEFAULT FALSE,
+        isEnded BOOLEAN DEFAULT FALSE,
+        endedAt TIMESTAMP NULL,
+        createdBy VARCHAR(36) NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (createdBy) REFERENCES users(id)
+      );
+    `);
+
+    // 征询图片表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS survey_images (
+        id VARCHAR(36) PRIMARY KEY,
+        surveyId VARCHAR(36) NOT NULL,
+        url VARCHAR(255) NOT NULL,
+        image_order INT NOT NULL,
+        FOREIGN KEY (surveyId) REFERENCES project_surveys(id) ON DELETE CASCADE
+      );
+    `);
+
+    // 投票选项表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS survey_options (
+        id VARCHAR(36) PRIMARY KEY,
+        surveyId VARCHAR(36) NOT NULL,
+        optionText VARCHAR(200) NOT NULL,
+        optionOrder INT NOT NULL,
+        FOREIGN KEY (surveyId) REFERENCES project_surveys(id) ON DELETE CASCADE
+      );
+    `);
+
+    // 用户投票记录表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS survey_votes (
+        id VARCHAR(36) PRIMARY KEY,
+        surveyId VARCHAR(36) NOT NULL,
+        optionId VARCHAR(36) NOT NULL,
+        userId VARCHAR(36) NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_survey_user (surveyId, userId),
+        FOREIGN KEY (surveyId) REFERENCES project_surveys(id) ON DELETE CASCADE,
+        FOREIGN KEY (optionId) REFERENCES survey_options(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
+    // 用户自由发言表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS survey_responses (
+        id VARCHAR(36) PRIMARY KEY,
+        surveyId VARCHAR(36) NOT NULL,
+        userId VARCHAR(36) NOT NULL,
+        content TEXT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (surveyId) REFERENCES project_surveys(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
+    // 用户提交记录表（跟踪用户是否已提交）
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS survey_submissions (
+        id VARCHAR(36) PRIMARY KEY,
+        surveyId VARCHAR(36) NOT NULL,
+        userId VARCHAR(36) NOT NULL,
+        submittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_survey_user_submission (surveyId, userId),
+        FOREIGN KEY (surveyId) REFERENCES project_surveys(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
     conn.release();
     console.log('数据库表创建成功');
   } catch (error) {

@@ -20,6 +20,7 @@ const ProfilePage = withLoadable(() => import('./pages/ProfilePage'));
 const DonatePage = withLoadable(() => import('./pages/DonatePage'));
 const EmailVerificationPage = withLoadable(() => import('./pages/EmailVerifiedPage'));
 const AdminPage = withLoadable(() => import('./pages/AdminPage'));
+const SurveyHistoryPage = withLoadable(() => import('./pages/SurveyHistoryPage'));
 
 // 自定义滚动条全局样式
 const ScrollbarStyles = () => {
@@ -80,6 +81,8 @@ const AppRoutes = () => {
       <Route path="/projects/:slug/donate" element={<Layout><DonatePage /></Layout>} />
       <Route path="/projects/:slug" element={<Layout><ProjectDetailPage /></Layout>} />
       <Route path="/projects/:slug/settings" element={<Layout><ProjectSettingsPage /></Layout>} />
+      <Route path="/projects/:slug/surveys" element={<Layout><SurveyHistoryPage /></Layout>} />
+      <Route path="/project/:projectId/surveys" element={<Layout><SurveyHistoryPage /></Layout>} />
       <Route path="/verify-email" element={<Layout><EmailVerificationPage /></Layout>} />
       <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
       <Route path="*" element={<Navigate to="/" replace />} />

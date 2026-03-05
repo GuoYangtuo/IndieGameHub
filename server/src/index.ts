@@ -6,6 +6,7 @@ import { userRouter } from './routes/userRoutes';
 import projectRouter from './routes/projectRoutes';
 import { proposalRouter } from './routes/proposalRoutes';
 import { commentRouter } from './routes/commentRoutes';
+import { surveyRouter } from './routes/surveyRoutes';
 import { initDatabase } from './utils/dbTools';
 import dotenv from 'dotenv';
 
@@ -35,6 +36,7 @@ const initApp = async () => {
     app.use('/api/projects', projectRouter);
     app.use('/api/proposals', proposalRouter);
     app.use('/api/comments', commentRouter);
+    app.use('/api/surveys', surveyRouter);
 
     // 启动服务器
     app.listen(PORT, () => {

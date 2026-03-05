@@ -59,6 +59,9 @@ import ProjectComments from './ProjectDetailPageComponents/ProjectComments';
 import ProjectUpdateForm from './ProjectDetailPageComponents/ProjectUpdateForm';
 import RecentUpdatesSection from './ProjectDetailPageComponents/RecentUpdatesSection';
 import ProjectSidebar, { ProjectSidebarTop, ProjectSidebarBottom } from './ProjectDetailPageComponents/ProjectSidebar';
+import CreateSurveyDialog from '../components/CreateSurveyDialog';
+import SurveySidebar from '../components/SurveySidebar';
+import PendingSurveysPanel from '../components/PendingSurveysPanel';
 
 interface ProjectUpdate {
   id: string;
@@ -243,6 +246,10 @@ const ProjectDetailPage: React.FC = () => {
   // 项目贡献度列表相关状态
   const [contributors, setContributors] = useState<{ id: string; username: string; avatarUrl?: string; contribution: number }[]>([]);
   const [loadingContributors, setLoadingContributors] = useState(false);
+
+  // 意见征询相关状态
+  const [createSurveyDialogOpen, setCreateSurveyDialogOpen] = useState(false);
+  const [surveyRefreshKey, setSurveyRefreshKey] = useState(0);
 
   // 设置项目标题到导航栏，确保使用slug而不是title
   useEffect(() => {
@@ -955,6 +962,16 @@ const ProjectDetailPage: React.FC = () => {
                   </Box>
                 )}
                 
+                {/* 玩家视图：未提交的意见征询 - 非项目成员可见，未登录也可查看 */}
+                {!isMember && project && (
+                  <PendingSurveysPanel
+                    projectId={project.id}
+                    projectSlug={slug || ''}
+                    isLoggedIn={!!user}
+                    onSurveysCompleted={() => setSurveyRefreshKey(prev => prev + 1)}
+                  />
+                )}
+                
                 {/* 最近更新区域 */}
                 <RecentUpdatesSection 
                   project={project}
@@ -1062,6 +1079,9 @@ const ProjectDetailPage: React.FC = () => {
                   onOpenInfoDialog={() => setShowInfoDialog(true)}
                   contributors={contributors}
                   loadingContributors={loadingContributors}
+                  isMember={isMember}
+                  onCreateSurvey={() => setCreateSurveyDialogOpen(true)}
+                  onRefreshSurvey={() => setSurveyRefreshKey(prev => prev + 1)}
                 />
               </Box>
             </Box>
@@ -1132,6 +1152,16 @@ const ProjectDetailPage: React.FC = () => {
             }
           }}
           isDarkMode={isDarkMode}
+        />
+      )}
+
+      {/* 创建征询对话框 */}
+      {project && (
+        <CreateSurveyDialog
+          open={createSurveyDialogOpen}
+          onClose={() => setCreateSurveyDialogOpen(false)}
+          projectId={project.id}
+          onSurveyCreated={() => setSurveyRefreshKey(prev => prev + 1)}
         />
       )}
       
