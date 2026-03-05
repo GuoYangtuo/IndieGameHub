@@ -129,7 +129,7 @@ export const ProjectSidebarTop: React.FC<ProjectSidebarTopProps> = ({
                       }
                     }}
                   />
-                  {update.isVersion && (
+                  {update.isVersion == true && (
                     <Chip
                       label="封面"
                       size="small"

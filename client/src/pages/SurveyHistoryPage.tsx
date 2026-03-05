@@ -587,7 +587,7 @@ const SurveyHistoryPage: React.FC = () => {
                     size="small"
                     sx={{ fontWeight: 500 }}
                   />
-                  {selectedSurvey.useVoting && (
+                  {selectedSurvey.useVoting == true && (
                     <Chip
                       icon={<HowToVote />}
                       label="投票"
@@ -596,7 +596,7 @@ const SurveyHistoryPage: React.FC = () => {
                       sx={{ fontWeight: 500 }}
                     />
                   )}
-                  {selectedSurvey.allowFreeResponse && (
+                  {selectedSurvey.allowFreeResponse == true && (
                     <Chip
                       icon={<CommentIcon />}
                       label="发言"
@@ -652,7 +652,7 @@ const SurveyHistoryPage: React.FC = () => {
             </Box>
 
             {/* 投票结果 */}
-            {selectedSurvey.useVoting && selectedSurvey.options && selectedSurvey.options.length > 0 && (
+            {selectedSurvey.useVoting == true && selectedSurvey.options && selectedSurvey.options.length > 0 && (
               <Fade in timeout={300}>
                 <Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
@@ -683,7 +683,7 @@ const SurveyHistoryPage: React.FC = () => {
             )}
 
             {/* 发言列表 */}
-            {selectedSurvey.allowFreeResponse && selectedSurvey.responses && selectedSurvey.responses.length > 0 && (
+            {selectedSurvey.allowFreeResponse == true && selectedSurvey.responses && selectedSurvey.responses.length > 0 && (
               <Fade in timeout={400}>
                 <Box sx={{  marginTop: 3}}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>

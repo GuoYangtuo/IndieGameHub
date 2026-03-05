@@ -12,11 +12,11 @@ import {
 } from '@mui/material';
 import { 
   Poll, 
-  TextFields, 
+  BorderColor, 
   Add, 
   History, 
   CheckCircle,
-  Share
+  Link
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -153,7 +153,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
                   {survey.useVoting ? (
                     <Poll fontSize="small" color="primary" />
                   ) : (
-                    <TextFields fontSize="small" color="secondary" />
+                    <BorderColor fontSize="small" color="secondary" />
                   )}
                 </ListItemIcon>
                 <ListItemText
@@ -172,7 +172,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
                   {copiedId === survey.id ? (
                     <CheckCircle fontSize="small" color="success" />
                   ) : (
-                    <Share fontSize="small" />
+                    <Link fontSize="small" />
                   )}
                 </IconButton>
               </ListItem>
