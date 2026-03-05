@@ -975,39 +975,75 @@ const ProjectDetailPage: React.FC = () => {
                   />
                 )}
                 
-                {/* 最近更新区域 */}
-                <RecentUpdatesSection 
-                  project={project}
-                  isMember={isMember}
-                  onSetCoverImage={handleSetCoverImage}
-                />
-                
-                {/* 提案列表 */}
-                <ProposalCardsPool
-                  proposals={Array.isArray(proposals) ? proposals : []}
-                  proposalView={proposalView}
-                  proposalSort={proposalSort}
-                  selectedCategory={selectedCategory}
-                  isMember={isMember}
-                  isCreator={isCreator}
-                  user={user}
-                  proposalBounties={proposalBounties}
-                  onOpenProposalDialog={() => setOpenProposalDialog(true)}
-                  onViewModeChange={handleViewModeChange}
-                  onSortChange={setProposalSort}
-                  onCategoryChange={(category) => setSelectedCategory(category)}
-                  onProposalLike={handleProposalLike}
-                  onProposalClose={handleProposalClose}
-                  onProposalDelete={handleProposalDelete}
-                  onAddToTaskQueue={handleAddToTaskQueue}
-                  onAddProposalBounty={handleAddProposalBounty}
-                  onOpenProposalDetail={handleOpenProposalDetail}
-                />
+                {/* 根据用户角色调整布局：成员交换位置，非成员保持原样 */}
+                {isMember ? (
+                  <>
+                    {/* 提案列表 - 项目成员在上 */}
+                    <ProposalCardsPool
+                      proposals={Array.isArray(proposals) ? proposals : []}
+                      proposalView={proposalView}
+                      proposalSort={proposalSort}
+                      selectedCategory={selectedCategory}
+                      isMember={isMember}
+                      isCreator={isCreator}
+                      user={user}
+                      proposalBounties={proposalBounties}
+                      onOpenProposalDialog={() => setOpenProposalDialog(true)}
+                      onViewModeChange={handleViewModeChange}
+                      onSortChange={setProposalSort}
+                      onCategoryChange={(category) => setSelectedCategory(category)}
+                      onProposalLike={handleProposalLike}
+                      onProposalClose={handleProposalClose}
+                      onProposalDelete={handleProposalDelete}
+                      onAddToTaskQueue={handleAddToTaskQueue}
+                      onAddProposalBounty={handleAddProposalBounty}
+                      onOpenProposalDetail={handleOpenProposalDetail}
+                    />
+
+                    {/* 最近更新区域 - 项目成员在下 */}
+                    <RecentUpdatesSection 
+                      project={project}
+                      isMember={isMember}
+                      onSetCoverImage={handleSetCoverImage}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {/* 最近更新区域 - 非项目成员在上 */}
+                    <RecentUpdatesSection 
+                      project={project}
+                      isMember={isMember}
+                      onSetCoverImage={handleSetCoverImage}
+                    />
+                    
+                    {/* 提案列表 - 非项目成员在下 */}
+                    <ProposalCardsPool
+                      proposals={Array.isArray(proposals) ? proposals : []}
+                      proposalView={proposalView}
+                      proposalSort={proposalSort}
+                      selectedCategory={selectedCategory}
+                      isMember={isMember}
+                      isCreator={isCreator}
+                      user={user}
+                      proposalBounties={proposalBounties}
+                      onOpenProposalDialog={() => setOpenProposalDialog(true)}
+                      onViewModeChange={handleViewModeChange}
+                      onSortChange={setProposalSort}
+                      onCategoryChange={(category) => setSelectedCategory(category)}
+                      onProposalLike={handleProposalLike}
+                      onProposalClose={handleProposalClose}
+                      onProposalDelete={handleProposalDelete}
+                      onAddToTaskQueue={handleAddToTaskQueue}
+                      onAddProposalBounty={handleAddProposalBounty}
+                      onOpenProposalDetail={handleOpenProposalDetail}
+                    />
+                  </>
+                )}
 
                 {/* 添加非成员用户也可见的任务队列区域，放在提案列表之后 */}
                 {!isMember && Array.isArray(proposals) && proposals.filter(p => p.status === 'queued').length > 0 && (
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom>当前任务队列</Typography>
+                    <Typography variant="h6" gutterBottom>当前工作重心（任务队列）</Typography>
                     <Paper variant="outlined" sx={{ p: 0 }}>
                       <List component="nav" disablePadding>
                         {proposals

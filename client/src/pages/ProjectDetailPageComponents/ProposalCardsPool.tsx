@@ -334,7 +334,7 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
   };
 
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box sx={{ mb: 1 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">许愿池</Typography>
         
