@@ -339,6 +339,44 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
         <Typography variant="h6">许愿池</Typography>
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {/* 排序选项切换按钮 */}
+          <Chip
+            icon={
+              proposalSort === 'random' ? <Shuffle fontSize="small" /> : 
+              proposalSort === 'time' ? <Schedule fontSize="small" /> : 
+              <TrendingUp fontSize="small" />
+            }
+            label={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {proposalSort === 'random' ? "随机排序" : proposalSort === 'time' ? "时间排序" : "热度排序"}
+              </Box>
+            }
+            onClick={() => {
+              if (proposalSort === 'random') onSortChange('time');
+              else if (proposalSort === 'time') onSortChange('hot');
+              else onSortChange('random');
+            }}
+            clickable
+            color="primary"
+            variant="outlined"
+            sx={{ mr: 1, height: '32px'  }}
+          />
+          
+          {/* 视图切换按钮 */}
+          <Chip
+            icon={proposalView === 'cards' ? <ViewModule fontSize="small" /> : <ViewList fontSize="small" />}
+            label={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {proposalView === 'cards' ? "卡片视图" : "列表视图"}
+              </Box>
+            }
+            onClick={() => onViewModeChange(proposalView === 'cards' ? 'list' : 'cards')}
+            clickable
+            color="primary"
+            variant="outlined"
+            sx={{ height: '32px', mr: 2 }}
+          />
+
           {user && (
             <Button
               variant="contained"
@@ -361,7 +399,7 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
           
           {/* 成员可见的分类筛选 */}
           {isMember && (
-            <Box sx={{ mr: 2 }}>
+            <Box sx={{  }}>
               <FormControl sx={{ minWidth: 120 }}>
                 <InputLabel id="category-select-label" size="small">提案分类</InputLabel>
                 <Select
@@ -380,44 +418,6 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
               </FormControl>
             </Box>
           )}
-          
-          {/* 排序选项切换按钮 */}
-          <Chip
-            icon={
-              proposalSort === 'random' ? <Shuffle fontSize="small" /> : 
-              proposalSort === 'time' ? <Schedule fontSize="small" /> : 
-              <TrendingUp fontSize="small" />
-            }
-            label={
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {proposalSort === 'random' ? "随机排序" : proposalSort === 'time' ? "时间排序" : "热度排序"}
-              </Box>
-            }
-            onClick={() => {
-              if (proposalSort === 'random') onSortChange('time');
-              else if (proposalSort === 'time') onSortChange('hot');
-              else onSortChange('random');
-            }}
-            clickable
-            color="primary"
-            variant="outlined"
-            sx={{ mr: 1, height: '30px'  }}
-          />
-          
-          {/* 视图切换按钮 */}
-          <Chip
-            icon={proposalView === 'cards' ? <ViewModule fontSize="small" /> : <ViewList fontSize="small" />}
-            label={
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {proposalView === 'cards' ? "卡片视图" : "列表视图"}
-              </Box>
-            }
-            onClick={() => onViewModeChange(proposalView === 'cards' ? 'list' : 'cards')}
-            clickable
-            color="primary"
-            variant="outlined"
-            sx={{ height: '30px' }}
-          />
         </Box>
       </Box>
       
