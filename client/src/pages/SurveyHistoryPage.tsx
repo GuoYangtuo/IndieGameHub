@@ -511,8 +511,8 @@ const SurveyHistoryPage: React.FC = () => {
         </List>
 
         {surveys.length === 0 && (
-          <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Campaign sx={{ fontSize: 48, color: 'text.disabled', mb: 2, opacity: 0.5 }} />
+          <Box sx={{ p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
+            <Campaign sx={{ fontSize: 24, color: 'text.disabled', opacity: 0.5 }} />
             <Typography color="text.secondary" sx={{ fontSize: '0.9rem' }}>
               暂无意见征询
             </Typography>

@@ -216,7 +216,7 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
       </Box>
       
       {/* 版本更新 */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 2 }}>
         <Typography variant="h6" gutterBottom>版本更新</Typography>
         {project.updates.length === 0 || project.updates.filter(update => update.isVersion).length === 0 ? (
           <Alert severity="info">暂无版本更新</Alert>

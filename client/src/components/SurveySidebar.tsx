@@ -86,9 +86,17 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   };
 
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box>
       {/* 标题和按钮 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        bgcolor: 'rgba(25, 118, 210, 0.18)',
+        borderRadius: 1,
+        px: 1.5,
+        py: 0.75
+      }}>
         <Typography variant="subtitle1" fontWeight="bold">
           意见征询
         </Typography>
@@ -109,31 +117,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
           <CircularProgress size={24} />
         </Box>
       ) : surveys.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            暂无进行中的意见征询
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {isMember && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Add />}
-                onClick={onCreateSurvey}
-              >
-                创建征询
-              </Button>
-            )}
-            <Button
-              variant="text"
-              size="small"
-              startIcon={<History />}
-              onClick={handleViewHistory}
-            >
-              查看历史
-            </Button>
-          </Box>
-        </Box>
+        null
       ) : (
         <>
           <List dense>

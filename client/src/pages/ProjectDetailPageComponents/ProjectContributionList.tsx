@@ -40,7 +40,7 @@ const ProjectContributionList: React.FC<ProjectContributionListProps> = ({
       elevation={0}
       sx={{
         p: 2,
-        mt: 3,
+        mt: 2,
         borderRadius: 1,
         border: theme => `1px solid ${theme.palette.divider}`,
         transition: 'box-shadow 0.2s ease-in-out',
@@ -48,7 +48,8 @@ const ProjectContributionList: React.FC<ProjectContributionListProps> = ({
           boxShadow: theme => theme.palette.mode === 'dark'
             ? '0 3px 6px rgba(149, 157, 165, 0.1)'
             : '0 3px 6px rgba(149, 157, 165, 0.2)',
-        }
+        },
+        bgcolor: 'background.default',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

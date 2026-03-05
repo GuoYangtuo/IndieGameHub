@@ -327,7 +327,7 @@ const PendingSurveysPanel: React.FC<PendingSurveysProps> = ({
                     fullWidth
                     multiline
                     rows={3}
-                    placeholder="请输入您的意见..."
+                    placeholder="我有更好的点子..."
                     value={freeResponse}
                     onChange={(e) => setFreeResponse(e.target.value)}
                   />
