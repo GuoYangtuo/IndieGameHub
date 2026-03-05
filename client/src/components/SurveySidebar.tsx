@@ -61,9 +61,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
 
   // 监听onRefresh变化时重新加载
   useEffect(() => {
-    if (onRefresh) {
-      loadSurveys();
-    }
+    loadSurveys();
   }, [onRefresh]);
 
   const loadSurveys = async () => {
