@@ -144,8 +144,7 @@ const SortableThumbnail = ({ image, isActive, isOwner, onDelete }: {
         width: 80,
         height: 60,
         position: 'relative',
-        mr: 1,
-        borderRadius: 1,
+        borderRadius: 0.5,
         overflow: 'hidden',
         '&:hover': {
           transform: 'scale(1.05)'
@@ -459,9 +458,9 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
       PaperProps={{ 
         sx: { 
           minHeight: { xs: '90vh', md: '80vh' }, 
-          maxHeight: { xs: '95vh', md: '90vh' }, 
-          width: { xs: '95%', md: '80%' }, 
-          maxWidth: '1200px',
+          maxHeight: { xs: '90vh', md: '85vh' }, 
+          width: { xs: '90%', md: '85%' }, 
+          maxWidth: '1400px',
           borderRadius: 2,
           overflow: 'hidden',
           position: 'relative',
@@ -589,8 +588,6 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
               {/* 缩略图区域 */}
               <Box 
                 sx={{ 
-                  px: 2,
-                  pb: 2,
                   display: 'flex', 
                   overflowX: 'auto',
                   overflowY: 'hidden',
@@ -675,8 +672,7 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
               overflowY: 'auto',
               minHeight: 0,
               bgcolor: 'background.paper',
-              borderLeft: { xs: 'none', md: '1px solid' },
-              borderColor: 'divider',
+              borderLeft: 'none',
               '&::-webkit-scrollbar': {
                 width: '6px',
               },
