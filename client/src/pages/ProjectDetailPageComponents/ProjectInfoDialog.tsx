@@ -2,10 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
   Typography,
   Box,
   IconButton,
@@ -14,20 +11,19 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Tooltip,
   CircularProgress,
   Paper,
   Divider,
   useTheme
 } from '@mui/material';
 import { 
-  Close, 
   ArrowBackIos, 
   ArrowForwardIos, 
   Add,
   Delete,
   Info,
-  Group
+  Group,
+  Close
 } from '@mui/icons-material';
 import {
   DndContext,
@@ -235,6 +231,7 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [displayImages, setDisplayImages] = useState<ProjectImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageScale, setImageScale] = useState(1);
   
   // 设置初始值
   React.useEffect(() => {
@@ -436,12 +433,21 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
     setCurrentImageIndex((prev) => 
       prev > 0 ? prev - 1 : displayImages.length - 1
     );
+    setImageScale(1);
   };
   
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => 
       prev < displayImages.length - 1 ? prev + 1 : 0
     );
+    setImageScale(1);
+  };
+
+  // 处理滚轮缩放图片
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setImageScale((prev) => Math.max(0.5, Math.min(3, prev + delta)));
   };
   
   return (
@@ -452,53 +458,76 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
       fullWidth
       PaperProps={{ 
         sx: { 
-          minHeight: '80vh', 
-          maxHeight: '90vh', 
-          width: '80%', 
+          minHeight: { xs: '90vh', md: '80vh' }, 
+          maxHeight: { xs: '95vh', md: '90vh' }, 
+          width: { xs: '95%', md: '80%' }, 
           maxWidth: '1200px',
           borderRadius: 2,
-          overflow: 'hidden'
-        } 
+          overflow: 'hidden',
+          position: 'relative',
+          m: { xs: 1, md: 2 },
+          display: 'flex',
+          flexDirection: 'column'
+        }
       }}
     >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        py: 1.5
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Info sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="h6">{project?.name}</Typography>
-        </Box>
-        <IconButton onClick={onClose} size="small">
-          <Close />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ p: 0 }}>
+      <IconButton
+        onClick={onClose}
+        sx={{
+          position: 'absolute',
+          top: { xs: 8, md: 16 },
+          right: { xs: 8, md: 16 },
+          zIndex: 1000,
+          color: 'white',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          '&:hover': {
+            backgroundColor: 'rgba(0,0,0,0.7)',
+          }
+        }}
+      >
+        <Close />
+      </IconButton>
+      <DialogContent sx={{ p: 0, overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {project && (
-          <Box>
-            {/* 图片查看器 */}
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.8)',
-                position: 'relative',
-                borderRadius: 0
-              }}
-            >
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' },
+            flex: 1,
+            minHeight: 0
+          }}>
+            {/* 左侧图片查看器 */}
+            <Box sx={{ 
+              flex: { xs: 'none', md: '1 1 70%' },
+              minHeight: { xs: 300, md: 0 },
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}>
+              <Paper 
+                elevation={0} 
+                sx={{ 
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.8)',
+                  position: 'relative',
+                  borderRadius: { xs: 0, md: 0 },
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden'
+                }}
+              >
               {/* 主图片显示区 */}
               <Box 
+                onWheel={handleWheel}
                 sx={{ 
-                  height: 400, 
+                  flex: 1,
                   display: 'flex', 
                   justifyContent: 'center',
                   alignItems: 'center',
                   position: 'relative',
                   px: 2,
-                  py: 2
+                  py: 2,
+                  overflow: 'hidden',
+                  minHeight: 0
                 }}
               >
                 {displayImages.length > 0 ? (
@@ -511,7 +540,10 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                         maxHeight: '100%',
                         objectFit: 'contain',
                         borderRadius: 1,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                        transform: `scale(${imageScale})`,
+                        transition: 'transform 0.1s ease-out',
+                        cursor: 'zoom-in'
                       }}
                     />
                     {displayImages.length > 1 && (
@@ -563,6 +595,7 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                   overflowX: 'auto',
                   overflowY: 'hidden',
                   maxHeight: '80px',
+                  flexShrink: 0,
                   '&::-webkit-scrollbar': {
                     height: '6px',
                   },
@@ -634,7 +667,27 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                 )}
               </Box>
             </Paper>
+            </Box>
             
+            {/* 右侧可滚动区域 */}
+            <Box sx={{ 
+              flex: { xs: 'none', md: '1 1 30%' },
+              overflowY: 'auto',
+              minHeight: 0,
+              bgcolor: 'background.paper',
+              borderLeft: { xs: 'none', md: '1px solid' },
+              borderColor: 'divider',
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.1)',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                borderRadius: '3px',
+              }
+            }}>
             {/* 项目描述 */}
             <Box sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
@@ -753,17 +806,9 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
               )}
             </Box>
           </Box>
+          </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-        <Button 
-          onClick={onClose} 
-          variant="contained"
-          color="primary"
-        >
-          关闭
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
