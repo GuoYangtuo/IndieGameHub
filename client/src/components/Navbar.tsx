@@ -162,7 +162,7 @@ const Navbar: React.FC = () => {
 
   // 处理项目点击
   const handleProjectClick = (slug: string) => {
-    navigate(`/${slug}`);
+    navigate(`/projects/${slug}`);
     setProjectsMenuOpen(false);
   };
 
@@ -187,7 +187,7 @@ const Navbar: React.FC = () => {
       return (
         <Button
           component={RouterLink}
-          to={`/${userProjects[0].slug}`}
+          to={`/projects/${userProjects[0].slug}`}
           sx={{ my: 2, color: 'white', display: 'block' }}
         >
           我的项目
@@ -307,7 +307,7 @@ const Navbar: React.FC = () => {
             variant="h6"
             noWrap
             component={RouterLink}
-            to={slug ? `/${slug}` : '#'} 
+            to={slug ? `/projects/${slug}` : '/'} 
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -347,7 +347,7 @@ const Navbar: React.FC = () => {
                   color="secondary"
                   startIcon={<FavoriteIcon />}
                   component={RouterLink}
-                  to={`/${currentSlug}/donate`}
+                  to={`/projects/${currentSlug}/donate`}
                   sx={{ ml: 1, fontWeight: 'bold', boxShadow: 3 }}
                 >
                   捐赠

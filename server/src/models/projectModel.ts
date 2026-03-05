@@ -153,9 +153,10 @@ export const findProjectBySlug = async (slug: string): Promise<Project | null> =
 export const findProjectsByUserId = async (userId: string): Promise<Project[]> => {
   try {
     const projects = await query(
-      `SELECT p.* FROM projects p 
+      `SELECT DISTINCT p.* FROM projects p 
        LEFT JOIN project_members pm ON p.id = pm.projectId 
-       WHERE p.createdBy = ? OR pm.userId = ?`,
+       WHERE p.createdBy = ? OR pm.userId = ?
+       ORDER BY p.createdAt DESC`,
       [userId, userId]
     );
     return projects;
