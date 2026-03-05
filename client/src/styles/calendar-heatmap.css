@@ -8,8 +8,28 @@
 .react-calendar-heatmap rect {
   stroke-width: 0;
   rx: 1px;
-  height: 7px;
-  width: 7px;
+  height: 8px;
+  width: 8px;
+}
+
+.react-calendar-heatmap .highlighted {
+  stroke: #1976d2;
+  stroke-width: 1px;
+  cursor: pointer;
+}
+
+/* 亮色模式下 highlighted 样式 */
+html:not([data-theme='dark']) .react-calendar-heatmap .highlighted {
+  stroke: #1976d2;
+  stroke-width: 1px;
+  cursor: pointer;
+}
+
+/* 暗色模式下 highlighted 样式 */
+[data-theme='dark'] .react-calendar-heatmap .highlighted {
+  stroke: #64b5f6;
+  stroke-width: 1px;
+  cursor: pointer;
 }
 
 .react-calendar-heatmap text {
@@ -17,17 +37,16 @@
   fill: #aaa;
 }
 
-/* 添加选中样式 */
-.react-calendar-heatmap rect.highlighted {
-  stroke: #1976d2;
-  stroke-width: 1px;
-  cursor: pointer;
-}
-
 /* 热力图颜色样式 - 亮色模式 */
 html:not([data-theme='dark']) .react-calendar-heatmap rect {
   stroke: transparent;
   stroke-width: 0;
+}
+
+html:not([data-theme='dark']) .react-calendar-heatmap rect:hover {
+  stroke: #1976d2;
+  stroke-width: 1px;
+  cursor: pointer;
 }
 
 html:not([data-theme='dark']) .react-calendar-heatmap .color-scale-1 { fill: #d6e685; }
@@ -40,6 +59,12 @@ html:not([data-theme='dark']) .react-calendar-heatmap .color-empty { fill: #eaea
 [data-theme='dark'] .react-calendar-heatmap rect {
   stroke: transparent;
   stroke-width: 0;
+}
+
+[data-theme='dark'] .react-calendar-heatmap rect:hover {
+  stroke: #1976d2;
+  stroke-width: 1px;
+  cursor: pointer;
 }
 
 [data-theme='dark'] .react-calendar-heatmap .color-scale-1 { fill: #4f8c39; }
@@ -57,21 +82,11 @@ html:not([data-theme='dark']) .react-calendar-heatmap .color-empty { fill: #eaea
   .react-calendar-heatmap text {
     font-size: 5px;
   }
-  
-  .react-calendar-heatmap rect {
-    height: 7px;
-    width: 7px;
-  }
 }
 
 @media (max-width: 600px) {
   .react-calendar-heatmap text {
     display: none;
-  }
-  
-  .react-calendar-heatmap rect {
-    height: 6px;
-    width: 6px;
   }
 }
 
@@ -86,3 +101,7 @@ html:not([data-theme='dark']) .react-calendar-heatmap .color-empty { fill: #eaea
   width: 100%;
   overflow: visible;
 } 
+
+.react-calendar-heatmap rect:focus {
+  outline: none;
+}

@@ -467,7 +467,7 @@ const Navbar: React.FC = () => {
                             minWidth: 180,
                             overflow: 'visible',
                             filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                            '&:before': {
+                            /*'&:before': {
                               content: '""',
                               display: 'block',
                               position: 'absolute',
@@ -478,7 +478,7 @@ const Navbar: React.FC = () => {
                               bgcolor: 'background.paper',
                               transform: 'translateY(-50%) rotate(45deg)',
                               zIndex: 0,
-                            },
+                            },*/
                           }}
                         >
                           <MenuList autoFocusItem={false}>
