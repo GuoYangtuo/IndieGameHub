@@ -103,7 +103,7 @@ const VoteResultItem: React.FC<{
         sx={{
           p: 2,
           mb: 1.5,
-          borderRadius: 2,
+          borderRadius: 1,
           border: '1px solid',
           borderColor: 'divider',
           bgcolor: 'background.paper',
@@ -182,7 +182,7 @@ const ResponseCard: React.FC<{ response: SurveyResponse; index: number }> = ({ r
       <Paper
         sx={{
           p: 2,
-          bgcolor: 'background.paper',
+          bgcolor: 'transparent',
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: 2,
@@ -241,23 +241,16 @@ const StatCard: React.FC<{
     sx={{
       display: 'flex',
       alignItems: 'center',
-      gap: 1.5,
-      p: 1.5,
-      borderRadius: 1.5,
-      bgcolor: alpha(color, 0.1),
-      border: '1px solid',
-      borderColor: alpha(color, 0.2),
+      gap: 1,
+      p: 1,
+      borderRadius: 1,
+      bgcolor: alpha(color, 0.08),
     }}
   >
     <Box sx={{ color, opacity: 0.8 }}>{icon}</Box>
-    <Box>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
-        {label}
-      </Typography>
-      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-        {value}
-      </Typography>
-    </Box>
+    <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+      {label} {value}
+    </Typography>
   </Box>
 );
 
@@ -391,7 +384,7 @@ const SurveyHistoryPage: React.FC = () => {
           borderRight: '1px solid',
           borderColor: 'divider',
           overflow: 'auto',
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -532,15 +525,7 @@ const SurveyHistoryPage: React.FC = () => {
         {selectedSurvey ? (
           <Box sx={{ maxWidth: 900, mx: 'auto' }}>
             {/* 主卡片 */}
-            <Paper
-              sx={{
-                p: 4,
-                mb: 3,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-              }}
-            >
+            <Box>
               {/* 标题区 */}
               <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
@@ -629,7 +614,7 @@ const SurveyHistoryPage: React.FC = () => {
                   sx={{
                     p: 2.5,
                     bgcolor: 'action.hover',
-                    borderRadius: 2,
+                    borderRadius: 1,
                     mb: 3,
                   }}
                 >
@@ -664,20 +649,12 @@ const SurveyHistoryPage: React.FC = () => {
                   </ImageList>
                 </Box>
               )}
-            </Paper>
+            </Box>
 
             {/* 投票结果 */}
             {selectedSurvey.useVoting && selectedSurvey.options && selectedSurvey.options.length > 0 && (
               <Fade in timeout={300}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    mb: 3,
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                  }}
-                >
+                <Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
                     <HowToVote sx={{ color: 'primary.main', fontSize: 28 }} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -701,21 +678,14 @@ const SurveyHistoryPage: React.FC = () => {
                         index={idx}
                       />
                     ))}
-                </Paper>
+                </Box>
               </Fade>
             )}
 
             {/* 发言列表 */}
             {selectedSurvey.allowFreeResponse && selectedSurvey.responses && selectedSurvey.responses.length > 0 && (
               <Fade in timeout={400}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                  }}
-                >
+                <Box sx={{  marginTop: 3}}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
                     <CommentIcon sx={{ color: 'secondary.main', fontSize: 28 }} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -733,7 +703,7 @@ const SurveyHistoryPage: React.FC = () => {
                       <ResponseCard key={response.id} response={response} index={idx} />
                     ))}
                   </Stack>
-                </Paper>
+                </Box>
               </Fade>
             )}
           </Box>
