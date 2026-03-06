@@ -1,26 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Card,
-  CardContent,
-  CardActions,
   Typography,
-  Button,
   CardActionArea,
   CardMedia,
   Box,
-  Chip,
-  Stack
+  Chip
 } from '@mui/material';
-import { Link as LinkIcon, Code, Update as UpdateIcon } from '@mui/icons-material';
-
-interface ProjectUpdate {
-  id: string;
-  content: string;
-  demoLink?: string;
-  createdAt: string;
-  imageUrl?: string;
-}
+import { Update as UpdateIcon } from '@mui/icons-material';
 
 interface ProjectCardProps {
   id: string;
@@ -28,7 +15,7 @@ interface ProjectCardProps {
   slug: string;
   description?: string;
   demoLink?: string;
-  updates?: ProjectUpdate[];
+  latestUpdateAt?: string;
   createdAt: string;
   coverImage?: string;
 }
@@ -37,29 +24,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   name,
   slug,
   description = '',
-  demoLink,
-  updates = [],
-  createdAt,
+  latestUpdateAt,
   coverImage
 }) => {
-  const navigate = useNavigate();
-
-  // 优先使用项目封面图片，如果没有则查找更新中的图片
-  const projectImage = coverImage || updates?.find(update => update.imageUrl)?.imageUrl;
-
   const handleCardClick = () => {
-    // 打开新标签页并带上showInfo=true参数
     window.open(`/projects/${slug}?showInfo=true`, '_blank');
   };
 
   // 计算更新日期，格式化为"最近更新于XX天前"
   const getLastUpdateText = () => {
-    if (updates && updates.length > 0) {
-      const latestUpdate = updates.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0];
-      
-      const updateDate = new Date(latestUpdate.createdAt);
+    if (latestUpdateAt) {
+      const updateDate = new Date(latestUpdateAt);
       const today = new Date();
       const diffTime = Math.abs(today.getTime() - updateDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -73,48 +48,101 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <Card 
       sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        transition: 'transform 0.2s ease-in-out',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 2,
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         '&:hover': {
-          transform: 'translateY(-4px)'
+          transform: 'translateY(-4px)',
+          boxShadow: 6
         }
       }}
     >
-      <CardActionArea onClick={handleCardClick} sx={{ flexGrow: 1 }}>
-        {projectImage && (
+      <CardActionArea onClick={handleCardClick}>
+        {coverImage ? (
           <CardMedia
             component="img"
-            height="180"
-            image={projectImage}
+            image={coverImage}
             alt={name}
-            sx={{ objectFit: 'cover' }}
+            sx={{ 
+              objectFit: 'cover',
+              width: '100%',
+              display: 'block'
+            }}
           />
-        )}
-        <CardContent sx={{ py: 2, px: 2.5 }}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-            <Code fontSize="small" color="primary" />
+        ) : (
+          <Box
+            sx={{
+              width: '100%',
+              paddingTop: '56.25%', // 16:9 比例
+              bgcolor: theme => theme.palette.mode === 'dark' 
+                ? 'rgba(255,255,255,0.05)' 
+                : 'rgba(0,0,0,0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
             <Typography 
-              variant="h6" 
-              component="div" 
+              variant="h5" 
               sx={{ 
-                fontWeight: 600,
-                color: theme => theme.palette.mode === 'dark' ? '#58a6ff' : '#0969da'
+                fontWeight: 700,
+                color: theme => theme.palette.mode === 'dark' 
+                  ? 'rgba(255,255,255,0.15)' 
+                  : 'rgba(0,0,0,0.1)',
+                textTransform: 'uppercase',
+                letterSpacing: 2,
+                position: 'absolute'
               }}
             >
-              {name}
+              {name.substring(0, 2)}
             </Typography>
-          </Stack>
+          </Box>
+        )}
+        
+        {/* 悬停叠加层 */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: theme => 
+              theme.palette.mode === 'dark'
+                ? 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)',
+            padding: 2,
+            pt: 6,
+            opacity: 0,
+            transition: 'opacity 0.3s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            height: '100%',
+            '.MuiCard-root:hover &': {
+              opacity: 1
+            }
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              fontWeight: 600,
+              color: '#fff',
+              mb: 0.5
+            }}
+          >
+            {name}
+          </Typography>
           
           <Typography 
             variant="body2" 
-            color="text.secondary" 
             sx={{ 
-              height: '2.5em', 
+              color: 'rgba(255,255,255,0.85)', 
               overflow: 'hidden', 
               textOverflow: 'ellipsis', 
-              mb: 2,
+              mb: 1,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical'
@@ -123,42 +151,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {description && description.length > 120 ? `${description.substring(0, 120)}...` : description}
           </Typography>
 
-          <Box sx={{ mt: 'auto' }}>
-            <Chip
-              size="small"
-              icon={<UpdateIcon fontSize="small" />}
-              label={getLastUpdateText()}
-              variant="outlined"
-              sx={{ 
-                height: 24, 
-                fontSize: '0.75rem',
-                color: 'text.secondary'
-              }}
-            />
-          </Box>
-        </CardContent>
-      </CardActionArea>
-      
-      <CardActions sx={{ py: 1, px: 2, bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(13, 17, 23, 0.3)' : 'rgba(246, 248, 250, 0.5)' }}>
-        {demoLink && (
-          <Button 
-            size="small" 
-            startIcon={<LinkIcon />}
-            href={demoLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="outlined"
-            color="primary"
+          <Chip
+            size="small"
+            icon={<UpdateIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.7) !important' }} />}
+            label={getLastUpdateText()}
             sx={{ 
-              ml: 0, 
-              fontWeight: 'medium',
-              fontSize: '0.8125rem'
+              height: 24, 
+              fontSize: '0.75rem',
+              color: 'rgba(255,255,255,0.9)',
+              bgcolor: 'rgba(255,255,255,0.15)',
+              '& .MuiChip-icon': {
+                color: 'rgba(255,255,255,0.7)'
+              }
             }}
-          >
-            下载Demo
-          </Button>
-        )}
-      </CardActions>
+          />
+        </Box>
+      </CardActionArea>
     </Card>
   );
 };

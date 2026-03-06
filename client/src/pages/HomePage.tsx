@@ -46,7 +46,7 @@ interface Project {
   createdAt: string;
   coverImage?: string;
   projectBalance?: number;
-  updates: ProjectUpdate[];
+  latestUpdateAt?: string;
 }
 
 // 项目更新接口
@@ -774,20 +774,28 @@ const HomePage: React.FC = () => {
           ) : projects.length === 0 ? (
             <Alert severity="info">暂无项目</Alert>
           ) : (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
+            <Box
+              sx={{
+                columnCount: { xs: 1, sm: 2, md: 3, lg: 4 },
+                columnGap: '16px',
+                '& > *': {
+                  breakInside: 'avoid',
+                  marginBottom: '16px'
+                }
+              }}
+            >
               {projects.map((project) => (
-                <Box key={project.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' }, p: 1.5 }}>
-                  <ProjectCard
-                    id={project.id}
-                    name={project.name}
-                    slug={project.slug}
-                    description={project.description}
-                    demoLink={project.demoLink}
-                    updates={project.updates}
-                    createdAt={project.createdAt}
-                    coverImage={project.coverImage}
-                  />
-                </Box>
+                <ProjectCard
+                  key={project.id}
+                  id={project.id}
+                  name={project.name}
+                  slug={project.slug}
+                  description={project.description}
+                  demoLink={project.demoLink}
+                  latestUpdateAt={project.latestUpdateAt}
+                  createdAt={project.createdAt}
+                  coverImage={project.coverImage}
+                />
               ))}
             </Box>
           )}
@@ -797,7 +805,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg">
       {/* 模块管理面板 */}
       {user && (
         <Paper 

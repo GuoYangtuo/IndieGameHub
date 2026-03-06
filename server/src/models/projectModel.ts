@@ -15,6 +15,7 @@ export interface Project {
   projectBalance: number; // 项目账户存款额
   githubRepoUrl?: string; // GitHub仓库地址
   githubAccessToken?: string; // GitHub访问密钥
+  latestUpdateAt?: string; // 最新更新时间
 }
 
 // 项目成员接口
@@ -119,7 +120,14 @@ const generateSlug = (name: string): string => {
 // 获取所有项目
 export const getAllProjects = async (): Promise<Project[]> => {
   try {
-    return await query('SELECT * FROM projects');
+    const projects = await query(`
+      SELECT p.*, 
+        (SELECT MAX(createdAt) FROM project_updates WHERE projectId = p.id) as latestUpdateAt
+      FROM projects p
+      ORDER BY p.createdAt DESC
+    `);
+    
+    return projects as Project[];
   } catch (error) {
     console.error('读取项目数据失败:', error);
     return [];
