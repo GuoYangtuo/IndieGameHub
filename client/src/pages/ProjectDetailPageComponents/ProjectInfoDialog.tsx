@@ -690,14 +690,7 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                 <Info fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
                 项目描述
               </Typography>
-              <Paper elevation={0} sx={{ 
-                p: 2, 
-                borderRadius: 2, 
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                border: '1px solid',
-                borderColor: 'divider'
-              }}>
-                <Box data-color-mode={isDarkMode ? "dark" : "light"} sx={{ 
+              <Box data-color-mode={isDarkMode ? "dark" : "light"} sx={{ 
                   mb: 0,
                   '& .wmde-markdown': { 
                     backgroundColor: 'transparent !important',
@@ -732,7 +725,6 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                 }}>
                   <MDEditor.Markdown source={project.description || '暂无项目描述'} />
                 </Box>
-              </Paper>
             </Box>
             
             <Divider sx={{ mx: 3 }} />
@@ -744,13 +736,7 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                 项目成员
               </Typography>
               {project.members && project.members.length > 0 ? (
-                <Paper elevation={0} sx={{ 
-                  borderRadius: 2, 
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                  border: '1px solid',
-                  borderColor: 'divider'
-                }}>
-                  <List>
+                <List>
                     {project.members.map((member) => (
                       <ListItem 
                         key={member.id}
@@ -794,7 +780,6 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
                       </ListItem>
                     ))}
                   </List>
-                </Paper>
               ) : (
                 <Typography variant="body1" color="text.secondary">
                   暂无成员信息
