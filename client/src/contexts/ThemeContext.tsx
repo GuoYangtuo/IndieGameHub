@@ -259,6 +259,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ? '0 8px 24px rgba(0, 0, 0, 0.4)' 
               : '0 8px 24px rgba(149, 157, 165, 0.2)',
             border: `1px solid ${isDarkMode ? '#30363d' : '#d0d7de'}`,
+            "--Paper-overlay": "transparent !important",
           },
         },
       },

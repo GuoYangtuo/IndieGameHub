@@ -109,7 +109,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </Box>
         )}
         
-        {/* 悬停叠加层 */}
+        {/* 固定叠加层 （之前是悬停显示） */}
         <Box
           sx={{
             position: 'absolute',
@@ -118,19 +118,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             right: 0,
             background: theme => 
               theme.palette.mode === 'dark'
-                ? 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)'
-                : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)',
+                ? 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 30%, transparent 60%)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 30%, transparent 60%)',
             padding: 2,
             pt: 6,
-            opacity: 0,
-            transition: 'opacity 0.3s ease',
+            opacity: 1,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-end',
-            height: '100%',
-            '.MuiCard-root:hover &': {
-              opacity: 1
-            }
+            height: '100%'
           }}
         >
           <Typography 
