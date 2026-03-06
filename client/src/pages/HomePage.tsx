@@ -47,6 +47,7 @@ interface Project {
   coverImage?: string;
   projectBalance?: number;
   latestUpdateAt?: string;
+  updates?: ProjectUpdate[];
   tags?: Array<{
     id: string;
     name: string;

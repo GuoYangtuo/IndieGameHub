@@ -172,30 +172,31 @@ const Navbar: React.FC = () => {
     if (userProjects.length === 0) {
       return null;
     }
-    
-    // 检查当前是否正在查看自己的项目
-    if (projectTitle) {
-      const currentProject = userProjects.find(p => p.name === projectTitle);
-      if (currentProject) {
-        // 如果当前正在查看自己的项目，不显示"我的项目"按钮
-        return null;
-      }
+
+    // 先从列表中剔除当前正在查看的项目（如果有）
+    const availableProjects = projectTitle
+      ? userProjects.filter(p => p.name !== projectTitle)
+      : userProjects;
+
+    // 如果剔除后没有剩余项目，则不显示“我的项目”入口
+    if (availableProjects.length === 0) {
+      return null;
     }
-    
-    // 如果只有一个项目，显示直接链接
-    if (userProjects.length === 1) {
+
+    // 如果只有一个可切换的项目，显示直接链接
+    if (availableProjects.length === 1) {
       return (
         <Button
           component={RouterLink}
-          to={`/projects/${userProjects[0].slug}`}
+          to={`/projects/${availableProjects[0].slug}`}
           sx={{ my: 2, color: 'white', display: 'block' }}
         >
           我的项目
         </Button>
       );
     }
-    
-    // 多个项目，显示下拉菜单
+
+    // 多个可切换项目，显示下拉菜单
     return (
       <>
         <Button
@@ -224,7 +225,7 @@ const Navbar: React.FC = () => {
               <Paper sx={{ mt: 1, minWidth: 180 }}>
                 <ClickAwayListener onClickAway={handleProjectsMenuClose}>
                   <MenuList autoFocusItem={projectsMenuOpen}>
-                    {userProjects.map((project) => (
+                    {availableProjects.map((project) => (
                       <MenuItem 
                         key={project.id}
                         onClick={() => handleProjectClick(project.slug)}
