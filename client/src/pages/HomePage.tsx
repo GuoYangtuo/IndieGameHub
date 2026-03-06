@@ -782,7 +782,7 @@ const HomePage: React.FC = () => {
           ) : (
             <Box
               sx={{
-                columnCount: { xs: 1, sm: 2, md: 3, lg: 4 },
+                columnCount: { xs: 1, sm: 2, md: 3 },
                 columnGap: '16px',
                 '& > *': {
                   breakInside: 'avoid',
@@ -812,7 +812,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl">
       {/* 模块管理面板 */}
       {user && (
         <Paper 

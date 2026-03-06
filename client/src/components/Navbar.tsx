@@ -191,7 +191,11 @@ const Navbar: React.FC = () => {
           to={`/projects/${availableProjects[0].slug}`}
           sx={{ my: 2, color: 'white', display: 'block' }}
         >
-          我的项目
+          {availableProjects == userProjects ? (
+            "我的项目"
+          ) : (
+            "切换项目"
+          )}
         </Button>
       );
     }
