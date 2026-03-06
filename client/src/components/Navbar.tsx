@@ -341,7 +341,7 @@ const Navbar: React.FC = () => {
               </Tooltip>
               
               {currentSlug && (
-              <Tooltip title="支持开发者">
+              <Tooltip title="直接向开发者捐赠">
                 <Button
                   variant="contained"
                   color="secondary"
