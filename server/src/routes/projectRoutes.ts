@@ -25,7 +25,10 @@ import {
   getProjectContributors,
   checkProjectName,
   validateGitHubRepository,
-  updateProjectCover
+  updateProjectCover,
+  getTags,
+  getProjectTagsHandler,
+  updateProjectTagsHandler
 } from '../controllers/projectController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { createNewProjectComment } from '../controllers/commentController';
@@ -112,5 +115,14 @@ projectRouter.post('/:projectId/contribute', verifyToken, addProjectContribution
 
 // 获取项目贡献者列表
 projectRouter.get('/:projectId/contributors', getProjectContributors);
+
+// 获取所有标签
+projectRouter.get('/tags/all', getTags);
+
+// 获取项目的标签
+projectRouter.get('/:projectId/tags', getProjectTagsHandler);
+
+// 更新项目标签
+projectRouter.put('/:projectId/tags', verifyToken, updateProjectTagsHandler);
 
 export default projectRouter; 

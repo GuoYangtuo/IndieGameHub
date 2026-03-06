@@ -379,6 +379,27 @@ const createTables = async (): Promise<void> => {
       );
     `);
 
+    // 标签表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS project_tags (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE,
+        color VARCHAR(20) DEFAULT '#1976d2',
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 项目标签关联表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS project_tag_map (
+        projectId VARCHAR(36) NOT NULL,
+        tagId VARCHAR(36) NOT NULL,
+        PRIMARY KEY (projectId, tagId),
+        FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (tagId) REFERENCES project_tags(id) ON DELETE CASCADE
+      );
+    `);
+
     conn.release();
     console.log('数据库表创建成功');
   } catch (error) {

@@ -23,9 +23,16 @@ import {
   getProjectImages,
   deleteProjectImage,
   getContributionRates,
+  getAllTags,
+  getProjectTags,
+  addProjectTags,
+  setProjectTags,
+  removeProjectTag,
+  getOrCreateTag,
   Project,
   ProjectUpdate,
-  ProjectImage
+  ProjectImage,
+  ProjectTag
 } from '../models/projectModel';
 import { findUserByUsername } from '../models/userModel';
 import { findProposalsByProjectId } from '../models/proposalModel';
@@ -43,6 +50,7 @@ interface ProjectWithDetails extends Project {
   displayImages: ProjectImage[];
   members: string[];
   comments?: any[];
+  tags?: ProjectTag[];
 }
 
 // 完整的项目详情数据接口
@@ -88,7 +96,19 @@ export const upload = multer({
 export const getProjects = async (req: Request, res: Response): Promise<void> => {
   try {
     const projects = await getAllProjects();
-    res.status(200).json(projects);
+    
+    // 为每个项目加载标签
+    const projectsWithTags = await Promise.all(
+      projects.map(async (project) => {
+        const tags = await getProjectTags(project.id);
+        return {
+          ...project,
+          tags: tags || []
+        };
+      })
+    );
+    
+    res.status(200).json(projectsWithTags);
   } catch (error) {
     console.error('获取项目列表失败:', error);
     res.status(500).json({ message: '服务器错误' });
@@ -178,12 +198,16 @@ export const getProjectBySlug = async (req: Request, res: Response): Promise<voi
     // 获取项目图片
     const images = await getProjectImages(project.id);
     
+    // 获取项目标签
+    const tags = await getProjectTags(project.id);
+    
     // 合并数据
     const projectWithData: ProjectWithDetails = {
       ...project,
       members: members.map(member => member.userId),
       updates: updates || [],
-      displayImages: images || []
+      displayImages: images || [],
+      tags: tags || []
     };
     
     // 加载提案数据
@@ -213,7 +237,7 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       return;
     }
 
-    const { name, description, demoLink, githubRepoUrl, githubAccessToken } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, colors } = req.body;
 
     // 处理封面上传
     let coverImage: string | undefined;
@@ -285,7 +309,17 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       );
     }
 
-    res.status(201).json(project);
+    // 如果提供了标签，添加标签
+    let projectTags: ProjectTag[] = [];
+    if (tagNames && Array.isArray(tagNames) && tagNames.length > 0) {
+      projectTags = await addProjectTags(project.id, tagNames, colors);
+    }
+
+    // 返回创建的项目和标签
+    res.status(201).json({
+      ...project,
+      tags: projectTags
+    });
   } catch (error) {
     console.error('创建项目失败:', error);
     res.status(500).json({ message: '服务器错误' });
@@ -566,7 +600,7 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
     }
 
     const { projectId } = req.params;
-    const { name, description, demoLink, githubRepoUrl, githubAccessToken } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, colors } = req.body;
 
     // 验证请求数据
     if (!name || !description) {
@@ -614,7 +648,34 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    res.status(200).json(updatedProject);
+    // 更新标签
+    let projectTags: ProjectTag[] = [];
+    if (tagNames !== undefined || tagIds !== undefined) {
+      // 先删除项目现有的所有标签
+      await query('DELETE FROM project_tag_map WHERE projectId = ?', [projectId]);
+      
+      // 如果提供了新的标签名称，先创建/获取这些标签
+      if (tagNames && Array.isArray(tagNames) && tagNames.length > 0) {
+        await addProjectTags(projectId, tagNames, colors);
+      }
+      
+      // 如果也提供了已存在的标签ID，添加这些标签
+      if (tagIds && Array.isArray(tagIds)) {
+        for (const tid of tagIds) {
+          await query(
+            'INSERT INTO project_tag_map (projectId, tagId) VALUES (?, ?)',
+            [projectId, tid]
+          );
+        }
+      }
+      
+      projectTags = await getProjectTags(projectId);
+    }
+
+    res.status(200).json({
+      ...updatedProject,
+      tags: projectTags
+    });
   } catch (error) {
     console.error('更新项目信息失败:', error);
     res.status(500).json({ message: '服务器错误' });
@@ -1383,6 +1444,93 @@ export const validateGitHubRepository = async (req: Request, res: Response): Pro
     }
   } catch (error) {
     console.error('验证GitHub仓库失败:', error);
+    res.status(500).json({ message: '服务器错误' });
+  }
+};
+
+// 获取所有标签
+export const getTags = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tags = await getAllTags();
+    res.status(200).json(tags);
+  } catch (error) {
+    console.error('获取标签列表失败:', error);
+    res.status(500).json({ message: '服务器错误' });
+  }
+};
+
+// 获取项目的标签
+export const getProjectTagsHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params;
+    const tags = await getProjectTags(projectId);
+    res.status(200).json(tags);
+  } catch (error) {
+    console.error('获取项目标签失败:', error);
+    res.status(500).json({ message: '服务器错误' });
+  }
+};
+
+// 更新项目标签
+export const updateProjectTagsHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: '未授权' });
+      return;
+    }
+
+    const { projectId } = req.params;
+    const { tagNames, tagIds, colors } = req.body;
+
+    // 获取项目
+    const project = await findProjectById(projectId);
+    if (!project) {
+      res.status(404).json({ message: '项目不存在' });
+      return;
+    }
+
+    // 检查用户是否为项目创建者
+    if (project.createdBy !== userId) {
+      res.status(403).json({ message: '只有项目创建者可以更新项目标签' });
+      return;
+    }
+
+    // 如果提供了新的标签名称，先创建/获取这些标签
+    if (tagNames && Array.isArray(tagNames) && tagNames.length > 0) {
+      const newTags = await addProjectTags(projectId, tagNames, colors);
+      
+      // 如果也提供了已存在的标签ID，保留这些标签
+      if (tagIds && Array.isArray(tagIds)) {
+        for (const tagId of tagIds) {
+          const existing = await query(
+            'SELECT * FROM project_tag_map WHERE projectId = ? AND tagId = ?',
+            [projectId, tagId]
+          );
+          if (existing.length === 0) {
+            await query(
+              'INSERT INTO project_tag_map (projectId, tagId) VALUES (?, ?)',
+              [projectId, tagId]
+            );
+          }
+        }
+      }
+
+      const updatedTags = await getProjectTags(projectId);
+      res.status(200).json(updatedTags);
+    } 
+    // 如果只提供了标签ID，直接设置
+    else if (tagIds && Array.isArray(tagIds)) {
+      await setProjectTags(projectId, tagIds);
+      const updatedTags = await getProjectTags(projectId);
+      res.status(200).json(updatedTags);
+    } else {
+      // 清空所有标签
+      await setProjectTags(projectId, []);
+      res.status(200).json([]);
+    }
+  } catch (error) {
+    console.error('更新项目标签失败:', error);
     res.status(500).json({ message: '服务器错误' });
   }
 }; 

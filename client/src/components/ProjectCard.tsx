@@ -5,7 +5,8 @@ import {
   CardActionArea,
   CardMedia,
   Box,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import { Update as UpdateIcon } from '@mui/icons-material';
 
@@ -18,6 +19,11 @@ interface ProjectCardProps {
   latestUpdateAt?: string;
   createdAt: string;
   coverImage?: string;
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -25,8 +31,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   slug,
   description = '',
   latestUpdateAt,
-  coverImage
+  coverImage,
+  tags = []
 }) => {
+  const theme = useTheme();
   const handleCardClick = () => {
     window.open(`/projects/${slug}?showInfo=true`, '_blank');
   };
@@ -151,20 +159,60 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {description && description.length > 120 ? `${description.substring(0, 120)}...` : description}
           </Typography>
 
-          <Chip
-            size="small"
-            icon={<UpdateIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.7) !important' }} />}
-            label={getLastUpdateText()}
-            sx={{ 
-              height: 24, 
-              fontSize: '0.75rem',
-              color: 'rgba(255,255,255,0.9)',
-              bgcolor: 'rgba(255,255,255,0.15)',
-              '& .MuiChip-icon': {
-                color: 'rgba(255,255,255,0.7)'
-              }
-            }}
-          />
+          {tags && tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1, alignItems: 'center' }}>
+              {tags.map((tag) => (
+                <Chip
+                  key={tag.id}
+                  label={tag.name}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.65rem',
+                    bgcolor: 'rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.9)',
+                    '& .MuiChip-label': {
+                      px: 1
+                    }
+                  }}
+                />
+              ))}
+              <Chip
+                size="small"
+                icon={<UpdateIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.7) !important' }} />}
+                label={getLastUpdateText()}
+                sx={{ 
+                  height: 20, 
+                  fontSize: '0.65rem',
+                  color: 'rgba(255,255,255,0.8)',
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  '& .MuiChip-icon': {
+                    color: 'rgba(255,255,255,0.7)'
+                  }
+                }}
+              />
+            </Box>
+          )}
+
+          {(!tags || tags.length === 0) && (
+            <Box sx={{ display: 'inline-flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+              <Chip
+                size="small"
+                icon={<UpdateIcon fontSize="small" sx={{ color: 'rgba(255,255,255,0.7) !important' }} />}
+                label={getLastUpdateText()}
+                sx={{ 
+                  height: 20, 
+                  fontSize: '0.65rem',
+                  color: 'rgba(255,255,255,0.8)',
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  width: 'auto',
+                  '& .MuiChip-icon': {
+                    color: 'rgba(255,255,255,0.7)'
+                  }
+                }}
+              />
+            </Box>
+          )}
         </Box>
       </CardActionArea>
     </Card>

@@ -703,4 +703,150 @@ export const deleteProjectImage = async (imageId: string): Promise<boolean> => {
     console.error('删除项目图片失败:', error);
     return false;
   }
+};
+
+// 标签接口
+export interface ProjectTag {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
+// 获取所有标签
+export const getAllTags = async (): Promise<ProjectTag[]> => {
+  try {
+    const tags = await query('SELECT * FROM project_tags ORDER BY name');
+    return tags as ProjectTag[];
+  } catch (error) {
+    console.error('获取所有标签失败:', error);
+    return [];
+  }
+};
+
+// 创建标签
+export const createTag = async (name: string, color: string = '#1976d2'): Promise<ProjectTag | null> => {
+  try {
+    const id = Date.now().toString() + Math.floor(Math.random() * 1000).toString();
+    await query(
+      'INSERT INTO project_tags (id, name, color) VALUES (?, ?, ?)',
+      [id, name, color]
+    );
+    const tags = await query('SELECT * FROM project_tags WHERE id = ?', [id]);
+    return tags.length > 0 ? tags[0] : null;
+  } catch (error) {
+    console.error('创建标签失败:', error);
+    return null;
+  }
+};
+
+// 根据名称获取或创建标签
+export const getOrCreateTag = async (name: string, color?: string): Promise<ProjectTag | null> => {
+  try {
+    // 先尝试查找已存在的标签
+    const existingTags = await query('SELECT * FROM project_tags WHERE name = ?', [name]);
+    if (existingTags.length > 0) {
+      return existingTags[0];
+    }
+    // 如果不存在，创建新标签
+    return await createTag(name, color || '#1976d2');
+  } catch (error) {
+    console.error('获取或创建标签失败:', error);
+    return null;
+  }
+};
+
+// 获取项目的标签
+export const getProjectTags = async (projectId: string): Promise<ProjectTag[]> => {
+  try {
+    const tags = await query(`
+      SELECT t.* FROM project_tags t
+      JOIN project_tag_map ptm ON t.id = ptm.tagId
+      WHERE ptm.projectId = ?
+      ORDER BY t.name
+    `, [projectId]);
+    return tags as ProjectTag[];
+  } catch (error) {
+    console.error('获取项目标签失败:', error);
+    return [];
+  }
+};
+
+// 设置项目标签
+export const setProjectTags = async (projectId: string, tagIds: string[]): Promise<boolean> => {
+  try {
+    // 先删除项目现有的所有标签
+    await query('DELETE FROM project_tag_map WHERE projectId = ?', [projectId]);
+    
+    // 添加新的标签关联
+    for (const tagId of tagIds) {
+      await query(
+        'INSERT INTO project_tag_map (projectId, tagId) VALUES (?, ?)',
+        [projectId, tagId]
+      );
+    }
+    return true;
+  } catch (error) {
+    console.error('设置项目标签失败:', error);
+    return false;
+  }
+};
+
+// 为项目添加标签（支持新标签名称）
+export const addProjectTags = async (projectId: string, tagNames: string[], colors?: string[]): Promise<ProjectTag[]> => {
+  try {
+    const addedTags: ProjectTag[] = [];
+    
+    for (let i = 0; i < tagNames.length; i++) {
+      const tagName = tagNames[i].trim();
+      if (!tagName) continue;
+      
+      const color = colors && colors[i] ? colors[i] : '#1976d2';
+      const tag = await getOrCreateTag(tagName, color);
+      if (tag) {
+        // 检查关联是否已存在
+        const existing = await query(
+          'SELECT * FROM project_tag_map WHERE projectId = ? AND tagId = ?',
+          [projectId, tag.id]
+        );
+        if (existing.length === 0) {
+          await query(
+            'INSERT INTO project_tag_map (projectId, tagId) VALUES (?, ?)',
+            [projectId, tag.id]
+          );
+        }
+        addedTags.push(tag);
+      }
+    }
+    
+    return addedTags;
+  } catch (error) {
+    console.error('添加项目标签失败:', error);
+    return [];
+  }
+};
+
+// 移除项目的标签
+export const removeProjectTag = async (projectId: string, tagId: string): Promise<boolean> => {
+  try {
+    await query(
+      'DELETE FROM project_tag_map WHERE projectId = ? AND tagId = ?',
+      [projectId, tagId]
+    );
+    return true;
+  } catch (error) {
+    console.error('移除项目标签失败:', error);
+    return false;
+  }
+};
+
+// 删除标签
+export const deleteTag = async (tagId: string): Promise<boolean> => {
+  try {
+    const result = await query('DELETE FROM project_tags WHERE id = ?', [tagId]);
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('删除标签失败:', error);
+    return false;
+  }
 }; 

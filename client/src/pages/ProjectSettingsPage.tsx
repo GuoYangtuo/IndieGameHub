@@ -25,7 +25,10 @@ import {
   Stack,
   Tabs,
   Tab,
-  Collapse
+  Collapse,
+  Chip,
+  Autocomplete,
+  createFilterOptions
 } from '@mui/material';
 import {
   Save,
@@ -40,6 +43,14 @@ import { projectAPI, userAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useProjectTitle } from '../contexts/ProjectTitleContext';
 import { formatRelativeTime } from '../utils/dateUtils';
+
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
+const filter = createFilterOptions<Tag>();
 
 interface User {
   id: string;
@@ -66,6 +77,11 @@ interface Project {
     oneTimeContribution: number;
     longTermContribution: number;
   };
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 interface TabPanelProps {
@@ -125,6 +141,12 @@ const ProjectSettingsPage: React.FC = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
 
+  // 标签相关状态
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [inputTagValue, setInputTagValue] = useState('');
+  const [loadingTags, setLoadingTags] = useState(false);
+
   // 项目账户管理相关状态
   const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
@@ -145,6 +167,17 @@ const ProjectSettingsPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        // 加载所有标签
+        try {
+          setLoadingTags(true);
+          const tagsResponse = await projectAPI.getAllTags();
+          setAllTags(tagsResponse.data || []);
+        } catch (tagErr) {
+          console.error('加载标签失败:', tagErr);
+        } finally {
+          setLoadingTags(false);
+        }
+        
         const projectResponse = await projectAPI.getProjectBySlug(slug);
         const projectData = projectResponse.data;
         setProject(projectData);
@@ -154,6 +187,11 @@ const ProjectSettingsPage: React.FC = () => {
         setProjectDemoLink(projectData.demoLink || '');
         setGithubRepoUrl(projectData.githubRepoUrl || '');
         setGithubAccessToken(projectData.githubAccessToken || '');
+        
+        // 设置项目标签
+        if (projectData.tags && projectData.tags.length > 0) {
+          setSelectedTags(projectData.tags);
+        }
         
         if (projectData.contributionRates) {
           setContributionRates(projectData.contributionRates);
@@ -230,17 +268,30 @@ const ProjectSettingsPage: React.FC = () => {
       setError(null);
       setSuccessMessage(null);
       
+      // 分离已存在的标签ID和新标签名称
+      const existingTagIds = selectedTags.filter(t => t.id && !t.id.startsWith('new-')).map(t => t.id);
+      const newTagNames = selectedTags
+        .filter(t => !t.id || t.id.startsWith('new-'))
+        .map(t => t.name);
+      
       const response = await projectAPI.updateProject(
         project.id,
         projectName,
         projectDescription,
         projectDemoLink,
         githubRepoUrl,
-        githubAccessToken
+        githubAccessToken,
+        newTagNames,
+        existingTagIds
       );
       
       setProject(response.data);
       setProjectTitle(response.data.name);
+      
+      // 更新标签状态
+      if (response.data.tags) {
+        setSelectedTags(response.data.tags);
+      }
       
       if (projectDemoLink) {
         setDemoLink(projectDemoLink);
@@ -488,6 +539,102 @@ const ProjectSettingsPage: React.FC = () => {
                 disabled={!isCreator}
               />
             </FormControl>
+            
+            <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+              项目标签
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              为项目添加标签，最多10个标签，便于分类和搜索
+            </Typography>
+            
+            <Autocomplete
+              multiple
+              freeSolo
+              options={allTags}
+              value={selectedTags}
+              onChange={(_, newValue) => {
+                if (newValue.length <= 10) {
+                  const processedValue = newValue.map(item => {
+                    if (typeof item === 'string') {
+                      return { id: '', name: item, color: '#1976d2' };
+                    }
+                    // 处理新创建的标签（id以new-开头），提取标签名称本身
+                    if (item.id && item.id.startsWith('new-')) {
+                      const tagName = item.name.replace(/^创建\s*"?([^"]*)"?$/, '$1');
+                      return { id: '', name: tagName, color: item.color };
+                    }
+                    return item;
+                  });
+                  setSelectedTags(processedValue);
+                }
+              }}
+              inputValue={inputTagValue}
+              onInputChange={(_, newInputValue) => {
+                setInputTagValue(newInputValue);
+              }}
+              filterOptions={(options, params) => {
+                const filtered = filter(options, params);
+                if (params.inputValue !== '' && !options.find(t => t.name.toLowerCase() === params.inputValue.toLowerCase())) {
+                  filtered.push({
+                    id: `new-${params.inputValue}`,
+                    name: `创建 "${params.inputValue}"`,
+                    color: '#1976d2'
+                  });
+                }
+                return filtered;
+              }}
+              getOptionLabel={(option) => {
+                if (typeof option === 'string') return option;
+                // 如果是新建的标签选项（id以new-开头），只显示标签名称本身
+                if (option.id && option.id.startsWith('new-')) {
+                  return option.name.replace(/^创建\s*"?([^"]*)"?$/, '$1');
+                }
+                return option.name;
+              }}
+              loading={loadingTags}
+              disabled={!isCreator}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => {
+                  const { key, ...tagProps } = getTagProps({ index });
+                  return (
+                    <Chip
+                      key={key}
+                      variant="outlined"
+                      label={typeof option === 'string' ? option : option.name}
+                      size="small"
+                      {...tagProps}
+                      sx={{
+                        bgcolor: typeof option === 'string' ? '#1976d2' : option.color,
+                        color: '#fff',
+                        '& .MuiChip-deleteIcon': {
+                          color: 'rgba(255,255,255,0.7)',
+                          '&:hover': {
+                            color: '#fff'
+                          }
+                        }
+                      }}
+                    />
+                  );
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={selectedTags.length >= 10 ? "已达最大标签数量(10)" : "输入标签名称"}
+                  disabled={!isCreator || selectedTags.length >= 10}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingTags ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    )
+                  }}
+                />
+              )}
+            />
             
             <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
               GitHub 仓库关联

@@ -153,8 +153,8 @@ export const projectAPI = {
   getProjectDetailComplete: (slug: string) => api.get(`/projects/detail/${slug}`),
   
   // 创建项目
-  createProject: (name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string) => 
-    api.post('/projects', { name, description, demoLink, githubRepoUrl, githubAccessToken }),
+  createProject: (name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string, tagNames?: string[], tagIds?: string[]) => 
+    api.post('/projects', { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds }),
   
   // 创建带封面图片的项目
   createProjectWithCover: (formData: FormData) => 
@@ -177,8 +177,8 @@ export const projectAPI = {
     }),
   
   // 更新项目信息
-  updateProject: (projectId: string, name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string) => 
-    api.put(`/projects/${projectId}`, { name, description, demoLink, githubRepoUrl, githubAccessToken }),
+  updateProject: (projectId: string, name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string, tagNames?: string[], tagIds?: string[]) => 
+    api.put(`/projects/${projectId}`, { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds }),
 
   // 更新项目封面图片
   updateProjectCover: (projectId: string, formData: FormData) =>
@@ -249,7 +249,17 @@ export const projectAPI = {
     
   // 验证GitHub仓库
   validateGithubRepository: (repoUrl: string, accessToken?: string) => 
-    api.post('/projects/validate-github', { repoUrl, accessToken })
+    api.post('/projects/validate-github', { repoUrl, accessToken }),
+    
+  // 获取所有标签
+  getAllTags: () => api.get('/projects/tags/all'),
+    
+  // 获取项目标签
+  getProjectTags: (projectId: string) => api.get(`/projects/${projectId}/tags`),
+    
+  // 更新项目标签
+  updateProjectTags: (projectId: string, tagNames?: string[], tagIds?: string[], colors?: string[]) => 
+    api.put(`/projects/${projectId}/tags`, { tagNames, tagIds, colors })
 };
 
 // 提案API

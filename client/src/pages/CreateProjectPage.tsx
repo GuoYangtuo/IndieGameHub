@@ -9,7 +9,10 @@ import {
   Paper,
   Alert,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Chip,
+  Autocomplete,
+  createFilterOptions
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { projectAPI } from '../services/api';
@@ -17,6 +20,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Delete } from '@mui/icons-material';
 import { useDebounce } from '../hooks/useDebounce';
+
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
+const filter = createFilterOptions<Tag>();
 
 const CreateProjectPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -31,12 +42,34 @@ const CreateProjectPage: React.FC = () => {
   const [checkingName, setCheckingName] = useState(false);
   const [validatingGithub, setValidatingGithub] = useState(false);
   
+  // 标签相关状态
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [inputTagValue, setInputTagValue] = useState('');
+  const [loadingTags, setLoadingTags] = useState(false);
+  
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   
   // 使用防抖处理项目名称输入
   const debouncedName = useDebounce(name, 500);
+
+  // 加载所有标签
+  useEffect(() => {
+    const loadTags = async () => {
+      try {
+        setLoadingTags(true);
+        const response = await projectAPI.getAllTags();
+        setTags(response.data || []);
+      } catch (err) {
+        console.error('加载标签失败:', err);
+      } finally {
+        setLoadingTags(false);
+      }
+    };
+    loadTags();
+  }, []);
 
   // 当防抖后的项目名称变化时，检查是否存在
   useEffect(() => {
@@ -168,10 +201,20 @@ const CreateProjectPage: React.FC = () => {
         if (githubRepoUrl) formData.append('githubRepoUrl', githubRepoUrl);
         if (githubAccessToken) formData.append('githubAccessToken', githubAccessToken);
         
+        // 添加标签名称
+        if (selectedTags.length > 0) {
+          const tagNames = selectedTags.map(t => t.name);
+          formData.append('tagNames', JSON.stringify(tagNames));
+        }
+        
         projectResponse = await projectAPI.createProjectWithCover(formData);
       } else {
         // 否则使用基本API
-        projectResponse = await projectAPI.createProject(name, description, undefined, githubRepoUrl, githubAccessToken);
+        // 分离已存在的标签ID和新标签名称
+        const existingTagIds = selectedTags.filter(t => t.id).map(t => t.id);
+        const newTagNames = selectedTags.filter(t => !t.id).map(t => t.name);
+        
+        projectResponse = await projectAPI.createProject(name, description, undefined, githubRepoUrl, githubAccessToken, newTagNames, existingTagIds);
       }
       
       const projectSlug = projectResponse.data.slug;
@@ -288,6 +331,105 @@ const CreateProjectPage: React.FC = () => {
                 </IconButton>
               </Box>
             )}
+          </Box>
+          
+          <Box sx={{ mt: 3, mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              项目标签 (可选)
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              为项目添加标签，最多10个标签，便于分类和搜索
+            </Typography>
+            <Autocomplete
+              multiple
+              freeSolo
+              options={tags}
+              value={selectedTags}
+              onChange={(_, newValue) => {
+                // 限制最多10个标签
+                if (newValue.length <= 10) {
+                  // 处理新输入的标签
+                  const processedValue = newValue.map(item => {
+                    if (typeof item === 'string') {
+                      // 新输入的字符串标签
+                      return { id: '', name: item, color: '#1976d2' };
+                    }
+                    // 处理新创建的标签（id以new-开头），提取标签名称本身
+                    if (item.id && item.id.startsWith('new-')) {
+                      const tagName = item.name.replace(/^创建\s*"?([^"]*)"?$/, '$1');
+                      return { id: '', name: tagName, color: item.color };
+                    }
+                    return item;
+                  });
+                  setSelectedTags(processedValue);
+                }
+              }}
+              inputValue={inputTagValue}
+              onInputChange={(_, newInputValue) => {
+                setInputTagValue(newInputValue);
+              }}
+              filterOptions={(options, params) => {
+                const filtered = filter(options, params);
+                // 如果输入的值不存在于选项中，添加"创建"选项
+                if (params.inputValue !== '' && !options.find(t => t.name.toLowerCase() === params.inputValue.toLowerCase())) {
+                  filtered.push({
+                    id: `new-${params.inputValue}`,
+                    name: `创建 "${params.inputValue}"`,
+                    color: '#1976d2'
+                  });
+                }
+                return filtered;
+              }}
+              getOptionLabel={(option) => {
+                if (typeof option === 'string') return option;
+                // 如果是新建的标签选项（id以new-开头），只显示标签名称本身
+                if (option.id && option.id.startsWith('new-')) {
+                  return option.name.replace(/^创建\s*"?([^"]*)"?$/, '$1');
+                }
+                return option.name;
+              }}
+              loading={loadingTags}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => {
+                  const { key, ...tagProps } = getTagProps({ index });
+                  return (
+                    <Chip
+                      key={key}
+                      variant="outlined"
+                      label={typeof option === 'string' ? option : option.name}
+                      size="small"
+                      {...tagProps}
+                      sx={{
+                        bgcolor: typeof option === 'string' ? '#1976d2' : option.color,
+                        color: '#fff',
+                        '& .MuiChip-deleteIcon': {
+                          color: 'rgba(255,255,255,0.7)',
+                          '&:hover': {
+                            color: '#fff'
+                          }
+                        }
+                      }}
+                    />
+                  );
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={selectedTags.length >= 10 ? "已达最大标签数量(10)" : "输入标签名称"}
+                  disabled={selectedTags.length >= 10}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingTags ? <CircularProgress color="inherit" size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    )
+                  }}
+                />
+              )}
+            />
           </Box>
           
           <Box sx={{ mt: 3, mb: 2 }}>

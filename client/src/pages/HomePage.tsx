@@ -47,6 +47,11 @@ interface Project {
   coverImage?: string;
   projectBalance?: number;
   latestUpdateAt?: string;
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 // 项目更新接口
@@ -795,6 +800,7 @@ const HomePage: React.FC = () => {
                   latestUpdateAt={project.latestUpdateAt}
                   createdAt={project.createdAt}
                   coverImage={project.coverImage}
+                  tags={project.tags}
                 />
               ))}
             </Box>
