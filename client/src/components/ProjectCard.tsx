@@ -75,6 +75,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             sx={{ 
               objectFit: 'cover',
               width: '100%',
+              maxHeight: 400,
               display: 'block'
             }}
           />
