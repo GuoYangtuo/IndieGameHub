@@ -18,6 +18,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { commentAPI } from '../services/api';
 import { formatRelativeTime } from '../utils/dateUtils';
 import { useWebSocketContext } from '../contexts/WebSocketContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ChatMessage {
   id: string;
@@ -39,6 +40,7 @@ const ChatRoomPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const projectSlug = searchParams.get('project') || '';
+  const { user } = useAuth();
   
   const { 
     isConnected, 
@@ -55,7 +57,10 @@ const ChatRoomPage: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const currentUserId = localStorage.getItem('userId');
+  // 使用 ref 保存 userId，确保消息加载时能正确获取
+  const currentUserIdRef = useRef<string | undefined>(undefined);
+  currentUserIdRef.current = user?.id;
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 加载聊天记录
@@ -69,9 +74,11 @@ const ChatRoomPage: React.FC = () => {
         
         const response = await commentAPI.getChatRoomMessages(chatRoomId);
         
-        const chatMessages: ChatMessage[] = response.data.messages.map((msg: any) => ({
+        // 使用 ref 获取当前 userId
+        const userId = currentUserIdRef.current;
+        const chatMessages: ChatMessage[] = (response.data.messages || []).map((msg: any) => ({
           ...msg,
-          isSelf: msg.userId === currentUserId
+          isSelf: userId ? msg.userId === userId : false
         }));
         
         setMessages(chatMessages);
@@ -85,7 +92,17 @@ const ChatRoomPage: React.FC = () => {
     };
 
     fetchChatRoom();
-  }, [chatRoomId, currentUserId]);
+  }, [chatRoomId]);
+
+  // 当 user 加载完成后，重新计算消息的 isSelf
+  useEffect(() => {
+    if (messages.length > 0 && user?.id) {
+      setMessages(prev => prev.map(msg => ({
+        ...msg,
+        isSelf: msg.userId === user.id
+      })));
+    }
+  }, [user?.id]);
 
   // 加入/离开聊天室
   useEffect(() => {
@@ -104,19 +121,21 @@ const ChatRoomPage: React.FC = () => {
   useEffect(() => {
     if (!isConnected) return;
     
-    // 通过轮询检查新消息（简化实现，实际项目中可以在 context 中添加消息回调）
+    // 使用 ref 获取最新的 currentUserId，避免重建 interval
     const interval = setInterval(async () => {
       if (!chatRoomId) return;
       
       try {
         const response = await commentAPI.getChatRoomMessages(chatRoomId);
-        const newMessages: ChatMessage[] = response.data.messages.map((msg: any) => ({
-          ...msg,
-          isSelf: msg.userId === currentUserId
-        }));
+        const fetchedMessages = response.data.messages || [];
         
         // 检查是否有新消息
-        if (newMessages.length > messages.length) {
+        if (fetchedMessages.length > messages.length) {
+          // 为新获取的消息计算 isSelf
+          const newMessages: ChatMessage[] = fetchedMessages.map((msg: any) => ({
+            ...msg,
+            isSelf: msg.userId === currentUserIdRef.current
+          }));
           setMessages(newMessages);
         }
       } catch (err) {
@@ -125,7 +144,7 @@ const ChatRoomPage: React.FC = () => {
     }, 3000);
     
     return () => clearInterval(interval);
-  }, [chatRoomId, isConnected, currentUserId, messages.length]);
+  }, [chatRoomId, isConnected, messages.length]);
 
   // 自动滚动到最新消息
   useEffect(() => {
@@ -144,7 +163,7 @@ const ChatRoomPage: React.FC = () => {
     // 先添加到本地显示
     const tempMessage: ChatMessage = {
       id: messageId,
-      userId: currentUserId || '',
+      userId: currentUserIdRef.current || '',
       userNickname: '我',
       content: messageContent,
       createdAt: new Date().toISOString(),
