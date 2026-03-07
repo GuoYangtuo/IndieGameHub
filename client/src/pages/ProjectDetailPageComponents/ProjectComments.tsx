@@ -12,7 +12,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import { Send, Delete, Forum, ChatBubbleOutline, Chat, ArrowForward } from '@mui/icons-material';
+import { Send, Delete, Forum, ChatBubbleOutline, QuestionAnswer } from '@mui/icons-material';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import DebouncedInput from '../../components/DebouncedInput';
 import { useNavigate } from 'react-router-dom';
@@ -196,22 +196,17 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
         <Box sx={{ mb: 2 }}>
           {comments.map((comment) => (
             <Box key={comment.id}>
-              {/* 评论主体 - 桌面端：头像+内容在左，操作按钮在右；移动端：垂直布局 */}
+              {/* 评论主体 - 始终水平布局：头像在左，内容+按钮在右 */}
               <Box sx={{ 
                 display: 'flex', 
                 gap: 2, 
                 py: 2, 
                 borderBottom: '1px solid', 
-                borderColor: 'divider',
-                flexDirection: { xs: 'column', md: 'row' }
+                borderColor: 'divider'
               }}>
-                {/* 头像 - 桌面端放在内容左侧，移动端隐藏（昵称行会显示小头像） */}
+                {/* 头像 */}
                 <Box 
-                  sx={{ 
-                    cursor: 'pointer', 
-                    flexShrink: 0,
-                    display: { xs: 'none', md: 'block' }
-                  }}
+                  sx={{ cursor: 'pointer', flexShrink: 0 }}
                   onClick={() => goToUserProfile(comment.userId)}
                 >
                   <Avatar 
@@ -222,54 +217,11 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                   </Avatar>
                 </Box>
                 
-                {/* 内容区域 */}
+                {/* 内容区域：昵称行 + 内容 + 按钮组 */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  {/* 移动端：头像和昵称在同一行 */}
-                  <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Box 
-                      sx={{ cursor: 'pointer', flexShrink: 0 }}
-                      onClick={() => goToUserProfile(comment.userId)}
-                    >
-                      <Avatar 
-                        src={comment.userAvatarUrl} 
-                        sx={{ width: 32, height: 32 }}
-                      >
-                        {comment.userNickname.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </Box>
-                    <Typography 
-                      variant="subtitle2" 
-                      sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
-                      onClick={() => goToUserProfile(comment.userId)}
-                    >
-                      {comment.userNickname}
-                    </Typography>
-                    {isUserCreator(comment.userId) && (
-                      <Chip 
-                        label="创建者" 
-                        size="small" 
-                        color="primary" 
-                        variant="outlined"
-                        sx={{ height: 16, fontSize: '0.6rem' }}
-                      />
-                    )}
-                    {isUserMember(comment.userId) && !isUserCreator(comment.userId) && (
-                      <Chip 
-                        label="成员" 
-                        size="small" 
-                        color="secondary" 
-                        variant="outlined"
-                        sx={{ height: 16, fontSize: '0.6rem' }}
-                      />
-                    )}
-                    <Typography variant="caption" color="text.secondary">
-                      {formatRelativeTime(comment.createdAt)}
-                    </Typography>
-                  </Box>
-
-                  {/* 桌面端：昵称和标签 */}
+                  {/* 昵称和标签 */}
                   <Box 
-                    sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1, cursor: 'pointer', flexWrap: 'wrap' }}
+                    sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', flexWrap: 'wrap' }}
                     onClick={() => goToUserProfile(comment.userId)}
                   >
                     <Typography variant="subtitle2" sx={{ '&:hover': { color: 'primary.main' } }}>
@@ -303,22 +255,33 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                     {comment.content}
                   </Typography>
                   
-                  {/* 移动端：评论操作按钮 - 放在评论下方 */}
-                  <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1, mt: 1 }}>
-                    {user && (
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleReplyClick(comment.id)}
-                      >
-                        <ChatBubbleOutline fontSize="small" />
-                      </IconButton>
-                    )}
+                  {/* 评论操作按钮 - 始终水平排列 */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                     {user && user.id === comment.userId && (
                       <IconButton 
                         size="small" 
                         onClick={() => onDeleteComment(comment.id)}
+                        title="删除"
                       >
                         <Delete fontSize="small" />
+                      </IconButton>
+                    )}
+                    {user && (
+                      <IconButton 
+                        size="small" 
+                        onClick={() => handleReplyClick(comment.id)}
+                        title="回复"
+                      >
+                        <ChatBubbleOutline fontSize="small" />
+                      </IconButton>
+                    )}
+                    {comment.chatRoomId && (
+                      <IconButton 
+                        size="small" 
+                        onClick={() => goToChatRoom(comment.chatRoomId!)}
+                        title="查看讨论"
+                      >
+                        <QuestionAnswer fontSize="small" />
                       </IconButton>
                     )}
                   </Box>
@@ -372,17 +335,12 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                             borderBottom: '1px solid', 
                             borderColor: 'divider',
                             display: 'flex',
-                            gap: 1.5,
-                            flexDirection: { xs: 'column', md: 'row' }
+                            gap: 1.5
                           }}
                         >
-                          {/* 回复头像 - 桌面端显示，移动端隐藏 */}
+                          {/* 回复头像 */}
                           <Box 
-                            sx={{ 
-                              cursor: 'pointer', 
-                              flexShrink: 0,
-                              display: { xs: 'none', md: 'block' }
-                            }}
+                            sx={{ cursor: 'pointer', flexShrink: 0 }}
                             onClick={() => goToUserProfile(reply.userId)}
                           >
                             <Avatar 
@@ -393,54 +351,11 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                             </Avatar>
                           </Box>
                           
-                          {/* 回复内容区域 */}
+                          {/* 回复内容区域：昵称行 + 内容 + 按钮组 */}
                           <Box sx={{ flex: 1, minWidth: 0 }}>
-                            {/* 移动端：头像和昵称在同一行 */}
-                            <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1, mb: 0.5 }}>
-                              <Box 
-                                sx={{ cursor: 'pointer', flexShrink: 0 }}
-                                onClick={() => goToUserProfile(reply.userId)}
-                              >
-                                <Avatar 
-                                  src={reply.userAvatarUrl} 
-                                  sx={{ width: 24, height: 24 }}
-                                >
-                                  {reply.userNickname.charAt(0).toUpperCase()}
-                                </Avatar>
-                              </Box>
-                              <Typography 
-                                variant="subtitle2" 
-                                sx={{ fontSize: '0.8rem', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
-                                onClick={() => goToUserProfile(reply.userId)}
-                              >
-                                {reply.userNickname}
-                              </Typography>
-                              {isUserCreator(reply.userId) && (
-                                <Chip 
-                                  label="创建者" 
-                                  size="small" 
-                                  color="primary" 
-                                  variant="outlined"
-                                  sx={{ height: 14, fontSize: '0.5rem' }}
-                                />
-                              )}
-                              {isUserMember(reply.userId) && !isUserCreator(reply.userId) && (
-                                <Chip 
-                                  label="成员" 
-                                  size="small" 
-                                  color="secondary" 
-                                  variant="outlined"
-                                  sx={{ height: 14, fontSize: '0.5rem' }}
-                                />
-                              )}
-                              <Typography variant="caption" color="text.secondary">
-                                {formatRelativeTime(reply.createdAt)}
-                              </Typography>
-                            </Box>
-
-                            {/* 桌面端：回复者信息和标签 */}
+                            {/* 昵称和标签 */}
                             <Box 
-                              sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
                               onClick={() => goToUserProfile(reply.userId)}
                             >
                               <Typography variant="subtitle2" sx={{ fontSize: '0.875rem', '&:hover': { color: 'primary.main' } }}>
@@ -474,88 +389,40 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                               {reply.content}
                             </Typography>
                             
-                            {/* 移动端：回复操作按钮 - 放在内容下方 */}
-                            <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                            {/* 回复操作按钮 - 始终水平排列 */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                              {user && user.id === reply.userId && (
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => onDeleteComment(reply.id)}
+                                  title="删除"
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              )}
                               {user && (
                                 <IconButton 
                                   size="small" 
                                   onClick={() => handleReplyToReplyClick(comment.id)}
+                                  title="回复"
                                 >
                                   <ChatBubbleOutline fontSize="small" />
                                 </IconButton>
                               )}
+                              {comment.chatRoomId && (
+                                <IconButton 
+                                  size="small" 
+                                  onClick={() => goToChatRoom(comment.chatRoomId!)}
+                                  title="查看讨论"
+                                >
+                                  <QuestionAnswer fontSize="small" />
+                                </IconButton>
+                              )}
                             </Box>
-                          </Box>
-
-                          {/* 桌面端：回复操作按钮 - 放在右侧 */}
-                          <Box sx={{ 
-                            display: { xs: 'none', md: 'flex' }, 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            justifyContent: 'flex-start',
-                            gap: 0.25,
-                            flexShrink: 0,
-                            minWidth: 32
-                          }}>
-                            {user && (
-                              <IconButton 
-                                size="small" 
-                                onClick={() => handleReplyToReplyClick(comment.id)}
-                                title="回复"
-                              >
-                                <ChatBubbleOutline fontSize="small" />
-                              </IconButton>
-                            )}
                           </Box>
                         </Box>
                       ))}
                     </Box>
-                  )}
-                  
-                  {/* 有chatRoomId时显示跳转到在线讨论区的链接 */}
-                  {comment.chatRoomId && (
-                    <Box sx={{ mt: 2 }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Chat />}
-                        endIcon={<ArrowForward />}
-                        onClick={() => goToChatRoom(comment.chatRoomId!)}
-                      >
-                        查看更多讨论记录
-                      </Button>
-                    </Box>
-                  )}
-                </Box>
-
-                {/* 桌面端：评论操作按钮 - 放在评论右侧 */}
-                <Box sx={{ 
-                  display: { xs: 'none', md: 'flex' }, 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  justifyContent: 'flex-start',
-                  gap: 0.5,
-                  flexShrink: 0,
-                  minWidth: 40
-                }}>
-                  {user && user.id === comment.userId && (
-                    <IconButton 
-                      size="small" 
-                      onClick={() => onDeleteComment(comment.id)}
-                      title="删除"
-                      color="error"
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  )}
-                  {user && (
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleReplyClick(comment.id)}
-                      title="回复"
-                    >
-                      <ChatBubbleOutline fontSize="small" />
-                    </IconButton>
                   )}
                 </Box>
               </Box>
