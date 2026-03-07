@@ -309,14 +309,6 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                     
                     {/* 按钮组 */}
                     <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: 'center' }, gap: 1 }}>
-                      {user && (
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleReplyClick(comment.id)}
-                        >
-                          <ChatBubbleOutline fontSize="small" />
-                        </IconButton>
-                      )}
                       {user && user.id === comment.userId && (
                         <IconButton 
                           size="small" 
@@ -331,6 +323,14 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
                           onClick={() => goToChatRoom(comment.chatRoomId!)}
                         >
                           <QuestionAnswer fontSize="small" />
+                        </IconButton>
+                      )}
+                        {user && (
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleReplyClick(comment.id)}
+                        >
+                          <ChatBubbleOutline fontSize="small" />
                         </IconButton>
                       )}
                     </Box>

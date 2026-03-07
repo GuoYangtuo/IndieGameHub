@@ -49,6 +49,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     isConnected,
     onlineUsers,
     connect,
+    disconnect,
     joinChatRoom: wsJoinChatRoom,
     leaveChatRoom: wsLeaveChatRoom,
     sendChatMessage: wsSendChatMessage
