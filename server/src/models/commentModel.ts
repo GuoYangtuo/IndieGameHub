@@ -39,14 +39,14 @@ export const findCommentById = async (id: string): Promise<Comment | undefined> 
   }
 };
 
-// 根据提案ID查找评论
+// 根据提案ID查找评论（只获取顶级评论，不包含回复）
 export const findCommentsByProposalId = async (proposalId: string): Promise<Comment[]> => {
   try {
     const comments = await query(
       `SELECT c.*, u.username as userNickname 
        FROM comments c
        LEFT JOIN users u ON c.userId = u.id
-       WHERE c.proposalId = ?
+       WHERE c.proposalId = ? AND c.parentId IS NULL
        ORDER BY c.createdAt DESC`,
       [proposalId]
     );
@@ -59,14 +59,14 @@ export const findCommentsByProposalId = async (proposalId: string): Promise<Comm
   }
 };
 
-// 根据项目ID查找评论
+// 根据项目ID查找评论（只获取顶级评论，不包含回复）
 export const findCommentsByProjectId = async (projectId: string): Promise<Comment[]> => {
   try {
     const comments = await query(
       `SELECT c.*, u.username as userNickname 
        FROM comments c
        LEFT JOIN users u ON c.userId = u.id
-       WHERE c.projectId = ?
+       WHERE c.projectId = ? AND c.parentId IS NULL
        ORDER BY c.createdAt DESC`,
       [projectId]
     );
