@@ -457,9 +457,10 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
       fullWidth
       PaperProps={{ 
         sx: { 
-          minHeight: { xs: '90vh', md: '80vh' }, 
+          minHeight: { xs: '50vh', md: '80vh' }, 
           maxHeight: { xs: '90vh', md: '85vh' }, 
-          width: { xs: '90%', md: '85%' }, 
+          height: { xs: 'auto', md: 'auto' }, 
+          width: { xs: '95%', md: '85%' }, 
           maxWidth: '1400px',
           borderRadius: 2,
           overflow: 'hidden',
@@ -486,7 +487,7 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
       >
         <Close />
       </IconButton>
-      <DialogContent sx={{ p: 0, overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <DialogContent sx={{ p: 0, overflow: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {project && (
           <Box sx={{ 
             display: 'flex', 
@@ -669,10 +670,10 @@ const ProjectInfoDialog: React.FC<ProjectInfoDialogProps> = ({
             {/* 右侧可滚动区域 */}
             <Box sx={{ 
               flex: { xs: 'none', md: '1 1 30%' },
-              overflowY: 'auto',
-              minHeight: 0,
+              overflowY: { xs: 'visible', md: 'auto' },
+              minHeight: { xs: 'auto', md: 0 },
               bgcolor: 'background.paper',
-              borderLeft: 'none',
+              display: { xs: 'block', md: 'block' },
               '&::-webkit-scrollbar': {
                 width: '6px',
               },
