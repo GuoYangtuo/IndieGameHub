@@ -193,7 +193,7 @@ const ProjectComments: React.FC<ProjectCommentsProps> = ({
       {comments.length === 0 ? (
         <Alert severity="info" sx={{ mb: 2 }}>暂无评论，快来发表第一条评论吧！</Alert>
       ) : (
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2, pl:1, pr:1 }}>
           {comments.map((comment) => (
             <Box key={comment.id}>
               {/* 评论主体 */}

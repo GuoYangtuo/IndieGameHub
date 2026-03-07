@@ -13,7 +13,7 @@ import {
   Chip,
   Stack
 } from '@mui/material';
-import { Send, ArrowBack, Chat } from '@mui/icons-material';
+import { Send, ArrowBack, QuestionAnswer } from '@mui/icons-material';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { commentAPI } from '../services/api';
 import { formatRelativeTime } from '../utils/dateUtils';
@@ -216,10 +216,10 @@ const ChatRoomPage: React.FC = () => {
       {/* 顶部导航栏 */}
       <AppBar position="static" color="default" elevation={1}>
         <Toolbar>
-          <IconButton edge="start" onClick={goBack} sx={{ mr: 2 }}>
-            <ArrowBack />
+          <IconButton edge="start" onClick={goBack}>
+            <ArrowBack sx={{ fontSize: '28px' }} />
           </IconButton>
-          <Chat sx={{ mr: 1, color: 'primary.main' }} />
+          <QuestionAnswer sx={{ mr: 1, color: 'primary.main', fontSize: '30px' }} />
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             在线讨论
           </Typography>
@@ -290,7 +290,7 @@ const ChatRoomPage: React.FC = () => {
               return (
                 <React.Fragment key={message.id}>
                   {showTimeDivider && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 1 }}>
                       <Typography variant="caption" color="text.secondary">
                         {formatRelativeTime(message.createdAt)}
                       </Typography>
@@ -302,13 +302,13 @@ const ChatRoomPage: React.FC = () => {
                       display: 'flex',
                       flexDirection: message.isSelf ? 'row-reverse' : 'row',
                       alignItems: 'flex-start',
-                      mb: 2,
+                      mb: 1,
                       gap: 1
                     }}
                   >
                     <Avatar 
                       src={message.userAvatarUrl}
-                      sx={{ width: 32, height: 32 }}
+                      sx={{ width: 40, height: 40, marginTop: message.isSelf ? 0 : 2 }}
                     >
                       {message.userNickname?.charAt(0).toUpperCase() || '?'}
                     </Avatar>
@@ -323,12 +323,11 @@ const ChatRoomPage: React.FC = () => {
                       <Paper
                         elevation={1}
                         sx={{
-                          p: 1.5,
+                          py: 1,
+                          px: 1.5,
                           borderRadius: 2,
                           bgcolor: message.isSelf ? 'primary.main' : 'action.hover',
                           color: message.isSelf ? 'white' : 'text.primary',
-                          borderTopRightRadius: message.isSelf ? 0 : 16,
-                          borderTopLeftRadius: message.isSelf ? 16 : 0,
                           wordBreak: 'break-word',
                           whiteSpace: 'pre-wrap'
                         }}
@@ -348,20 +347,19 @@ const ChatRoomPage: React.FC = () => {
       </Paper>
 
       {/* 消息输入框 */}
-      <Paper 
-        elevation={3}
+      <Box 
         sx={{ 
-          p: 2, 
+          p: 1.5, 
           borderRadius: 0,
-          bgcolor: 'background.paper'
+          bgcolor: 'background.paper',
+          boxShadow: 3
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
           <TextField
             fullWidth
             multiline
-            minRows={1}
-            maxRows={6}
+            maxRows={4}
             placeholder="输入消息..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -369,6 +367,10 @@ const ChatRoomPage: React.FC = () => {
             sx={{ 
               '& .MuiOutlinedInput-root': {
                 borderRadius: '24px',
+                paddingY: 0.5
+              },
+              '& .MuiInputBase-input': {
+                padding: '8px 14px'
               }
             }}
           />
@@ -391,7 +393,7 @@ const ChatRoomPage: React.FC = () => {
             <Send />
           </IconButton>
         </Box>
-      </Paper>
+      </Box>
     </Box>
   );
 };
