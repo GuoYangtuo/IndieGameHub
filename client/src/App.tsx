@@ -4,10 +4,12 @@ import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { StyledEngineProvider } from '@mui/material/styles';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProjectTitleProvider } from './contexts/ProjectTitleContext';
+import { WebSocketProvider, useWebSocketContext } from './contexts/WebSocketContext';
 import Navbar from './components/Navbar';
 import { Box, GlobalStyles } from '@mui/material';
 import { ThemeProvider as CustomThemeProvider, useTheme } from './contexts/ThemeContext';
 import withLoadable from './utils/loadable';
+import { NotificationManager, Notification } from './components/NotificationPopup';
 import './App.css';
 import './styles/github-styles.css'; // 导入GitHub风格样式表
 
@@ -21,6 +23,7 @@ const DonatePage = withLoadable(() => import('./pages/DonatePage'));
 const EmailVerificationPage = withLoadable(() => import('./pages/EmailVerifiedPage'));
 const AdminPage = withLoadable(() => import('./pages/AdminPage'));
 const SurveyHistoryPage = withLoadable(() => import('./pages/SurveyHistoryPage'));
+const ChatRoomPage = withLoadable(() => import('./pages/ChatRoomPage'));
 
 // 自定义滚动条全局样式
 const ScrollbarStyles = () => {
@@ -75,6 +78,20 @@ const Layout = ({ children, disablePadding = false }: LayoutProps) => {
   );
 };
 
+// 聊天页面专用布局（不带导航栏）
+const ChatLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: theme => theme.palette.background.default
+      }}
+    >
+      {children}
+    </Box>
+  );
+};
+
 // 应用路由组件
 const AppRoutes = () => {
   return (
@@ -90,6 +107,7 @@ const AppRoutes = () => {
       <Route path="/project/:projectId/surveys" element={<Layout disablePadding><SurveyHistoryPage /></Layout>} />
       <Route path="/verify-email" element={<Layout><EmailVerificationPage /></Layout>} />
       <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
+      <Route path="/chat/:chatRoomId" element={<ChatLayout><ChatRoomPage /></ChatLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -101,14 +119,44 @@ const App: React.FC = () => {
       <CustomThemeProvider>
         <ScrollbarStyles />
         <AuthProvider>
-          <ProjectTitleProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-          </ProjectTitleProvider>
+          <WebSocketProvider>
+            <ProjectTitleProvider>
+              <Router>
+                <AppRoutes />
+                <NotificationManagerWithContext />
+              </Router>
+            </ProjectTitleProvider>
+          </WebSocketProvider>
         </AuthProvider>
       </CustomThemeProvider>
     </StyledEngineProvider>
+  );
+};
+
+// 通知管理器组件 - 使用 WebSocket Context
+const NotificationManagerWithContext: React.FC = () => {
+  const { notifications, clearNotification } = useWebSocketContext();
+  const [currentNotification, setCurrentNotification] = useState<Notification | null>(null);
+
+  // 监听新通知
+  useEffect(() => {
+    const unread = notifications.find(n => !n.read);
+    if (unread && unread.id !== currentNotification?.id) {
+      setCurrentNotification(unread);
+    }
+  }, [notifications, currentNotification]);
+
+  const handleClose = (id: string) => {
+    clearNotification(id);
+    setCurrentNotification(null);
+  };
+
+  return (
+    <NotificationManager
+      notifications={notifications}
+      currentNotification={currentNotification}
+      onNotificationClose={handleClose}
+    />
   );
 };
 

@@ -186,9 +186,34 @@ const createTables = async (): Promise<void> => {
         projectId VARCHAR(36),
         userId VARCHAR(36) NOT NULL,
         content TEXT NOT NULL,
+        parentId VARCHAR(36),
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (proposalId) REFERENCES proposals(id) ON DELETE CASCADE,
         FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES users(id),
+        FOREIGN KEY (parentId) REFERENCES comments(id) ON DELETE CASCADE
+      );
+    `);
+    
+    // 在线讨论区（聊天房间）表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS chat_rooms (
+        id VARCHAR(36) PRIMARY KEY,
+        commentId VARCHAR(36) NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (commentId) REFERENCES comments(id) ON DELETE CASCADE
+      );
+    `);
+    
+    // 聊天消息表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id VARCHAR(36) PRIMARY KEY,
+        chatRoomId VARCHAR(36) NOT NULL,
+        userId VARCHAR(36) NOT NULL,
+        content TEXT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (chatRoomId) REFERENCES chat_rooms(id) ON DELETE CASCADE,
         FOREIGN KEY (userId) REFERENCES users(id)
       );
     `);
@@ -416,6 +441,58 @@ export const query = async (sql: string, params?: any[]): Promise<any> => {
   } catch (error) {
     console.error('查询执行失败:', error);
     throw error;
+  }
+};
+
+// 数据库迁移函数 - 更新现有表结构
+export const migrateDatabase = async (): Promise<void> => {
+  try {
+    const conn = await pool.getConnection();
+    
+    // 检查 comments 表是否有 parentId 字段
+    const [columns] = await conn.query('SHOW COLUMNS FROM comments LIKE "parentId"');
+    if (Array.isArray(columns) && columns.length === 0) {
+      await conn.query('ALTER TABLE comments ADD COLUMN parentId VARCHAR(36) AFTER content');
+      console.log('已添加 parentId 字段到 comments 表');
+    }
+    
+    // 检查是否存在 chat_rooms 表
+    const [tables] = await conn.query('SHOW TABLES LIKE "chat_rooms"');
+    if (Array.isArray(tables) && tables.length === 0) {
+      // 创建 chat_rooms 表
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS chat_rooms (
+          id VARCHAR(36) PRIMARY KEY,
+          commentId VARCHAR(36) NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (commentId) REFERENCES comments(id) ON DELETE CASCADE
+        )
+      `);
+      console.log('已创建 chat_rooms 表');
+    }
+    
+    // 检查是否存在 chat_messages 表
+    const [msgTables] = await conn.query('SHOW TABLES LIKE "chat_messages"');
+    if (Array.isArray(msgTables) && msgTables.length === 0) {
+      // 创建 chat_messages 表
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id VARCHAR(36) PRIMARY KEY,
+          chatRoomId VARCHAR(36) NOT NULL,
+          userId VARCHAR(36) NOT NULL,
+          content TEXT NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (chatRoomId) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+          FOREIGN KEY (userId) REFERENCES users(id)
+        )
+      `);
+      console.log('已创建 chat_messages 表');
+    }
+    
+    conn.release();
+    console.log('数据库迁移完成');
+  } catch (error) {
+    console.error('数据库迁移失败:', error);
   }
 };
 

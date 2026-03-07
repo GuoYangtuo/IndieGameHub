@@ -328,7 +328,46 @@ export const commentAPI = {
     
   // 获取提案评论
   getProposalComments: (proposalId: string) =>
-    api.get(`/comments/proposals/${proposalId}/comments`)
+    api.get(`/comments/proposals/${proposalId}/comments`),
+
+  // 创建评论回复（单级回复）
+  createReply: (commentId: string, content: string) =>
+    api.post(`/comments/${commentId}/replies`, { content }),
+
+  // 获取评论的回复
+  getReplies: (commentId: string) =>
+    api.get(`/comments/${commentId}/replies`),
+
+  // 创建或获取在线讨论区
+  createOrGetChatRoom: (commentId: string) =>
+    api.post(`/comments/${commentId}/chat-room`),
+
+  // 获取在线讨论区消息
+  getChatRoomMessages: (chatRoomId: string) =>
+    api.get(`/comments/chat-rooms/${chatRoomId}/messages`),
+
+  // 发送消息到在线讨论区
+  sendChatMessage: (chatRoomId: string, content: string) =>
+    api.post(`/comments/chat-rooms/${chatRoomId}/messages`, { content }),
+};
+
+// 通知API
+export const notificationAPI = {
+  // 发送通知给指定用户
+  sendNotification: (userId: string, title: string, content: string, type?: string) =>
+    api.post('/notifications/send', { userId, title, content, type }),
+
+  // 广播通知
+  broadcastNotification: (title: string, content: string, type?: string) =>
+    api.post('/notifications/broadcast', { title, content, type }),
+
+  // 获取在线用户列表
+  getOnlineUsers: () =>
+    api.get('/notifications/online-users'),
+
+  // 获取聊天室在线成员
+  getChatRoomMembers: (chatRoomId: string) =>
+    api.get(`/notifications/chat-room/${chatRoomId}/members`),
 };
 
 // 管理员API

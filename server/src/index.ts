@@ -2,12 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
+import http from 'http';
 import { userRouter } from './routes/userRoutes';
 import projectRouter from './routes/projectRoutes';
 import { proposalRouter } from './routes/proposalRoutes';
 import { commentRouter } from './routes/commentRoutes';
 import { surveyRouter } from './routes/surveyRoutes';
-import { initDatabase } from './utils/dbTools';
+import notificationRouter from './routes/notificationRoutes';
+import { initDatabase, migrateDatabase } from './utils/dbTools';
+import { initializeWebSocket } from './websocket';
 import dotenv from 'dotenv';
 
 // 加载环境变量
@@ -21,6 +24,9 @@ const initApp = async () => {
   try {
     // 初始化MySQL数据库
     await initDatabase();
+    
+    // 执行数据库迁移（添加新字段和新表）
+    await migrateDatabase();
     
     // 中间件
     app.use(cors());
@@ -37,9 +43,19 @@ const initApp = async () => {
     app.use('/api/proposals', proposalRouter);
     app.use('/api/comments', commentRouter);
     app.use('/api/surveys', surveyRouter);
+    app.use('/api/notifications', notificationRouter);
+
+    // 创建 HTTP 服务器
+    const server = http.createServer(app);
+    
+    // 初始化 WebSocket
+    const ws = initializeWebSocket(server);
+    
+    // 将 ws 实例挂载到 app 上，供其他模块使用
+    (app as any).ws = ws;
 
     // 启动服务器
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`服务器运行在端口: ${PORT}`);
     });
     
@@ -49,4 +65,4 @@ const initApp = async () => {
 };
 
 // 启动应用
-initApp(); 
+initApp();

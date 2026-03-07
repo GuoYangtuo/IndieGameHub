@@ -136,6 +136,9 @@ interface Comment {
   content: string;
   createdAt: string;
   userAvatarUrl?: string;
+  parentId?: string | null;
+  replies?: Comment[];
+  chatRoomId?: string | null;
 }
 
 interface Member {
@@ -569,6 +572,27 @@ const ProjectDetailPage: React.FC = () => {
       setProjectComments(projectComments.filter(comment => comment.id !== commentId));
     } catch (err: any) {
       console.error('删除评论失败:', err);
+    }
+  };
+
+  // 处理回复评论
+  const handleReplyComment = async (commentId: string, content: string) => {
+    if (!user || !project) return;
+
+    try {
+      const response = await commentAPI.createReply(commentId, content);
+      
+      // 更新评论列表，添加回复
+      setProjectComments(projectComments.map(comment => {
+        if (comment.id === commentId) {
+          const newReplies = [...(comment.replies || []), response.data];
+          return { ...comment, replies: newReplies };
+        }
+        return comment;
+      }));
+    } catch (err: any) {
+      console.error('回复评论失败:', err);
+      throw err;
     }
   };
 
@@ -1097,6 +1121,8 @@ const ProjectDetailPage: React.FC = () => {
                   onCommentContentChange={setProjectCommentContent}
                   onAddComment={handleAddProjectComment}
                   onDeleteComment={handleDeleteProjectComment}
+                  onReplyComment={handleReplyComment}
+                  projectSlug={slug}
                 />
                 
                 {/* 在小屏幕上在主内容区底部显示下半部分侧边栏组件 */}

@@ -4,7 +4,12 @@ import {
   getProjectCommentsAPI,
   createNewComment,
   createNewProjectComment,
-  deleteCommentById
+  deleteCommentById,
+  createCommentReply,
+  getCommentReplies,
+  createOrGetChatRoom,
+  getChatRoomMessages,
+  sendChatMessage
 } from '../controllers/commentController';
 import { verifyToken } from '../middleware/authMiddleware';
 
@@ -23,4 +28,19 @@ commentRouter.post('/proposals/:proposalId/comments', verifyToken, createNewComm
 commentRouter.post('/projects/:projectId/comments', verifyToken, createNewProjectComment);
 
 // 删除评论
-commentRouter.delete('/:id', verifyToken, deleteCommentById); 
+commentRouter.delete('/:id', verifyToken, deleteCommentById);
+
+// 创建评论回复
+commentRouter.post('/:commentId/replies', verifyToken, createCommentReply);
+
+// 获取评论的回复
+commentRouter.get('/:commentId/replies', getCommentReplies);
+
+// 创建或获取在线讨论区
+commentRouter.post('/:commentId/chat-room', verifyToken, createOrGetChatRoom);
+
+// 获取讨论区消息
+commentRouter.get('/chat-rooms/:chatRoomId/messages', getChatRoomMessages);
+
+// 发送消息到讨论区
+commentRouter.post('/chat-rooms/:chatRoomId/messages', verifyToken, sendChatMessage); 
