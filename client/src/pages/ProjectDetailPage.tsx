@@ -1123,6 +1123,8 @@ const ProjectDetailPage: React.FC = () => {
                   onDeleteComment={handleDeleteProjectComment}
                   onReplyComment={handleReplyComment}
                   projectSlug={slug}
+                  projectCreatedBy={project?.createdBy}
+                  projectMemberIds={project?.members || []}
                 />
                 
                 {/* 在小屏幕上在主内容区底部显示下半部分侧边栏组件 */}
