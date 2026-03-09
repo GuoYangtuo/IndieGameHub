@@ -35,13 +35,15 @@ import {
   Logout,
   Home,
   Person,
-  Share
+  Share,
+  TrendingUp,
+  History
 } from '@mui/icons-material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useProjectTitle } from '../contexts/ProjectTitleContext';
-import { projectAPI, userAPI } from '../services/api'; // userAPI still needed for handleToggleFavorite
+import { projectAPI, userAPI, betCampaignAPI } from '../services/api'; // userAPI still needed for handleToggleFavorite
 import { Description, Update, AccountTree } from '@mui/icons-material';
 import AuthDialog from './AuthDialog';
 import RechargeDialog from './RechargeDialog';
@@ -73,7 +75,10 @@ const Navbar: React.FC = () => {
   const dataLoaded = !slug || !!sharedProjectData; // 非项目页直接算已加载；项目页等 sharedProjectData 就绪
   
   const [currentSlug, setCurrentSlug] = useState<string | undefined>(slug);
-  
+
+  // 对赌众筹相关状态
+  const [activeBetCampaign, setActiveBetCampaign] = useState<any>(null);
+
   // 项目下拉菜单
   const [projectsMenuOpen, setProjectsMenuOpen] = useState(false);
   const projectsAnchorRef = useRef<HTMLButtonElement>(null);
@@ -95,7 +100,27 @@ const Navbar: React.FC = () => {
       setCurrentSlug(slug);
     }
   }, [slug]);
-  
+
+  // 获取对赌众筹状态
+  useEffect(() => {
+    const fetchActiveBetCampaign = async () => {
+      if (!slug || !sharedProjectData) {
+        setActiveBetCampaign(null);
+        return;
+      }
+
+      try {
+        const response = await betCampaignAPI.getActiveBetCampaign(sharedProjectData.id);
+        setActiveBetCampaign(response.data);
+      } catch (error) {
+        console.error('获取对赌众筹状态失败', error);
+        setActiveBetCampaign(null);
+      }
+    };
+
+    fetchActiveBetCampaign();
+  }, [slug, sharedProjectData]);
+
   // 获取用户项目列表（Navbar 唯一需要独立请求的数据）
   useEffect(() => {
     if (user) {
@@ -358,6 +383,39 @@ const Navbar: React.FC = () => {
                   捐赠
                 </Button>
               </Tooltip>
+              )}
+
+              {/* 对赌众筹按钮 */}
+              {currentSlug && (
+                (isMember || isCreator) ? (
+                  // 项目成员：跳转到管理页面
+                  <Tooltip title="管理对赌众筹">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<TrendingUp />}
+                      component={RouterLink}
+                      to={`/projects/${currentSlug}/bet-campaign/manage`}
+                      sx={{ ml: 1, fontWeight: 'bold' }}
+                    >
+                      对赌众筹
+                    </Button>
+                  </Tooltip>
+                ) : activeBetCampaign ? (
+                  // 非项目成员但有进行中的对赌众筹：跳转到对赌众筹页面
+                  <Tooltip title="查看对赌众筹">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<TrendingUp />}
+                      component={RouterLink}
+                      to={`/projects/${currentSlug}/bet-campaign`}
+                      sx={{ ml: 1, fontWeight: 'bold' }}
+                    >
+                      对赌众筹
+                    </Button>
+                  </Tooltip>
+                ) : null
               )}
             </Box>
           )}

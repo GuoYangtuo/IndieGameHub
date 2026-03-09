@@ -9,6 +9,7 @@ import { proposalRouter } from './routes/proposalRoutes';
 import { commentRouter } from './routes/commentRoutes';
 import { surveyRouter } from './routes/surveyRoutes';
 import notificationRouter from './routes/notificationRoutes';
+import betCampaignRouter from './routes/betCampaignRoutes';
 import { initDatabase, migrateDatabase } from './utils/dbTools';
 import { initializeWebSocket } from './websocket';
 import dotenv from 'dotenv';
@@ -44,6 +45,7 @@ const initApp = async () => {
     app.use('/api/comments', commentRouter);
     app.use('/api/surveys', surveyRouter);
     app.use('/api/notifications', notificationRouter);
+    app.use('/api/bet-campaigns', betCampaignRouter);
 
     // 创建 HTTP 服务器
     const server = http.createServer(app);

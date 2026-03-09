@@ -472,4 +472,48 @@ export const surveyAPI = {
   // 删除征询（仅创建者）
   deleteSurvey: (surveyId: string) =>
     api.delete(`/surveys/${surveyId}`)
+};
+
+// 对赌众筹API
+export const betCampaignAPI = {
+  // 获取项目的所有对赌众筹
+  getBetCampaigns: (projectId: string, status?: string) =>
+    api.get(`/bet-campaigns/project/${projectId}${status ? `?status=${status}` : ''}`),
+
+  // 获取项目当前进行中的对赌众筹
+  getActiveBetCampaign: (projectId: string) =>
+    api.get(`/bet-campaigns/project/${projectId}/active`),
+
+  // 获取单个对赌众筹详情
+  getBetCampaignById: (campaignId: string) =>
+    api.get(`/bet-campaigns/${campaignId}`),
+
+  // 创建对赌众筹
+  createBetCampaign: (data: {
+    projectId: string;
+    title: string;
+    description?: string;
+    targetAmount: number;
+    fundingDays: number;
+    developmentDays: number;
+    developmentGoals?: string;
+    tierAmounts: number[];
+    allowCustomAmount?: boolean;
+  }) => api.post('/bet-campaigns', data),
+
+  // 捐赠对赌众筹
+  donateToBetCampaign: (campaignId: string, amount: number, message?: string) =>
+    api.post(`/bet-campaigns/${campaignId}/donate`, { amount, message }),
+
+  // 检查开发阶段状态
+  checkDevelopmentStatus: (campaignId: string) =>
+    api.get(`/bet-campaigns/${campaignId}/status`),
+
+  // 删除对赌众筹
+  deleteBetCampaign: (campaignId: string) =>
+    api.delete(`/bet-campaigns/${campaignId}`),
+
+  // 设置开发结果
+  setDevelopmentResult: (campaignId: string, result: 'success' | 'failed') =>
+    api.put(`/bet-campaigns/${campaignId}/result`, { result })
 }; 

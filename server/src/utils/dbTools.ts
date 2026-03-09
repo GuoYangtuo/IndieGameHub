@@ -425,6 +425,46 @@ const createTables = async (): Promise<void> => {
       );
     `);
 
+    // 对赌众筹表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS bet_campaigns (
+        id VARCHAR(36) PRIMARY KEY,
+        projectId VARCHAR(36) NOT NULL,
+        createdBy VARCHAR(36) NOT NULL,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        targetAmount INT NOT NULL,
+        fundingDays INT NOT NULL,
+        developmentDays INT NOT NULL,
+        fundingEndTime TIMESTAMP NOT NULL,
+        developmentEndTime TIMESTAMP NOT NULL,
+        developmentGoals TEXT,
+        tierAmounts TEXT NOT NULL,
+        allowCustomAmount BOOLEAN DEFAULT TRUE,
+        status ENUM('funding', 'development', 'completed', 'failed', 'cancelled') DEFAULT 'funding',
+        result ENUM('pending', 'success', 'failed') DEFAULT 'pending',
+        totalRaised INT DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (createdBy) REFERENCES users(id)
+      );
+    `);
+
+    // 对赌众筹捐赠表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS bet_donations (
+        id VARCHAR(36) PRIMARY KEY,
+        campaignId VARCHAR(36) NOT NULL,
+        userId VARCHAR(36) NOT NULL,
+        amount INT NOT NULL,
+        message TEXT,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campaignId) REFERENCES bet_campaigns(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES users(id)
+      );
+    `);
+
     conn.release();
     console.log('数据库表创建成功');
   } catch (error) {
@@ -448,14 +488,35 @@ export const query = async (sql: string, params?: any[]): Promise<any> => {
 export const migrateDatabase = async (): Promise<void> => {
   try {
     const conn = await pool.getConnection();
-    
+
     // 检查 comments 表是否有 parentId 字段
     const [columns] = await conn.query('SHOW COLUMNS FROM comments LIKE "parentId"');
     if (Array.isArray(columns) && columns.length === 0) {
       await conn.query('ALTER TABLE comments ADD COLUMN parentId VARCHAR(36) AFTER content');
       console.log('已添加 parentId 字段到 comments 表');
     }
-    
+
+    // 检查 bet_donations 表的字段迁移
+    const [betIdColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "betId"');
+    const [campaignIdColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "campaignId"');
+
+    if (Array.isArray(betIdColumns) && betIdColumns.length > 0) {
+      if (Array.isArray(campaignIdColumns) && campaignIdColumns.length > 0) {
+        // 两列都存在，先删除外键约束，再删除 betId 列
+        await conn.query('ALTER TABLE bet_donations DROP FOREIGN KEY bet_donations_ibfk_1');
+        await conn.query('ALTER TABLE bet_donations DROP COLUMN betId');
+        console.log('已删除多余的 betId 字段');
+      } else {
+        // 只有 betId，重命名为 campaignId（这也会保留外键约束）
+        await conn.query('ALTER TABLE bet_donations CHANGE COLUMN betId campaignId VARCHAR(36) NOT NULL');
+        console.log('已将 betId 字段重命名为 campaignId');
+      }
+    } else if (Array.isArray(campaignIdColumns) && campaignIdColumns.length === 0) {
+      // 没有 campaignId，添加它
+      await conn.query('ALTER TABLE bet_donations ADD COLUMN campaignId VARCHAR(36) NOT NULL AFTER id');
+      console.log('已添加 campaignId 字段到 bet_donations 表');
+    }
+
     // 检查是否存在 chat_rooms 表
     const [tables] = await conn.query('SHOW TABLES LIKE "chat_rooms"');
     if (Array.isArray(tables) && tables.length === 0) {

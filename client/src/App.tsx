@@ -24,6 +24,8 @@ const EmailVerificationPage = withLoadable(() => import('./pages/EmailVerifiedPa
 const AdminPage = withLoadable(() => import('./pages/AdminPage'));
 const SurveyHistoryPage = withLoadable(() => import('./pages/SurveyHistoryPage'));
 const ChatRoomPage = withLoadable(() => import('./pages/ChatRoomPage'));
+const BetCampaignPage = withLoadable(() => import('./pages/BetCampaignPage'));
+const BetCampaignManagePage = withLoadable(() => import('./pages/BetCampaignManagePage'));
 
 // 自定义滚动条全局样式
 const ScrollbarStyles = () => {
@@ -101,6 +103,9 @@ const AppRoutes = () => {
       <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/user/:id" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/projects/:slug/donate" element={<Layout><DonatePage /></Layout>} />
+      <Route path="/projects/:slug/bet-campaign" element={<Layout><BetCampaignPage /></Layout>} />
+      <Route path="/projects/:slug/bet-campaign/:campaignId" element={<Layout><BetCampaignPage /></Layout>} />
+      <Route path="/projects/:slug/bet-campaign/manage" element={<Layout><BetCampaignManagePage /></Layout>} />
       <Route path="/projects/:slug" element={<Layout><ProjectDetailPage /></Layout>} />
       <Route path="/projects/:slug/settings" element={<Layout><ProjectSettingsPage /></Layout>} />
       <Route path="/projects/:slug/surveys" element={<Layout disablePadding><SurveyHistoryPage /></Layout>} />
