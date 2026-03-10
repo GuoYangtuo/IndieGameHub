@@ -58,7 +58,7 @@ export const createBetCampaign = async (req: Request, res: Response): Promise<vo
     await query(
       `INSERT INTO bet_campaigns (id, projectId, createdBy, title, description, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals, tierAmounts, allowCustomAmount, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'funding')`,
-      [campaignId, projectId, userId, title, description || null, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals || null, JSON.stringify(tierAmounts), allowCustomAmount !== false]
+      [campaignId, projectId, userId, title, description || null, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals ? JSON.stringify(developmentGoals) : null, JSON.stringify(tierAmounts), allowCustomAmount !== false]
     );
 
     const newCampaign = await query('SELECT * FROM bet_campaigns WHERE id = ?', [campaignId]);

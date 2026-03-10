@@ -41,8 +41,6 @@ import {
 } from '@mui/material';
 import {
   ArrowBack,
-  TrendingUp,
-  Schedule,
   AttachMoney,
   EmojiEvents,
   Warning,
@@ -58,6 +56,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
 import { formatDate, formatRelativeTime } from '../utils/dateUtils';
+import BetCampaignGuide from '../components/BetCampaignGuide';
 
 interface BetDonation {
   id: string;
@@ -99,33 +98,6 @@ interface Project {
   createdBy: string;
   members: string[];
 }
-
-// 对赌众筹说明
-const BetCampaignGuide = () => (
-  <Paper sx={{ p: 3, mb: 3, bgcolor: 'info.main', color: 'info.contrastText' }}>
-    <Typography variant="h6" gutterBottom>
-      <EmojiEvents sx={{ mr: 1, verticalAlign: 'middle' }} />
-      什么是"对赌众筹"？
-    </Typography>
-    <Typography variant="body2" sx={{ mb: 2 }}>
-      对赌众筹是一种创新的众筹模式，将众筹分为两个阶段：
-    </Typography>
-    <Box sx={{ pl: 2 }}>
-      <Typography variant="body2" sx={{ mb: 1 }}>
-        <TrendingUp sx={{ mr: 1, verticalAlign: 'middle', fontSize: 18 }} />
-        <strong>众筹阶段：</strong>在设定的时间内（如3天）筹集目标金额。如果未达成目标，所有捐款将被退还。
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 1 }}>
-        <Schedule sx={{ mr: 1, verticalAlign: 'middle', fontSize: 18 }} />
-        <strong>开发阶段：</strong>众筹成功后，进入开发阶段（如7天）。开发者需要完成预设的目标。
-      </Typography>
-      <Typography variant="body2">
-        <EmojiEvents sx={{ mr: 1, verticalAlign: 'middle', fontSize: 18 }} />
-        <strong>挑战结果：</strong>开发完成后，如果达成目标，开发者获得捐款；如果未达成，所有捐款将被退还给捐赠者。
-      </Typography>
-    </Box>
-  </Paper>
-);
 
 const BetCampaignPage: React.FC = () => {
   const { slug, campaignId } = useParams<{ slug: string; campaignId?: string }>();
