@@ -57,7 +57,8 @@ import {
   Delete,
   History,
   Create,
-  Image as ImageIcon
+  Image as ImageIcon,
+  HelpOutline
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
@@ -117,6 +118,10 @@ const BetCampaignManagePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
+  const [guideHidden, setGuideHidden] = useState(() => {
+    return localStorage.getItem('bet_campaign_guide_hidden') === 'true';
+  });
+  const [guideForceShow, setGuideForceShow] = useState(0);
 
   // 创建对话框状态
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -379,18 +384,34 @@ const BetCampaignManagePage: React.FC = () => {
         <Button startIcon={<ArrowBack />} onClick={() => navigate(`/projects/${slug}`)}>
           返回项目
         </Button>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setCreateDialogOpen(true)}
-          disabled={!!activeCampaign}
-        >
-          创建对赌众筹
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {guideHidden && (
+            <Tooltip title="显示对赌众筹说明">
+              <IconButton
+                onClick={() => {
+                  localStorage.removeItem('bet_campaign_guide_hidden');
+                  setGuideHidden(false);
+                  setGuideForceShow(prev => prev + 1);
+                }}
+                size="small"
+              >
+                <HelpOutline />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setCreateDialogOpen(true)}
+            disabled={!!activeCampaign}
+          >
+            创建对赌众筹
+          </Button>
+        </Box>
       </Box>
 
       {/* 对赌众筹说明 */}
-      <BetCampaignGuide />
+      <BetCampaignGuide forceShow={guideForceShow} onNeverShow={() => setGuideHidden(true)} />
 
       {/* 进行中的对赌众筹 */}
       {activeCampaign && (

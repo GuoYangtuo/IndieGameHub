@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
   Paper,
-  IconButton
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
   TrendingUp,
   Schedule,
   EmojiEvents,
-  Close
+  Close,
+  VisibilityOff,
+  Close as CloseIcon
 } from '@mui/icons-material';
+
+const STORAGE_KEY = 'bet_campaign_guide_hidden';
 
 interface BetCampaignGuideProps {
   /**
@@ -22,17 +30,63 @@ interface BetCampaignGuideProps {
    * 组件样式配置
    */
   sx?: object;
+
+  /**
+   * 触发重新检查 localStorage（使用数字递增）
+   */
+  forceShow?: number;
+
+  /**
+   * 当用户选择"不再显示"时的回调
+   */
+  onNeverShow?: () => void;
 }
 
 const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({ 
   showCloseButton = true,
-  sx 
+  sx,
+  forceShow = 0,
+  onNeverShow
 }) => {
   const [visible, setVisible] = useState(true);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+
+  // 检查 localStorage 状态
+  useEffect(() => {
+    const isHidden = localStorage.getItem(STORAGE_KEY) === 'true';
+    if (isHidden && !forceShow) {
+      setVisible(false);
+    } else {
+      setVisible(true);
+    }
+  }, [forceShow]);
 
   if (!visible) {
     return null;
   }
+
+  // 处理关闭按钮点击
+  const handleCloseClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (showCloseButton) {
+      setMenuAnchor(event.currentTarget);
+    }
+  };
+
+  // 仅关闭一次
+  const handleCloseOnce = () => {
+    setVisible(false);
+    setMenuAnchor(null);
+  };
+
+  // 不再显示
+  const handleNeverShow = () => {
+    localStorage.setItem(STORAGE_KEY, 'true');
+    setVisible(false);
+    setMenuAnchor(null);
+    if (onNeverShow) {
+      onNeverShow();
+    }
+  };
 
   return (
     <Paper 
@@ -48,7 +102,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
       {/* 关闭按钮 */}
       {showCloseButton && (
         <IconButton
-          onClick={() => setVisible(false)}
+          onClick={handleCloseClick}
           sx={{
             position: 'absolute',
             top: 8,
@@ -63,6 +117,34 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
           <Close />
         </IconButton>
       )}
+
+      {/* 关闭选项菜单 */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleCloseOnce}>
+          <ListItemIcon>
+            <CloseIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>仅关闭一次</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleNeverShow}>
+          <ListItemIcon>
+            <VisibilityOff fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>不再显示</ListItemText>
+        </MenuItem>
+      </Menu>
 
       <Typography variant="h6" gutterBottom>
         什么是"对赌众筹"？
