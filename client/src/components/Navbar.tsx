@@ -349,26 +349,28 @@ const Navbar: React.FC = () => {
             {projectTitle || 'IndieGameHub'}
           </Typography>
           
-          {projectTitle && demoLink && dataLoaded && (
+          {projectTitle && dataLoaded && (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Tooltip title="下载最新Demo">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<Download />}
-                  href={demoLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{ 
-                    ml: 1, 
-                    fontWeight: 'bold', 
-                    boxShadow: 3,
-                    color: 'white'
-                  }}
-                >
-                  下载Demo
-                </Button>
-              </Tooltip>
+              {demoLink && (
+                <Tooltip title="下载最新Demo">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Download />}
+                    href={demoLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ 
+                      ml: 1, 
+                      fontWeight: 'bold', 
+                      boxShadow: 3,
+                      color: 'white'
+                    }}
+                  >
+                    下载Demo
+                  </Button>
+                </Tooltip>
+              )}
               
               {currentSlug && (
               <Tooltip title="直接向开发者捐赠">
@@ -385,7 +387,7 @@ const Navbar: React.FC = () => {
               </Tooltip>
               )}
 
-              {/* 对赌众筹按钮 */}
+              {/* 对赌众筹按钮 - 放在 demoLink 条件之外，确保只要是项目成员就能看到 */}
               {currentSlug && (
                 (isMember || isCreator) ? (
                   // 项目成员：跳转到管理页面
@@ -420,7 +422,7 @@ const Navbar: React.FC = () => {
             </Box>
           )}
 
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, pl: 1 }}>
             {user && renderProjectsButton()}
           </Box>
 
