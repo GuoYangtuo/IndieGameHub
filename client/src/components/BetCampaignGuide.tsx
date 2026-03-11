@@ -201,7 +201,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
       </Typography>
       <Box component="ul" sx={{ pl: 3.5, mb: 2, m: 1, '& li': { mb: 0.5 } }}>
         <Typography component="li" variant="body2">开发初期缺钱的</Typography>
-        <Typography component="li" variant="body2">希望全职开发独立游戏的（通过几十上百次小的对赌众筹，或者源源不断的支持）</Typography>
+        <Typography component="li" variant="body2">希望全职开发独立游戏的（通过连续的对赌众筹，获得源源不断的支持）</Typography>
         <Typography component="li" variant="body2">进度缓慢，需要监督和动力的</Typography>
         <Typography component="li" variant="body2">害怕一次性众筹的高风险的，或者独狼没有团队的</Typography>
         <Typography component="li" variant="body2">想挑战自己的</Typography>
@@ -212,7 +212,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
         哪些粉丝可能需要？
       </Typography>
       <Box component="ul" sx={{ pl: 3.5, m: 1, '& li': { mb: 0.5 } }}>
-        <Typography component="li" variant="body2">想要投资梦想，但担心捐款打水漂的</Typography>
+        <Typography component="li" variant="body2">想要支持梦想，但担心捐款打水漂的</Typography>
         <Typography component="li" variant="body2">觉得开发者进度慢，想激励他的</Typography>
         <Typography component="li" variant="body2">看见有人想挑战自己，想看热闹捧个场的</Typography>
       </Box>
