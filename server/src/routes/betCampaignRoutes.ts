@@ -7,7 +7,8 @@ import {
   donateToBetCampaign,
   checkDevelopmentStatus,
   deleteBetCampaign,
-  setDevelopmentResult
+  setDevelopmentResult,
+  uploadGoalImages
 } from '../controllers/betCampaignController';
 import { verifyToken } from '../middleware/authMiddleware';
 
@@ -22,8 +23,8 @@ router.get('/project/:projectId/active', getActiveBetCampaign);
 // 获取单个对赌众筹详情
 router.get('/:campaignId', getBetCampaignById);
 
-// 创建对赌众筹（需要登录）
-router.post('/', verifyToken, createBetCampaign);
+// 创建对赌众筹（需要登录，支持多图上传）
+router.post('/', verifyToken, uploadGoalImages.array('goalImages', 10), createBetCampaign);
 
 // 捐赠对赌众筹（需要登录）
 router.post('/:campaignId/donate', verifyToken, donateToBetCampaign);

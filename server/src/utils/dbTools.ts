@@ -439,6 +439,7 @@ const createTables = async (): Promise<void> => {
         fundingEndTime TIMESTAMP NOT NULL,
         developmentEndTime TIMESTAMP NOT NULL,
         developmentGoals TEXT,
+        developmentGoalImages TEXT,
         tierAmounts TEXT NOT NULL,
         allowCustomAmount BOOLEAN DEFAULT TRUE,
         status ENUM('funding', 'development', 'completed', 'failed', 'cancelled') DEFAULT 'funding',
@@ -515,6 +516,13 @@ export const migrateDatabase = async (): Promise<void> => {
       // 没有 campaignId，添加它
       await conn.query('ALTER TABLE bet_donations ADD COLUMN campaignId VARCHAR(36) NOT NULL AFTER id');
       console.log('已添加 campaignId 字段到 bet_donations 表');
+    }
+
+    // 检查 bet_campaigns 表是否有 developmentGoalImages 字段
+    const [goalImageColumns] = await conn.query('SHOW COLUMNS FROM bet_campaigns LIKE "developmentGoalImages"');
+    if (Array.isArray(goalImageColumns) && goalImageColumns.length === 0) {
+      await conn.query('ALTER TABLE bet_campaigns ADD COLUMN developmentGoalImages TEXT AFTER developmentGoals');
+      console.log('已添加 developmentGoalImages 字段到 bet_campaigns 表');
     }
 
     // 检查是否存在 chat_rooms 表

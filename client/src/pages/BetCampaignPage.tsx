@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import {
   Container,
   Typography,
@@ -80,7 +81,8 @@ interface BetCampaign {
   developmentDays: number;
   fundingEndTime: string;
   developmentEndTime: string;
-  developmentGoals?: string | string[];
+  developmentGoals?: string;
+  developmentGoalImages?: string[];
   tierAmounts: number[];
   allowCustomAmount: boolean;
   status: 'funding' | 'development' | 'completed' | 'failed' | 'cancelled';
@@ -322,25 +324,44 @@ const BetCampaignPage: React.FC = () => {
         )}
 
         {/* 开发目标 */}
-        {campaign.developmentGoals && campaign.developmentGoals.length > 0 && (
+        {campaign.developmentGoals && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               <CheckCircle sx={{ mr: 1, verticalAlign: 'middle' }} />
               开发目标
             </Typography>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              {Array.isArray(campaign.developmentGoals) ? (
-                <List dense>
-                  {campaign.developmentGoals.map((goal, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={goal} />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Typography variant="body2">{campaign.developmentGoals}</Typography>
-              )}
+              <Box sx={{ '& img': { maxWidth: '100%', height: 'auto' } }}>
+                <ReactMarkdown>{campaign.developmentGoals}</ReactMarkdown>
+              </Box>
             </Paper>
+          </Box>
+        )}
+
+        {/* 开发目标图片 */}
+        {campaign.developmentGoalImages && campaign.developmentGoalImages.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              <ImageIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+              开发目标配图
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {campaign.developmentGoalImages.map((image, index) => (
+                <Box
+                  key={index}
+                  component="img"
+                  src={image}
+                  alt={`开发目标配图 ${index + 1}`}
+                  sx={{
+                    maxWidth: '100%',
+                    maxHeight: 400,
+                    objectFit: 'contain',
+                    borderRadius: 2,
+                    boxShadow: 1
+                  }}
+                />
+              ))}
+            </Box>
           </Box>
         )}
 

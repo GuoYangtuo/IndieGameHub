@@ -166,7 +166,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
         }}
       >
         <img 
-          src="/src/assets/images/bet-campaign-flowchart.png" 
+          src="/images/bet-campaign-flowchart.png" 
           alt="对赌众筹流程图" 
         />
       </Box>

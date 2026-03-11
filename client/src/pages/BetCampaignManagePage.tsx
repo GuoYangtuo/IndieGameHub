@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -58,7 +58,8 @@ import {
   History,
   Create,
   Image as ImageIcon,
-  HelpOutline
+  HelpOutline,
+  CloudUpload
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
@@ -87,7 +88,8 @@ interface BetCampaign {
   developmentDays: number;
   fundingEndTime: string;
   developmentEndTime: string;
-  developmentGoals?: string | string[];
+  developmentGoals?: string;
+  developmentGoalImages?: string[];
   tierAmounts: number[];
   allowCustomAmount: boolean;
   status: 'funding' | 'development' | 'completed' | 'failed' | 'cancelled';
@@ -134,6 +136,8 @@ const BetCampaignManagePage: React.FC = () => {
   const [fundingDays, setFundingDays] = useState(3);
   const [developmentDays, setDevelopmentDays] = useState(7);
   const [developmentGoals, setDevelopmentGoals] = useState('');
+  const [goalImages, setGoalImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [tierAmounts, setTierAmounts] = useState<number[]>([5, 10, 20]);
   const [allowCustomAmount, setAllowCustomAmount] = useState(true);
 
@@ -210,7 +214,7 @@ const BetCampaignManagePage: React.FC = () => {
         developmentGoals: developmentGoals || undefined,
         tierAmounts,
         allowCustomAmount
-      });
+      }, goalImages);
 
       // 刷新数据
       const campaignsResponse = await betCampaignAPI.getBetCampaigns(project.id);
@@ -300,6 +304,8 @@ const BetCampaignManagePage: React.FC = () => {
     setFundingDays(3);
     setDevelopmentDays(7);
     setDevelopmentGoals('');
+    setGoalImages([]);
+    setImagePreviews([]);
     setTierAmounts([5, 10, 20]);
     setAllowCustomAmount(true);
   };
@@ -607,15 +613,86 @@ const BetCampaignManagePage: React.FC = () => {
           </Box>
 
           <TextField
-            label="开发目标（每行一个目标）"
+            label="开发目标（支持Markdown格式）"
             value={developmentGoals}
             onChange={(e) => setDevelopmentGoals(e.target.value)}
             fullWidth
             multiline
-            rows={3}
+            rows={5}
             sx={{ mb: 2 }}
-            helperText="在开发阶段需要完成的任务，每行一个目标"
+            placeholder="# 主要目标&#10;&#10;## 子任务1&#10;- 任务1.1&#10;- 任务1.2&#10;&#10;## 子任务2&#10;- 任务2.1"
+            helperText="使用Markdown格式描述开发目标，支持标题、列表等格式"
           />
+
+          {/* 开发目标图片上传 */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              开发目标配图（可选，最多10张）
+            </Typography>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<CloudUpload />}
+              sx={{ mb: 1 }}
+            >
+              上传图片
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files) {
+                    const newFiles = Array.from(files);
+                    const totalFiles = goalImages.length + newFiles.length;
+                    if (totalFiles > 10) {
+                      alert('最多只能上传10张图片');
+                      return;
+                    }
+                    setGoalImages([...goalImages, ...newFiles]);
+                    // 创建预览
+                    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+                    setImagePreviews([...imagePreviews, ...newPreviews]);
+                  }
+                }}
+              />
+            </Button>
+            {imagePreviews.length > 0 && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                {imagePreviews.map((preview, index) => (
+                  <Box key={index} sx={{ position: 'relative' }}>
+                    <img
+                      src={preview}
+                      alt={`预览 ${index + 1}`}
+                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4 }}
+                    />
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        bgcolor: 'error.main',
+                        color: 'white',
+                        '&:hover': { bgcolor: 'error.dark' },
+                        width: 24,
+                        height: 24
+                      }}
+                      onClick={() => {
+                        const newImages = goalImages.filter((_, i) => i !== index);
+                        const newPreviews = imagePreviews.filter((_, i) => i !== index);
+                        setGoalImages(newImages);
+                        setImagePreviews(newPreviews);
+                      }}
+                    >
+                      <Delete sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
 
           <Typography variant="subtitle2" gutterBottom>
             捐赠档位（选择默认档位或自定义）

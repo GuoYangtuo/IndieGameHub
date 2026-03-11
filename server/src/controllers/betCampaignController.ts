@@ -1,16 +1,61 @@
 import { Request, Response } from 'express';
 import { query } from '../utils/dbTools';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 // 生成唯一ID
 const generateId = (): string => {
   return Date.now().toString() + Math.floor(Math.random() * 1000).toString();
 };
 
-// 创建对赌众筹
+// 配置multer中间件用于开发目标图片上传
+const storage = multer.diskStorage({
+  destination: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+    const uploadDir = path.join(__dirname, '../../uploads/bet-campaign-goals');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'goal-image-' + uniqueSuffix + ext);
+  }
+});
+
+export const uploadGoalImages = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('只允许上传图片文件'));
+    }
+    cb(null, true);
+  }
+});
+
+// 创建对赌众筹（支持多图上传）
 export const createBetCampaign = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { projectId, title, description, targetAmount, fundingDays, developmentDays, developmentGoals, tierAmounts, allowCustomAmount } = req.body;
     const userId = req.user?.id;
+    let { projectId, title, description, targetAmount, fundingDays, developmentDays, developmentGoals, tierAmounts, allowCustomAmount } = req.body;
+
+    // 解析从 FormData 发送的 JSON 字符串
+    if (typeof tierAmounts === 'string') {
+      try {
+        tierAmounts = JSON.parse(tierAmounts);
+      } catch (e) {
+        tierAmounts = [];
+      }
+    }
+
+    // 处理上传的图片
+    const files = req.files as Express.Multer.File[];
+    const developmentGoalImages = files && files.length > 0
+      ? files.map(file => `/uploads/bet-campaign-goals/${file.filename}`)
+      : [];
 
     if (!userId) {
       res.status(401).json({ error: '未登录' });
@@ -56,9 +101,9 @@ export const createBetCampaign = async (req: Request, res: Response): Promise<vo
     const developmentEndTime = new Date(fundingEndTime.getTime() + developmentDays * 24 * 60 * 60 * 1000);
 
     await query(
-      `INSERT INTO bet_campaigns (id, projectId, createdBy, title, description, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals, tierAmounts, allowCustomAmount, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'funding')`,
-      [campaignId, projectId, userId, title, description || null, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals ? JSON.stringify(developmentGoals) : null, JSON.stringify(tierAmounts), allowCustomAmount !== false]
+      `INSERT INTO bet_campaigns (id, projectId, createdBy, title, description, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals, developmentGoalImages, tierAmounts, allowCustomAmount, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'funding')`,
+      [campaignId, projectId, userId, title, description || null, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals || null, JSON.stringify(developmentGoalImages), JSON.stringify(tierAmounts), allowCustomAmount !== false]
     );
 
     const newCampaign = await query('SELECT * FROM bet_campaigns WHERE id = ?', [campaignId]);
@@ -91,6 +136,7 @@ export const getBetCampaigns = async (req: Request, res: Response): Promise<void
     const parsedCampaigns = (campaigns as any[]).map(campaign => {
       let parsedTierAmounts = [];
       let parsedDevelopmentGoals = null;
+      let parsedDevelopmentGoalImages: string[] = [];
 
       try {
         parsedTierAmounts = JSON.parse(campaign.tierAmounts || '[]');
@@ -100,16 +146,24 @@ export const getBetCampaigns = async (req: Request, res: Response): Promise<void
       }
 
       try {
-        parsedDevelopmentGoals = campaign.developmentGoals ? JSON.parse(campaign.developmentGoals) : null;
+        parsedDevelopmentGoals = campaign.developmentGoals ? campaign.developmentGoals : null;
       } catch (e) {
         console.warn(`解析 developmentGoals 失败，campaignId: ${campaign.id}, 值: ${campaign.developmentGoals}`);
         parsedDevelopmentGoals = null;
       }
 
+      try {
+        parsedDevelopmentGoalImages = campaign.developmentGoalImages ? JSON.parse(campaign.developmentGoalImages) : [];
+      } catch (e) {
+        console.warn(`解析 developmentGoalImages 失败，campaignId: ${campaign.id}, 值: ${campaign.developmentGoalImages}`);
+        parsedDevelopmentGoalImages = [];
+      }
+
       return {
         ...campaign,
         tierAmounts: parsedTierAmounts,
-        developmentGoals: parsedDevelopmentGoals
+        developmentGoals: parsedDevelopmentGoals,
+        developmentGoalImages: parsedDevelopmentGoalImages
       };
     });
 
@@ -137,6 +191,7 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
     // 解析 JSON 字段
     let parsedTierAmounts = [];
     let parsedDevelopmentGoals = null;
+    let parsedDevelopmentGoalImages: string[] = [];
 
     try {
       parsedTierAmounts = JSON.parse(campaignData.tierAmounts || '[]');
@@ -146,10 +201,17 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
     }
 
     try {
-      parsedDevelopmentGoals = campaignData.developmentGoals ? JSON.parse(campaignData.developmentGoals) : null;
+      parsedDevelopmentGoals = campaignData.developmentGoals ? campaignData.developmentGoals : null;
     } catch (e) {
       console.warn(`解析 developmentGoals 失败，campaignId: ${campaignData.id}, 值: ${campaignData.developmentGoals}`);
       parsedDevelopmentGoals = null;
+    }
+
+    try {
+      parsedDevelopmentGoalImages = campaignData.developmentGoalImages ? JSON.parse(campaignData.developmentGoalImages) : [];
+    } catch (e) {
+      console.warn(`解析 developmentGoalImages 失败，campaignId: ${campaignData.id}, 值: ${campaignData.developmentGoalImages}`);
+      parsedDevelopmentGoalImages = [];
     }
 
     // 获取捐赠列表
@@ -162,6 +224,7 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       ...campaignData,
       tierAmounts: parsedTierAmounts,
       developmentGoals: parsedDevelopmentGoals,
+      developmentGoalImages: parsedDevelopmentGoalImages,
       donations: donations || []
     });
   } catch (error) {
@@ -190,6 +253,7 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
     // 解析 JSON 字段
     let parsedTierAmounts = [];
     let parsedDevelopmentGoals = null;
+    let parsedDevelopmentGoalImages: string[] = [];
 
     try {
       parsedTierAmounts = JSON.parse(campaignData.tierAmounts || '[]');
@@ -199,10 +263,17 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
     }
 
     try {
-      parsedDevelopmentGoals = campaignData.developmentGoals ? JSON.parse(campaignData.developmentGoals) : null;
+      parsedDevelopmentGoals = campaignData.developmentGoals ? campaignData.developmentGoals : null;
     } catch (e) {
       console.warn(`解析 developmentGoals 失败，campaignId: ${campaignData.id}, 值: ${campaignData.developmentGoals}`);
       parsedDevelopmentGoals = null;
+    }
+
+    try {
+      parsedDevelopmentGoalImages = campaignData.developmentGoalImages ? JSON.parse(campaignData.developmentGoalImages) : [];
+    } catch (e) {
+      console.warn(`解析 developmentGoalImages 失败，campaignId: ${campaignData.id}, 值: ${campaignData.developmentGoalImages}`);
+      parsedDevelopmentGoalImages = [];
     }
 
     // 获取捐赠列表
@@ -215,6 +286,7 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       ...campaignData,
       tierAmounts: parsedTierAmounts,
       developmentGoals: parsedDevelopmentGoals,
+      developmentGoalImages: parsedDevelopmentGoalImages,
       donations: donations || []
     });
   } catch (error) {

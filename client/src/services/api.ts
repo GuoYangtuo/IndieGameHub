@@ -488,7 +488,7 @@ export const betCampaignAPI = {
   getBetCampaignById: (campaignId: string) =>
     api.get(`/bet-campaigns/${campaignId}`),
 
-  // 创建对赌众筹
+  // 创建对赌众筹（支持图片上传）
   createBetCampaign: (data: {
     projectId: string;
     title: string;
@@ -499,7 +499,30 @@ export const betCampaignAPI = {
     developmentGoals?: string;
     tierAmounts: number[];
     allowCustomAmount?: boolean;
-  }) => api.post('/bet-campaigns', data),
+  }, goalImages?: File[]) => {
+    const formData = new FormData();
+    formData.append('projectId', data.projectId);
+    formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    formData.append('targetAmount', data.targetAmount.toString());
+    formData.append('fundingDays', data.fundingDays.toString());
+    formData.append('developmentDays', data.developmentDays.toString());
+    if (data.developmentGoals) formData.append('developmentGoals', data.developmentGoals);
+    formData.append('tierAmounts', JSON.stringify(data.tierAmounts));
+    formData.append('allowCustomAmount', String(data.allowCustomAmount ?? true));
+
+    if (goalImages && goalImages.length > 0) {
+      goalImages.forEach((file) => {
+        formData.append('goalImages', file);
+      });
+    }
+
+    return api.post('/bet-campaigns', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
 
   // 捐赠对赌众筹
   donateToBetCampaign: (campaignId: string, amount: number, message?: string) =>
