@@ -341,10 +341,6 @@ const BetCampaignPage: React.FC = () => {
         {/* 开发目标图片 */}
         {campaign.developmentGoalImages && campaign.developmentGoalImages.length > 0 && (
           <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              <ImageIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              开发目标配图
-            </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {campaign.developmentGoalImages.map((image, index) => (
                 <Box
