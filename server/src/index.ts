@@ -10,7 +10,7 @@ import { commentRouter } from './routes/commentRoutes';
 import { surveyRouter } from './routes/surveyRoutes';
 import notificationRouter from './routes/notificationRoutes';
 import betCampaignRouter from './routes/betCampaignRoutes';
-import { initDatabase, migrateDatabase } from './utils/dbTools';
+import { initDatabase, migrateDatabase, migrateProjectFeatures } from './utils/dbTools';
 import { initializeWebSocket } from './websocket';
 import dotenv from 'dotenv';
 
@@ -28,6 +28,9 @@ const initApp = async () => {
     
     // 执行数据库迁移（添加新字段和新表）
     await migrateDatabase();
+    
+    // 执行项目功能模块字段迁移
+    await migrateProjectFeatures();
     
     // 中间件
     app.use(cors());

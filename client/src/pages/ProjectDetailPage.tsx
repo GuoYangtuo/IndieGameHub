@@ -94,6 +94,12 @@ interface Project {
   comments?: Comment[];
   displayImages?: ProjectImage[];
   projectBalance: number; // 项目账户存款额，确保初始化为0
+  enableUpdates?: boolean;
+  enableSurveys?: boolean;
+  enableContributions?: boolean;
+  enableTaskQueue?: boolean;
+  enableProposals?: boolean;
+  enableDiscussions?: boolean;
 }
 
 interface Proposal {
@@ -948,7 +954,7 @@ const ProjectDetailPage: React.FC = () => {
               {/* 主内容区 - 左侧 75% */}
               <Box sx={{ flex: { xs: '1', md: '0.75' } }}>
                 {/* 项目成员的更新表单 */}
-                {isMember && project && (
+                {isMember && project && project.enableUpdates == true && (
                   <ProjectUpdateForm
                     projectId={project.id}
                     projectSlug={slug || ''}
@@ -961,7 +967,7 @@ const ProjectDetailPage: React.FC = () => {
                 )}
                 
                 {/* 在项目成员的更新表单下方添加任务队列区域 */}
-                {isMember && (
+                {isMember && project?.enableTaskQueue == true && (
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" gutterBottom>任务队列</Typography>
                     
@@ -989,7 +995,7 @@ const ProjectDetailPage: React.FC = () => {
                 )}
                 
                 {/* 玩家视图：未提交的意见征询 - 非项目成员可见，未登录也可查看 */}
-                {!isMember && project && (
+                {!isMember && project && project.enableSurveys == true && (
                   <PendingSurveysPanel
                     projectId={project.id}
                     projectSlug={slug || ''}
@@ -1003,69 +1009,77 @@ const ProjectDetailPage: React.FC = () => {
                 {isMember ? (
                   <>
                     {/* 提案列表 - 项目成员在上 */}
-                    <ProposalCardsPool
-                      proposals={Array.isArray(proposals) ? proposals : []}
-                      proposalView={proposalView}
-                      proposalSort={proposalSort}
-                      selectedCategory={selectedCategory}
-                      isMember={isMember}
-                      isCreator={isCreator}
-                      user={user}
-                      proposalBounties={proposalBounties}
-                      onOpenProposalDialog={() => setOpenProposalDialog(true)}
-                      onViewModeChange={handleViewModeChange}
-                      onSortChange={setProposalSort}
-                      onCategoryChange={(category) => setSelectedCategory(category)}
-                      onProposalLike={handleProposalLike}
-                      onProposalClose={handleProposalClose}
-                      onProposalDelete={handleProposalDelete}
-                      onAddToTaskQueue={handleAddToTaskQueue}
-                      onAddProposalBounty={handleAddProposalBounty}
-                      onOpenProposalDetail={handleOpenProposalDetail}
-                    />
+                    {project?.enableProposals == true && (
+                      <ProposalCardsPool
+                        proposals={Array.isArray(proposals) ? proposals : []}
+                        proposalView={proposalView}
+                        proposalSort={proposalSort}
+                        selectedCategory={selectedCategory}
+                        isMember={isMember}
+                        isCreator={isCreator}
+                        user={user}
+                        proposalBounties={proposalBounties}
+                        onOpenProposalDialog={() => setOpenProposalDialog(true)}
+                        onViewModeChange={handleViewModeChange}
+                        onSortChange={setProposalSort}
+                        onCategoryChange={(category) => setSelectedCategory(category)}
+                        onProposalLike={handleProposalLike}
+                        onProposalClose={handleProposalClose}
+                        onProposalDelete={handleProposalDelete}
+                        onAddToTaskQueue={handleAddToTaskQueue}
+                        onAddProposalBounty={handleAddProposalBounty}
+                        onOpenProposalDetail={handleOpenProposalDetail}
+                      />
+                    )}
 
                     {/* 最近更新区域 - 项目成员在下 */}
-                    <RecentUpdatesSection 
-                      project={project}
-                      isMember={isMember}
-                      onSetCoverImage={handleSetCoverImage}
-                    />
+                    {project?.enableUpdates == true && (
+                      <RecentUpdatesSection 
+                        project={project}
+                        isMember={isMember}
+                        onSetCoverImage={handleSetCoverImage}
+                      />
+                    )}
                   </>
                 ) : (
                   <>
                     {/* 最近更新区域 - 非项目成员在上 */}
-                    <RecentUpdatesSection 
-                      project={project}
-                      isMember={isMember}
-                      onSetCoverImage={handleSetCoverImage}
-                    />
+                    {project?.enableUpdates == true && (
+                      <RecentUpdatesSection 
+                        project={project}
+                        isMember={isMember}
+                        onSetCoverImage={handleSetCoverImage}
+                      />
+                    )}
                     
                     {/* 提案列表 - 非项目成员在下 */}
-                    <ProposalCardsPool
-                      proposals={Array.isArray(proposals) ? proposals : []}
-                      proposalView={proposalView}
-                      proposalSort={proposalSort}
-                      selectedCategory={selectedCategory}
-                      isMember={isMember}
-                      isCreator={isCreator}
-                      user={user}
-                      proposalBounties={proposalBounties}
-                      onOpenProposalDialog={() => setOpenProposalDialog(true)}
-                      onViewModeChange={handleViewModeChange}
-                      onSortChange={setProposalSort}
-                      onCategoryChange={(category) => setSelectedCategory(category)}
-                      onProposalLike={handleProposalLike}
-                      onProposalClose={handleProposalClose}
-                      onProposalDelete={handleProposalDelete}
-                      onAddToTaskQueue={handleAddToTaskQueue}
-                      onAddProposalBounty={handleAddProposalBounty}
+                    {project?.enableProposals == true && (
+                      <ProposalCardsPool
+                        proposals={Array.isArray(proposals) ? proposals : []}
+                        proposalView={proposalView}
+                        proposalSort={proposalSort}
+                        selectedCategory={selectedCategory}
+                        isMember={isMember}
+                        isCreator={isCreator}
+                        user={user}
+                        proposalBounties={proposalBounties}
+                        onOpenProposalDialog={() => setOpenProposalDialog(true)}
+                        onViewModeChange={handleViewModeChange}
+                        onSortChange={setProposalSort}
+                        onCategoryChange={(category) => setSelectedCategory(category)}
+                        onProposalLike={handleProposalLike}
+                        onProposalClose={handleProposalClose}
+                        onProposalDelete={handleProposalDelete}
+                        onAddToTaskQueue={handleAddToTaskQueue}
+                        onAddProposalBounty={handleAddProposalBounty}
                       onOpenProposalDetail={handleOpenProposalDetail}
                     />
+                    )}
                   </>
                 )}
 
                 {/* 添加非成员用户也可见的任务队列区域，放在提案列表之后 */}
-                {!isMember && Array.isArray(proposals) && proposals.filter(p => p.status === 'queued').length > 0 && (
+                {!isMember && Array.isArray(proposals) && proposals.filter(p => p.status === 'queued').length > 0 && project?.enableTaskQueue == true && (
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" gutterBottom>当前工作重心（任务队列）</Typography>
                     <Paper variant="outlined" sx={{ p: 0 }}>
@@ -1112,20 +1126,22 @@ const ProjectDetailPage: React.FC = () => {
                 )}
 
                 {/* 项目评论区域 */}
-                <ProjectComments
-                  comments={projectComments}
-                  user={user}
-                  commentContent={projectCommentContent}
-                  isAddingComment={addingProjectComment}
-                  commentError={projectCommentError}
-                  onCommentContentChange={setProjectCommentContent}
-                  onAddComment={handleAddProjectComment}
-                  onDeleteComment={handleDeleteProjectComment}
-                  onReplyComment={handleReplyComment}
-                  projectSlug={slug}
-                  projectCreatedBy={project?.createdBy}
-                  projectMemberIds={project?.members || []}
-                />
+                {project?.enableDiscussions == true && (
+                  <ProjectComments
+                    comments={projectComments}
+                    user={user}
+                    commentContent={projectCommentContent}
+                    isAddingComment={addingProjectComment}
+                    commentError={projectCommentError}
+                    onCommentContentChange={setProjectCommentContent}
+                    onAddComment={handleAddProjectComment}
+                    onDeleteComment={handleDeleteProjectComment}
+                    onReplyComment={handleReplyComment}
+                    projectSlug={slug}
+                    projectCreatedBy={project?.createdBy}
+                    projectMemberIds={project?.members || []}
+                  />
+                )}
                 
                 {/* 在小屏幕上在主内容区底部显示下半部分侧边栏组件 */}
                 <Box sx={{ display: { xs: 'block', md: 'none' }, mt: 3 }}>

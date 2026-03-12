@@ -76,6 +76,12 @@ const createTables = async (): Promise<void> => {
         projectBalance INT DEFAULT 0,
         githubRepoUrl VARCHAR(500),
         githubAccessToken VARCHAR(500),
+        enableUpdates BOOLEAN DEFAULT TRUE,
+        enableSurveys BOOLEAN DEFAULT TRUE,
+        enableContributions BOOLEAN DEFAULT TRUE,
+        enableTaskQueue BOOLEAN DEFAULT TRUE,
+        enableProposals BOOLEAN DEFAULT TRUE,
+        enableDiscussions BOOLEAN DEFAULT TRUE,
         FOREIGN KEY (createdBy) REFERENCES users(id)
       );
     `);
@@ -640,6 +646,60 @@ export const migrateDatabase = async (): Promise<void> => {
     console.log('数据库迁移完成');
   } catch (error) {
     console.error('数据库迁移失败:', error);
+  }
+};
+
+// 新增字段迁移函数
+export const migrateProjectFeatures = async (): Promise<void> => {
+  try {
+    const conn = await pool.getConnection();
+    
+    // 检查 enableUpdates 字段是否存在
+    const [enableUpdatesColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableUpdates"');
+    if (Array.isArray(enableUpdatesColumns) && enableUpdatesColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableUpdates BOOLEAN DEFAULT TRUE');
+      console.log('已添加 enableUpdates 字段到 projects 表');
+    }
+    
+    // 检查 enableSurveys 字段是否存在
+    const [enableSurveysColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableSurveys"');
+    if (Array.isArray(enableSurveysColumns) && enableSurveysColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableSurveys BOOLEAN DEFAULT TRUE');
+      console.log('已添加 enableSurveys 字段到 projects 表');
+    }
+    
+    // 检查 enableContributions 字段是否存在
+    const [enableContributionsColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableContributions"');
+    if (Array.isArray(enableContributionsColumns) && enableContributionsColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableContributions BOOLEAN DEFAULT TRUE');
+      console.log('已添加 enableContributions 字段到 projects 表');
+    }
+    
+    // 检查 enableTaskQueue 字段是否存在
+    const [enableTaskQueueColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableTaskQueue"');
+    if (Array.isArray(enableTaskQueueColumns) && enableTaskQueueColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableTaskQueue BOOLEAN DEFAULT TRUE');
+      console.log('已添加 enableTaskQueue 字段到 projects 表');
+    }
+    
+    // 检查 enableProposals 字段是否存在
+    const [enableProposalsColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableProposals"');
+    if (Array.isArray(enableProposalsColumns) && enableProposalsColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableProposals BOOLEAN DEFAULT TRUE');
+      console.log('已添加 enableProposals 字段到 projects 表');
+    }
+    
+    // 检查 enableDiscussions 字段是否存在
+    const [enableDiscussionsColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableDiscussions"');
+    if (Array.isArray(enableDiscussionsColumns) && enableDiscussionsColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableDiscussions BOOLEAN DEFAULT TRUE');
+      console.log('已添加 enableDiscussions 字段到 projects 表');
+    }
+    
+    conn.release();
+    console.log('项目功能模块字段迁移完成');
+  } catch (error) {
+    console.error('项目功能模块字段迁移失败:', error);
   }
 };
 

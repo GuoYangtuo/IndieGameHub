@@ -42,7 +42,7 @@ const storage = multer.diskStorage({
 // 配置上传中间件
 export const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 限制5MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 限制10MB
 });
 
 // 获取项目的所有提案

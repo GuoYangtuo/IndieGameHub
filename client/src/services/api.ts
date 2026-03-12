@@ -153,11 +153,11 @@ export const projectAPI = {
   getProjectDetailComplete: (slug: string) => api.get(`/projects/detail/${slug}`),
   
   // 创建项目
-  createProject: (name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string, tagNames?: string[], tagIds?: string[]) => 
-    api.post('/projects', { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds }),
+  createProject: (name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string, tagNames?: string[], tagIds?: string[], enableUpdates?: boolean, enableSurveys?: boolean, enableContributions?: boolean, enableTaskQueue?: boolean, enableProposals?: boolean, enableDiscussions?: boolean) =>
+    api.post('/projects', { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions }),
   
   // 创建带封面图片的项目
-  createProjectWithCover: (formData: FormData) => 
+  createProjectWithCover: (formData: FormData) =>
     api.post('/projects/with-cover', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -177,8 +177,8 @@ export const projectAPI = {
     }),
   
   // 更新项目信息
-  updateProject: (projectId: string, name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string, tagNames?: string[], tagIds?: string[]) => 
-    api.put(`/projects/${projectId}`, { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds }),
+  updateProject: (projectId: string, name: string, description: string, demoLink?: string, githubRepoUrl?: string, githubAccessToken?: string, tagNames?: string[], tagIds?: string[], enableUpdates?: boolean, enableSurveys?: boolean, enableContributions?: boolean, enableTaskQueue?: boolean, enableProposals?: boolean, enableDiscussions?: boolean) =>
+    api.put(`/projects/${projectId}`, { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions }),
 
   // 更新项目封面图片
   updateProjectCover: (projectId: string, formData: FormData) =>

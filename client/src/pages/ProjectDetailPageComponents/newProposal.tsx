@@ -68,10 +68,10 @@ const NewProposalDialog: React.FC<Props> = ({ isDarkMode, projectId, open, onClo
     if (!event.target.files || event.target.files.length === 0) return;
     
     const files = Array.from(event.target.files);
-    const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // 5MB限制
-    
+    const validFiles = files.filter(file => file.size <= 10 * 1024 * 1024); // 10MB限制
+
     if (validFiles.length !== files.length) {
-      setError('部分文件超过5MB限制，已自动过滤');
+      setError('部分文件超过10MB限制，已自动过滤');
     }
     
     setProposalAttachments([...proposalAttachments, ...validFiles]);
@@ -318,7 +318,7 @@ const NewProposalDialog: React.FC<Props> = ({ isDarkMode, projectId, open, onClo
               </Button>
             </label>
             <Typography variant="caption" sx={{ ml: 2 }}>
-              每个文件最大5MB
+              每个文件最大10MB
             </Typography>
           </Box>
 

@@ -28,7 +28,9 @@ import {
   Collapse,
   Chip,
   Autocomplete,
-  createFilterOptions
+  createFilterOptions,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import {
   Save,
@@ -82,6 +84,12 @@ interface Project {
     name: string;
     color: string;
   }>;
+  enableUpdates?: boolean;
+  enableSurveys?: boolean;
+  enableContributions?: boolean;
+  enableTaskQueue?: boolean;
+  enableProposals?: boolean;
+  enableDiscussions?: boolean;
 }
 
 interface TabPanelProps {
@@ -147,6 +155,14 @@ const ProjectSettingsPage: React.FC = () => {
   const [inputTagValue, setInputTagValue] = useState('');
   const [loadingTags, setLoadingTags] = useState(false);
 
+  // 功能模块启用状态
+  const [enableUpdates, setEnableUpdates] = useState(true);
+  const [enableSurveys, setEnableSurveys] = useState(true);
+  const [enableContributions, setEnableContributions] = useState(true);
+  const [enableTaskQueue, setEnableTaskQueue] = useState(true);
+  const [enableProposals, setEnableProposals] = useState(true);
+  const [enableDiscussions, setEnableDiscussions] = useState(true);
+
   // 项目账户管理相关状态
   const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
@@ -192,6 +208,14 @@ const ProjectSettingsPage: React.FC = () => {
         if (projectData.tags && projectData.tags.length > 0) {
           setSelectedTags(projectData.tags);
         }
+        
+        // 设置功能模块启用状态
+        setEnableUpdates(projectData.enableUpdates !== undefined ? projectData.enableUpdates : true);
+        setEnableSurveys(projectData.enableSurveys !== undefined ? projectData.enableSurveys : true);
+        setEnableContributions(projectData.enableContributions !== undefined ? projectData.enableContributions : true);
+        setEnableTaskQueue(projectData.enableTaskQueue !== undefined ? projectData.enableTaskQueue : true);
+        setEnableProposals(projectData.enableProposals !== undefined ? projectData.enableProposals : true);
+        setEnableDiscussions(projectData.enableDiscussions !== undefined ? projectData.enableDiscussions : true);
         
         if (projectData.contributionRates) {
           setContributionRates(projectData.contributionRates);
@@ -282,7 +306,13 @@ const ProjectSettingsPage: React.FC = () => {
         githubRepoUrl,
         githubAccessToken,
         newTagNames,
-        existingTagIds
+        existingTagIds,
+        enableUpdates,
+        enableSurveys,
+        enableContributions,
+        enableTaskQueue,
+        enableProposals,
+        enableDiscussions
       );
       
       setProject(response.data);
@@ -694,6 +724,131 @@ const ProjectSettingsPage: React.FC = () => {
                 )}
               </Stack>
             )}
+
+            {/* 功能模块启用设置 */}
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              功能模块设置
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              选择项目需要启用的功能模块，默认全部启用
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableUpdates} 
+                    onChange={(e) => setEnableUpdates(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    更新日志系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (包含 RecentUpdatesSection, ProjectUpdateForm 以及右侧边栏的"版本更新"区域)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableSurveys} 
+                    onChange={(e) => setEnableSurveys(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    意见征询系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (包含 SurveySidebar, PendingSurveysPanel)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableContributions} 
+                    onChange={(e) => setEnableContributions(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    贡献度系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (包含 ProjectContributionList)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableTaskQueue} 
+                    onChange={(e) => setEnableTaskQueue(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    任务队列
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (包含任务队列区域)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableProposals} 
+                    onChange={(e) => setEnableProposals(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    提案系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (包含 ProposalCardsPool)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableDiscussions} 
+                    onChange={(e) => setEnableDiscussions(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    讨论区
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (包含 ProjectComments)
+                    </Typography>
+                  </Typography>
+                }
+              />
+            </Box>
             
             <Button
               variant="contained"

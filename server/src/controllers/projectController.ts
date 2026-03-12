@@ -82,7 +82,7 @@ const storage = multer.diskStorage({
 // 配置上传中间件
 export const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 限制5MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 限制10MB
   fileFilter: (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     // 只允许上传图片
     if (!file.mimetype.startsWith('image/')) {
@@ -237,7 +237,7 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       return;
     }
 
-    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, colors } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, colors, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions } = req.body;
 
     // 处理封面上传
     let coverImage: string | undefined;
@@ -285,7 +285,13 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       createdBy: userId,
       githubRepoUrl,
       githubAccessToken,
-      coverImage
+      coverImage,
+      enableUpdates: enableUpdates !== undefined ? enableUpdates : true,
+      enableSurveys: enableSurveys !== undefined ? enableSurveys : true,
+      enableContributions: enableContributions !== undefined ? enableContributions : true,
+      enableTaskQueue: enableTaskQueue !== undefined ? enableTaskQueue : true,
+      enableProposals: enableProposals !== undefined ? enableProposals : true,
+      enableDiscussions: enableDiscussions !== undefined ? enableDiscussions : true
     });
 
     if (!project) {
@@ -600,7 +606,7 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
     }
 
     const { projectId } = req.params;
-    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, colors } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, colors, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions } = req.body;
 
     // 验证请求数据
     if (!name || !description) {
@@ -641,7 +647,20 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
     }
 
     // 更新项目
-    const updatedProject = await updateProject(projectId, name, description, demoLink, githubRepoUrl, githubAccessToken);
+    const updatedProject = await updateProject(
+      projectId, 
+      name, 
+      description, 
+      demoLink, 
+      githubRepoUrl, 
+      githubAccessToken,
+      enableUpdates,
+      enableSurveys,
+      enableContributions,
+      enableTaskQueue,
+      enableProposals,
+      enableDiscussions
+    );
 
     if (!updatedProject) {
       res.status(500).json({ message: '更新项目信息失败' });

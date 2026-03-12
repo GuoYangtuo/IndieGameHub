@@ -162,6 +162,9 @@ interface ProjectSidebarBottomProps {
     createdBy: string;
     members: string[];
     updates: ProjectUpdate[];
+    enableUpdates?: boolean;
+    enableSurveys?: boolean;
+    enableContributions?: boolean;
   };
   members: Member[];
   contributors?: { id: string; username: string; avatarUrl?: string; contribution: number }[];
@@ -218,6 +221,7 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
       </Box>
       
       {/* 版本更新 */}
+      {project.enableUpdates == true && (
       <Box sx={{ mb: 2 }}>
         <Typography variant="h6" gutterBottom>版本更新</Typography>
         {project.updates.length === 0 || project.updates.filter(update => update.isVersion).length === 0 ? (
@@ -296,9 +300,10 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
           </List>
         )}
       </Box>
+      )}
 
       {/* 意见征询板块 - 仅项目成员可见 */}
-      {isMember && (
+      {isMember && project.enableSurveys == true && (
         <SurveySidebar
           projectId={project.id}
           projectSlug={project.slug}
@@ -310,7 +315,9 @@ export const ProjectSidebarBottom: React.FC<ProjectSidebarBottomProps> = ({
       )}
       
       {/* 项目贡献度列表 */}
-      <ProjectContributionList contributors={contributors} loading={loadingContributors} />
+      {project.enableContributions == true && (
+        <ProjectContributionList contributors={contributors} loading={loadingContributors} />
+      )}
     </>
   );
 };
@@ -325,6 +332,9 @@ interface ProjectSidebarProps {
     createdBy: string;
     members: string[];
     updates: ProjectUpdate[];
+    enableUpdates?: boolean;
+    enableSurveys?: boolean;
+    enableContributions?: boolean;
   };
   members: Member[];
   onOpenInfoDialog: () => void;

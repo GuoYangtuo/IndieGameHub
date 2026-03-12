@@ -46,9 +46,9 @@ const ProjectUpdateForm: React.FC<ProjectUpdateFormProps> = ({
       const invalidFiles: string[] = [];
       
       fileArray.forEach(file => {
-        // 检查文件大小（限制为5MB）
-        if (file.size > 5 * 1024 * 1024) {
-          invalidFiles.push(`${file.name} 超过5MB`);
+        // 检查文件大小（限制为10MB）
+        if (file.size > 10 * 1024 * 1024) {
+          invalidFiles.push(`${file.name} 超过10MB`);
           return;
         }
         

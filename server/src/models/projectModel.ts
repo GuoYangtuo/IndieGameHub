@@ -16,6 +16,12 @@ export interface Project {
   githubRepoUrl?: string; // GitHub仓库地址
   githubAccessToken?: string; // GitHub访问密钥
   latestUpdateAt?: string; // 最新更新时间
+  enableUpdates?: boolean; // 是否启用更新日志系统
+  enableSurveys?: boolean; // 是否启用意见征询系统
+  enableContributions?: boolean; // 是否启用贡献度系统
+  enableTaskQueue?: boolean; // 是否启用任务队列
+  enableProposals?: boolean; // 是否启用提案系统
+  enableDiscussions?: boolean; // 是否启用讨论区
 }
 
 // 项目成员接口
@@ -47,6 +53,12 @@ export interface CreateProjectData {
   githubRepoUrl?: string;
   githubAccessToken?: string;
   coverImage?: string;
+  enableUpdates?: boolean;
+  enableSurveys?: boolean;
+  enableContributions?: boolean;
+  enableTaskQueue?: boolean;
+  enableProposals?: boolean;
+  enableDiscussions?: boolean;
 }
 
 // 更新项目接口
@@ -65,6 +77,12 @@ export interface UpdateProjectInfoData {
   demoLink?: string;
   githubRepoUrl?: string;
   githubAccessToken?: string;
+  enableUpdates?: boolean;
+  enableSurveys?: boolean;
+  enableContributions?: boolean;
+  enableTaskQueue?: boolean;
+  enableProposals?: boolean;
+  enableDiscussions?: boolean;
 }
 
 // 项目图片接口
@@ -210,9 +228,27 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
     
     await query(
       `INSERT INTO projects 
-       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken, coverImage) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, projectData.name, uniqueSlug, projectData.description, projectData.demoLink || '', projectData.createdBy, mysqlDateFormat, 0, projectData.githubRepoUrl || null, projectData.githubAccessToken || null, projectData.coverImage || null]
+       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken, coverImage, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id, 
+        projectData.name, 
+        uniqueSlug, 
+        projectData.description, 
+        projectData.demoLink || '', 
+        projectData.createdBy, 
+        mysqlDateFormat, 
+        0, 
+        projectData.githubRepoUrl || null, 
+        projectData.githubAccessToken || null, 
+        projectData.coverImage || null,
+        projectData.enableUpdates !== undefined ? projectData.enableUpdates : true,
+        projectData.enableSurveys !== undefined ? projectData.enableSurveys : true,
+        projectData.enableContributions !== undefined ? projectData.enableContributions : true,
+        projectData.enableTaskQueue !== undefined ? projectData.enableTaskQueue : true,
+        projectData.enableProposals !== undefined ? projectData.enableProposals : true,
+        projectData.enableDiscussions !== undefined ? projectData.enableDiscussions : true
+      ]
     );
     
     // 添加创建者为成员
@@ -385,12 +421,66 @@ export const updateProject = async (
   description: string,
   demoLink?: string,
   githubRepoUrl?: string,
-  githubAccessToken?: string
+  githubAccessToken?: string,
+  enableUpdates?: boolean,
+  enableSurveys?: boolean,
+  enableContributions?: boolean,
+  enableTaskQueue?: boolean,
+  enableProposals?: boolean,
+  enableDiscussions?: boolean
 ): Promise<Project | null> => {
   try {
+    // 构建动态更新语句
+    const updateFields: string[] = [];
+    const params: any[] = [];
+    
+    updateFields.push('name = ?');
+    params.push(name);
+    updateFields.push('description = ?');
+    params.push(description);
+    
+    if (demoLink !== undefined) {
+      updateFields.push('demoLink = ?');
+      params.push(demoLink || null);
+    }
+    if (githubRepoUrl !== undefined) {
+      updateFields.push('githubRepoUrl = ?');
+      params.push(githubRepoUrl || null);
+    }
+    if (githubAccessToken !== undefined) {
+      updateFields.push('githubAccessToken = ?');
+      params.push(githubAccessToken || null);
+    }
+    if (enableUpdates !== undefined) {
+      updateFields.push('enableUpdates = ?');
+      params.push(enableUpdates);
+    }
+    if (enableSurveys !== undefined) {
+      updateFields.push('enableSurveys = ?');
+      params.push(enableSurveys);
+    }
+    if (enableContributions !== undefined) {
+      updateFields.push('enableContributions = ?');
+      params.push(enableContributions);
+    }
+    if (enableTaskQueue !== undefined) {
+      updateFields.push('enableTaskQueue = ?');
+      params.push(enableTaskQueue);
+    }
+    if (enableProposals !== undefined) {
+      updateFields.push('enableProposals = ?');
+      params.push(enableProposals);
+    }
+    if (enableDiscussions !== undefined) {
+      updateFields.push('enableDiscussions = ?');
+      params.push(enableDiscussions);
+    }
+    
+    params.push(id);
+    
     await query(
-      'UPDATE projects SET name = ?, description = ?, demoLink = ?, githubRepoUrl = ?, githubAccessToken = ? WHERE id = ?',
-      [name, description, demoLink || null, githubRepoUrl || null, githubAccessToken || null, id]
+      `UPDATE projects SET ${updateFields.join(', ')} WHERE id = ?`,
+      params
     );
 
     return await findProjectById(id);

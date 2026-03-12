@@ -56,8 +56,8 @@ const CreateSurveyDialog: React.FC<CreateSurveyDialogProps> = ({
       const invalidFiles: string[] = [];
       
       fileArray.forEach(file => {
-        if (file.size > 5 * 1024 * 1024) {
-          invalidFiles.push(`${file.name} 超过5MB`);
+        if (file.size > 10 * 1024 * 1024) {
+          invalidFiles.push(`${file.name} 超过10MB`);
           return;
         }
         if (!file.type.match('image.*')) {

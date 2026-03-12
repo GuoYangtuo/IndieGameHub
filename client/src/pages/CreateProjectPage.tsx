@@ -12,7 +12,9 @@ import {
   CircularProgress,
   Chip,
   Autocomplete,
-  createFilterOptions
+  createFilterOptions,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { projectAPI } from '../services/api';
@@ -47,6 +49,14 @@ const CreateProjectPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [inputTagValue, setInputTagValue] = useState('');
   const [loadingTags, setLoadingTags] = useState(false);
+  
+  // 功能模块启用状态（默认全部启用）
+  const [enableUpdates, setEnableUpdates] = useState(true);
+  const [enableSurveys, setEnableSurveys] = useState(true);
+  const [enableContributions, setEnableContributions] = useState(false);
+  const [enableTaskQueue, setEnableTaskQueue] = useState(true);
+  const [enableProposals, setEnableProposals] = useState(true);
+  const [enableDiscussions, setEnableDiscussions] = useState(true);
   
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
@@ -102,9 +112,9 @@ const CreateProjectPage: React.FC = () => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // 检查文件大小（限制为5MB）
-      if (file.size > 5 * 1024 * 1024) {
-        setError(`文件大小超过5MB`);
+      // 检查文件大小（限制为10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`文件大小超过10MB`);
         return;
       }
       
@@ -207,6 +217,14 @@ const CreateProjectPage: React.FC = () => {
           formData.append('tagNames', JSON.stringify(tagNames));
         }
         
+        // 添加功能模块启用设置
+        formData.append('enableUpdates', String(enableUpdates));
+        formData.append('enableSurveys', String(enableSurveys));
+        formData.append('enableContributions', String(enableContributions));
+        formData.append('enableTaskQueue', String(enableTaskQueue));
+        formData.append('enableProposals', String(enableProposals));
+        formData.append('enableDiscussions', String(enableDiscussions));
+        
         projectResponse = await projectAPI.createProjectWithCover(formData);
       } else {
         // 否则使用基本API
@@ -214,7 +232,21 @@ const CreateProjectPage: React.FC = () => {
         const existingTagIds = selectedTags.filter(t => t.id).map(t => t.id);
         const newTagNames = selectedTags.filter(t => !t.id).map(t => t.name);
         
-        projectResponse = await projectAPI.createProject(name, description, undefined, githubRepoUrl, githubAccessToken, newTagNames, existingTagIds);
+        projectResponse = await projectAPI.createProject(
+          name, 
+          description, 
+          undefined, 
+          githubRepoUrl, 
+          githubAccessToken, 
+          newTagNames, 
+          existingTagIds,
+          enableUpdates,
+          enableSurveys,
+          enableContributions,
+          enableTaskQueue,
+          enableProposals,
+          enableDiscussions
+        );
       }
       
       const projectSlug = projectResponse.data.slug;
@@ -284,9 +316,6 @@ const CreateProjectPage: React.FC = () => {
           </Box>
           
           <Box sx={{ mt: 2, mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              项目封面图片 (可选)
-            </Typography>
             <input
               accept="image/*"
               style={{ display: 'none' }}
@@ -300,7 +329,7 @@ const CreateProjectPage: React.FC = () => {
               </Button>
             </label>
             <Typography variant="caption" sx={{ ml: 2 }}>
-              选择一张项目封面图片，最大5MB，之后在项目详情页可以上传更多图片
+              选择一张项目封面图片，最大10MB，之后在项目详情页可以上传更多图片
             </Typography>
             
             {coverImagePreview && (
@@ -462,6 +491,126 @@ const CreateProjectPage: React.FC = () => {
               helperText="访问私有仓库需要提供Personal Access Token（仓库地址会在创建项目时自动验证）"
             />
 
+          </Box>
+          
+          {/* 功能模块启用设置 */}
+          <Box sx={{ mt: 4, mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              功能模块设置
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+              选择项目需要启用的功能模块，默认全部启用
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableUpdates} 
+                    onChange={(e) => setEnableUpdates(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    更新日志系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (用于让开发者发布更新日志，并向粉丝展示自己的更新频率，可以连接git/svn获取)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableSurveys} 
+                    onChange={(e) => setEnableSurveys(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    意见征询系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (用于在开发者面临选择时，征求粉丝的看法，支持投票或自由发言)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableTaskQueue} 
+                    onChange={(e) => setEnableTaskQueue(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    任务队列
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (一个待办清单Todo List，展示了开发者的工作计划或开发重心，同时也会展示给玩家)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableProposals} 
+                    onChange={(e) => setEnableProposals(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    提案系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (一个让开发者和粉丝共同记录想法或者bug的地方)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableDiscussions} 
+                    onChange={(e) => setEnableDiscussions(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    讨论区
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (粉丝可以自由留言，表达赞扬或否定，从讨论区诞生的创意，可以被创建为提案)
+                    </Typography>
+                  </Typography>
+                }
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox 
+                    checked={enableContributions} 
+                    onChange={(e) => setEnableContributions(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    贡献度系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (粉丝通过提案，捐赠，悬赏等方式获得贡献度，通过贡献度限制，开发者可以发布特殊版本。实验性功能，不建议启用)
+                    </Typography>
+                  </Typography>
+                }
+              />
+            </Box>
           </Box>
           
           {error && (
