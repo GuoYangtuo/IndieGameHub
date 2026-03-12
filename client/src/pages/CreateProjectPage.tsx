@@ -474,7 +474,7 @@ const CreateProjectPage: React.FC = () => {
               <FeaturePreview
                 featureKey="updates"
                 label="更新日志系统"
-                description="(用于让开发者发布更新日志，并向粉丝展示自己的更新频率，可以连接git/svn获取)"
+                description="(用于发布更新日志，并向粉丝展示自己的更新频率，目前需要手动填写，后续可以连接git/svn获取)"
                 checked={enableUpdates}
                 onChange={setEnableUpdates}
                 darkImage="/images/features/updates-dark.png"
