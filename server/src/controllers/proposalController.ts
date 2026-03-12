@@ -122,12 +122,24 @@ export const createNewProposal = async (req: Request, res: Response): Promise<vo
       createdBy: userId,
       category
     });
-    
+
     if (!proposal) {
       res.status(500).json({ message: '创建提案失败' });
       return;
     }
-    
+
+    // 通知项目成员有新提案
+    const app = req.app as any;
+    const ws = app?.ws;
+    const { notifyProjectMembersOnNewProposal } = require('../models/notificationModel');
+    await notifyProjectMembersOnNewProposal(
+      projectId,
+      proposal.id,
+      title,
+      project.name,
+      ws
+    );
+
     res.status(201).json(proposal);
   } catch (error) {
     console.error('创建提案失败:', error);
@@ -190,6 +202,18 @@ export const createProposalWithAttachments = async (req: Request & { files?: any
       res.status(500).json({ message: '创建提案失败' });
       return;
     }
+
+    // 通知项目成员有新提案
+    const app = req.app as any;
+    const ws = app?.ws;
+    const { notifyProjectMembersOnNewProposal } = require('../models/notificationModel');
+    await notifyProjectMembersOnNewProposal(
+      projectId,
+      proposal.id,
+      title,
+      project.name,
+      ws
+    );
     
     res.status(201).json(proposal);
   } catch (error) {
@@ -366,6 +390,12 @@ export const addToTaskQueue = async (req: Request, res: Response): Promise<void>
       res.status(404).json({ message: '提案不存在或不是开放状态' });
       return;
     }
+
+    // 通知提案创建者提案已被加入队列
+    const app = req.app as any;
+    const ws = app?.ws;
+    const { notifyProposalCreatorOnQueued } = require('../models/notificationModel');
+    await notifyProposalCreatorOnQueued(proposalId, ws);
     
     res.status(200).json(proposal);
   } catch (error) {

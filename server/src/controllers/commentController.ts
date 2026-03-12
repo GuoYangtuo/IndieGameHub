@@ -155,6 +155,16 @@ export const createNewProjectComment = async (req: Request, res: Response): Prom
       res.status(400).json({ message: '评论内容是必填项' });
       return;
     }
+
+    // 获取当前用户信息
+    const { findUserById } = require('../models/userModel');
+    const user = await findUserById(userId);
+    const commenterName = user?.username || '某用户';
+    
+    // 获取项目信息
+    const { findProjectById } = require('../models/projectModel');
+    const project = await findProjectById(projectId);
+    const projectName = project?.name || '某项目';
     
     // 创建评论
     const comment = await createComment({
@@ -167,6 +177,18 @@ export const createNewProjectComment = async (req: Request, res: Response): Prom
       res.status(500).json({ message: '创建项目评论失败' });
       return;
     }
+
+    // 通知项目成员有新评论
+    const app = req.app as any;
+    const ws = app?.ws;
+    const { notifyProjectMembersOnNewComment } = require('../models/notificationModel');
+    await notifyProjectMembersOnNewComment(
+      projectId,
+      comment.id,
+      commenterName,
+      projectName,
+      ws
+    );
     
     res.status(201).json(comment);
   } catch (error) {

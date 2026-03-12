@@ -368,6 +368,38 @@ export const notificationAPI = {
   // 获取聊天室在线成员
   getChatRoomMembers: (chatRoomId: string) =>
     api.get(`/notifications/chat-room/${chatRoomId}/members`),
+
+  // 获取当前用户的系统通知列表
+  getMyNotifications: (limit?: number, offset?: number) =>
+    api.get('/notifications/my/notifications', { params: { limit, offset } }),
+
+  // 获取当前用户未读通知数量
+  getMyUnreadCount: () =>
+    api.get('/notifications/my/unread-count'),
+
+  // 标记单条通知为已读
+  markNotificationRead: (notificationId: string) =>
+    api.put(`/notifications/my/notifications/${notificationId}/read`),
+
+  // 标记所有通知为已读
+  markAllNotificationsRead: () =>
+    api.put('/notifications/my/notifications/read-all'),
+
+  // 删除单条通知
+  deleteNotification: (notificationId: string) =>
+    api.delete(`/notifications/my/notifications/${notificationId}`),
+
+  // 清空所有通知
+  clearAllNotifications: () =>
+    api.delete('/notifications/my/notifications'),
+
+  // 获取当前用户的通知设置
+  getMyNotificationSettings: () =>
+    api.get('/notifications/my/settings'),
+
+  // 更新当前用户的通知设置
+  updateMyNotificationSettings: (settings: any) =>
+    api.put('/notifications/my/settings', settings),
 };
 
 // 管理员API

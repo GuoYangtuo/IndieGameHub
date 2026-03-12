@@ -26,6 +26,7 @@ const SurveyHistoryPage = withLoadable(() => import('./pages/SurveyHistoryPage')
 const ChatRoomPage = withLoadable(() => import('./pages/ChatRoomPage'));
 const BetCampaignPage = withLoadable(() => import('./pages/BetCampaignPage'));
 const BetCampaignManagePage = withLoadable(() => import('./pages/BetCampaignManagePage'));
+const InboxPage = withLoadable(() => import('./pages/InboxPage'));
 
 // 自定义滚动条全局样式
 const ScrollbarStyles = () => {
@@ -113,6 +114,7 @@ const AppRoutes = () => {
       <Route path="/verify-email" element={<Layout><EmailVerificationPage /></Layout>} />
       <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
       <Route path="/chat/:chatRoomId" element={<ChatLayout><ChatRoomPage /></ChatLayout>} />
+      <Route path="/inbox" element={<Layout><InboxPage /></Layout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

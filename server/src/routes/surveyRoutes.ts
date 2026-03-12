@@ -413,6 +413,31 @@ surveyRouter.post('/:surveyId/vote', verifyToken, async (req: Request, res: Resp
       'INSERT INTO survey_submissions (id, surveyId, userId) VALUES (?, ?, ?)',
       [submissionId, surveyId, userId]
     );
+
+    // 通知征询创建者有人提交了意见
+    try {
+      const { findUserById } = require('../models/userModel');
+      const submitter = await findUserById(userId);
+      const submitterName = submitter?.username || '某用户';
+      
+      const projects = await query('SELECT name FROM projects WHERE id = ?', [survey.projectId]);
+      const projectName = projects[0]?.name || '某项目';
+      
+      // 获取app和ws
+      const app = req.app as any;
+      const ws = app?.ws;
+      
+      const { notifySurveyCreatorOnSubmission } = require('../models/notificationModel');
+      await notifySurveyCreatorOnSubmission(
+        surveyId,
+        survey.projectId,
+        projectName,
+        submitterName,
+        ws
+      );
+    } catch (notifyError) {
+      console.error('发送征询提交通知失败:', notifyError);
+    }
     
     res.json({ message: '投票成功' });
   } catch (error) {
@@ -527,6 +552,31 @@ surveyRouter.post('/:surveyId/submit', verifyToken, async (req: Request, res: Re
       'INSERT INTO survey_submissions (id, surveyId, userId) VALUES (?, ?, ?)',
       [submissionId, surveyId, userId]
     );
+
+    // 通知征询创建者有人提交了意见
+    try {
+      const { findUserById } = require('../models/userModel');
+      const submitter = await findUserById(userId);
+      const submitterName = submitter?.username || '某用户';
+      
+      const projects = await query('SELECT name FROM projects WHERE id = ?', [survey.projectId]);
+      const projectName = projects[0]?.name || '某项目';
+      
+      // 获取app和ws
+      const app = req.app as any;
+      const ws = app?.ws;
+      
+      const { notifySurveyCreatorOnSubmission } = require('../models/notificationModel');
+      await notifySurveyCreatorOnSubmission(
+        surveyId,
+        survey.projectId,
+        projectName,
+        submitterName,
+        ws
+      );
+    } catch (notifyError) {
+      console.error('发送征询提交通知失败:', notifyError);
+    }
     
     res.json({ message: '提交成功' });
   } catch (error) {

@@ -466,6 +466,41 @@ const createTables = async (): Promise<void> => {
       );
     `);
 
+    // 系统通知记录表（用于存储所有系统通知）
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS system_notifications (
+        id VARCHAR(36) PRIMARY KEY,
+        userId VARCHAR(36) NOT NULL,
+        title VARCHAR(200) NOT NULL,
+        content TEXT NOT NULL,
+        type VARCHAR(50) DEFAULT 'system',
+        isRead BOOLEAN DEFAULT FALSE,
+        relatedType VARCHAR(50),
+        relatedId VARCHAR(36),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
+    // 用户通知设置表
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS user_notification_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        userId VARCHAR(36) NOT NULL UNIQUE,
+        notifyOnNewProposal BOOLEAN DEFAULT TRUE,
+        notifyOnNewComment BOOLEAN DEFAULT TRUE,
+        notifyOnSurveySubmission BOOLEAN DEFAULT TRUE,
+        notifyOnProposalQueued BOOLEAN DEFAULT TRUE,
+        emailOnNewProposal BOOLEAN DEFAULT FALSE,
+        emailOnNewComment BOOLEAN DEFAULT FALSE,
+        emailOnSurveySubmission BOOLEAN DEFAULT FALSE,
+        emailOnProposalQueued BOOLEAN DEFAULT FALSE,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
     conn.release();
     console.log('数据库表创建成功');
   } catch (error) {
@@ -557,7 +592,50 @@ export const migrateDatabase = async (): Promise<void> => {
       `);
       console.log('已创建 chat_messages 表');
     }
-    
+
+    // 检查是否存在 system_notifications 表
+    const [notifTables] = await conn.query('SHOW TABLES LIKE "system_notifications"');
+    if (Array.isArray(notifTables) && notifTables.length === 0) {
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS system_notifications (
+          id VARCHAR(36) PRIMARY KEY,
+          userId VARCHAR(36) NOT NULL,
+          title VARCHAR(200) NOT NULL,
+          content TEXT NOT NULL,
+          type VARCHAR(50) DEFAULT 'system',
+          isRead BOOLEAN DEFAULT FALSE,
+          relatedType VARCHAR(50),
+          relatedId VARCHAR(36),
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      console.log('已创建 system_notifications 表');
+    }
+
+    // 检查是否存在 user_notification_settings 表
+    const [settingsTables] = await conn.query('SHOW TABLES LIKE "user_notification_settings"');
+    if (Array.isArray(settingsTables) && settingsTables.length === 0) {
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS user_notification_settings (
+          id VARCHAR(36) PRIMARY KEY,
+          userId VARCHAR(36) NOT NULL UNIQUE,
+          notifyOnNewProposal BOOLEAN DEFAULT TRUE,
+          notifyOnNewComment BOOLEAN DEFAULT TRUE,
+          notifyOnSurveySubmission BOOLEAN DEFAULT TRUE,
+          notifyOnProposalQueued BOOLEAN DEFAULT TRUE,
+          emailOnNewProposal BOOLEAN DEFAULT FALSE,
+          emailOnNewComment BOOLEAN DEFAULT FALSE,
+          emailOnSurveySubmission BOOLEAN DEFAULT FALSE,
+          emailOnProposalQueued BOOLEAN DEFAULT FALSE,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      console.log('已创建 user_notification_settings 表');
+    }
+
     conn.release();
     console.log('数据库迁移完成');
   } catch (error) {

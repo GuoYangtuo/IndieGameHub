@@ -19,7 +19,8 @@ import {
   Grow,
   ListItemIcon,
   ListItemText,
-  Stack
+  Stack,
+  Badge
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -37,13 +38,14 @@ import {
   Person,
   Share,
   TrendingUp,
-  History
+  History,
+  Mail
 } from '@mui/icons-material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useProjectTitle } from '../contexts/ProjectTitleContext';
-import { projectAPI, userAPI, betCampaignAPI } from '../services/api'; // userAPI still needed for handleToggleFavorite
+import { projectAPI, userAPI, betCampaignAPI, notificationAPI } from '../services/api'; // userAPI still needed for handleToggleFavorite
 import { Description, Update, AccountTree } from '@mui/icons-material';
 import AuthDialog from './AuthDialog';
 import RechargeDialog from './RechargeDialog';
@@ -94,6 +96,9 @@ const Navbar: React.FC = () => {
   // 添加状态管理充值弹窗
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
 
+  // 未读通知数量
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+
   // 当路由参数slug变化时更新currentSlug
   useEffect(() => {
     if (slug) {
@@ -137,6 +142,25 @@ const Navbar: React.FC = () => {
       };
 
       fetchUserProjects();
+    }
+  }, [user]);
+
+  // 获取未读通知数量
+  useEffect(() => {
+    if (user) {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await notificationAPI.getMyUnreadCount();
+          setUnreadNotificationCount(response.data.count);
+        } catch (error) {
+          console.error('获取未读通知数量失败:', error);
+        }
+      };
+      fetchUnreadCount();
+
+      // 定时刷新未读数量
+      const interval = setInterval(fetchUnreadCount, 60000);
+      return () => clearInterval(interval);
     }
   }, [user]);
 
@@ -477,6 +501,20 @@ const Navbar: React.FC = () => {
                 {isDarkMode ? <Brightness7 /> : <Brightness4 />}
               </IconButton>
             </Tooltip>
+
+            {user && (
+              <Tooltip title="站内信">
+                <IconButton
+                  component={RouterLink}
+                  to="/inbox"
+                  color="inherit"
+                >
+                  <Badge badgeContent={unreadNotificationCount > 0 ? unreadNotificationCount : 0} color="error">
+                    <Mail />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+            )}
 
             {dataLoaded && (isMember || isCreator) && currentSlug && (
               <Tooltip title="项目设置">

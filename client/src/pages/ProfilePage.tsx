@@ -23,11 +23,14 @@ import {
   Badge,
   Tabs,
   Tab,
-  Chip
+  Chip,
+  FormControlLabel,
+  Switch,
+  Grid
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { projectAPI, userAPI } from '../services/api';
+import { projectAPI, userAPI, notificationAPI } from '../services/api';
 import { PhotoCamera } from '@mui/icons-material';
 
 interface Project {
@@ -90,6 +93,20 @@ const ProfilePage: React.FC = () => {
   }[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [activeTab, setActiveTab] = useState(0); // 用于切换不同的信息标签页
+
+  // 通知设置状态
+  const [notificationSettings, setNotificationSettings] = useState({
+    notifyOnNewProposal: true,
+    notifyOnNewComment: true,
+    notifyOnSurveySubmission: true,
+    notifyOnProposalQueued: true,
+    emailOnNewProposal: false,
+    emailOnNewComment: false,
+    emailOnSurveySubmission: false,
+    emailOnProposalQueued: false,
+  });
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
   
   // 头像上传引用
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,6 +141,9 @@ const ProfilePage: React.FC = () => {
           
           // 获取用户贡献的项目
           fetchContributedProjects(user.id);
+
+          // 获取通知设置
+          fetchNotificationSettings();
         } else {
           // 获取其他用户的信息
           try {
@@ -229,6 +249,36 @@ const ProfilePage: React.FC = () => {
     } catch (error) {
       console.error('获取用户贡献项目失败:', error);
       setContributedProjects([]);
+    }
+  };
+
+  // 获取通知设置
+  const fetchNotificationSettings = async () => {
+    if (!user) return;
+    try {
+      setLoadingSettings(true);
+      const response = await notificationAPI.getMyNotificationSettings();
+      if (response.data.settings) {
+        setNotificationSettings(response.data.settings);
+      }
+    } catch (error) {
+      console.error('获取通知设置失败:', error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  // 保存通知设置
+  const handleSaveNotificationSettings = async () => {
+    try {
+      setSavingSettings(true);
+      await notificationAPI.updateMyNotificationSettings(notificationSettings);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('保存通知设置失败:', error);
+    } finally {
+      setSavingSettings(false);
     }
   };
   
@@ -540,6 +590,7 @@ const ProfilePage: React.FC = () => {
             <Tab label="我的项目" />
             <Tab label="近期活动" />
             <Tab label="贡献项目" />
+            {isCurrentUser && <Tab label="通知设置" />}
           </Tabs>
         </Box>
         
@@ -685,6 +736,180 @@ const ProfilePage: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* 通知设置标签页 - 仅本人可见 */}
+      {isCurrentUser && (
+        <Paper sx={{ p: 4, mt: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            通知设置
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            选择您希望接收的通知类型和邮件提醒
+          </Typography>
+
+          {loadingSettings ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box>
+              {/* 站内通知设置 */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+                  站内通知
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.notifyOnNewProposal}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            notifyOnNewProposal: e.target.checked
+                          })}
+                        />
+                      }
+                      label="项目新提案通知"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.notifyOnNewComment}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            notifyOnNewComment: e.target.checked
+                          })}
+                        />
+                      }
+                      label="项目新评论通知"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.notifyOnSurveySubmission}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            notifyOnSurveySubmission: e.target.checked
+                          })}
+                        />
+                      }
+                      label="意见征询提交通知"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.notifyOnProposalQueued}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            notifyOnProposalQueued: e.target.checked
+                          })}
+                        />
+                      }
+                      label="提案加入队列通知"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider sx={{ my: 3 }} />
+
+              {/* 邮件通知设置 */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+                  邮件通知
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  开启邮件通知后，当上述事件发生时，您将收到电子邮件提醒
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.emailOnNewProposal}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            emailOnNewProposal: e.target.checked
+                          })}
+                          disabled={!notificationSettings.notifyOnNewProposal}
+                        />
+                      }
+                      label="新提案邮件通知"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.emailOnNewComment}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            emailOnNewComment: e.target.checked
+                          })}
+                          disabled={!notificationSettings.notifyOnNewComment}
+                        />
+                      }
+                      label="新评论邮件通知"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.emailOnSurveySubmission}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            emailOnSurveySubmission: e.target.checked
+                          })}
+                          disabled={!notificationSettings.notifyOnSurveySubmission}
+                        />
+                      }
+                      label="征询提交邮件通知"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={notificationSettings.emailOnProposalQueued}
+                          onChange={(e) => setNotificationSettings({
+                            ...notificationSettings,
+                            emailOnProposalQueued: e.target.checked
+                          })}
+                          disabled={!notificationSettings.notifyOnProposalQueued}
+                        />
+                      }
+                      label="提案入队邮件通知"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveNotificationSettings}
+                  disabled={savingSettings}
+                >
+                  {savingSettings ? '保存中...' : '保存设置'}
+                </Button>
+                {saveSuccess && (
+                  <Typography variant="body2" color="success.main">
+                    保存成功！
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+        </Paper>
+      )}
       
       {/* 删除账户确认对话框 */}
       {isCurrentUser && (
