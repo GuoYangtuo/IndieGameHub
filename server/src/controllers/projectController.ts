@@ -691,8 +691,12 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
       projectTags = await getProjectTags(projectId);
     }
 
+    // 获取项目成员列表
+    const members = await getProjectMembers(projectId);
+
     res.status(200).json({
       ...updatedProject,
+      members: members.map(member => member.userId),
       tags: projectTags
     });
   } catch (error) {
@@ -746,7 +750,10 @@ export const updateProjectCover = async (req: Request & { file?: Express.Multer.
       return;
     }
 
-    res.status(200).json(updatedProject);
+    res.status(200).json({
+      ...updatedProject,
+      members: projectMembers.map(member => member.userId)
+    });
   } catch (error) {
     console.error('更新项目封面图片失败:', error);
     res.status(500).json({ message: '服务器错误' });

@@ -102,7 +102,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+      {value === index && <Box>{children}</Box>}
     </div>
   );
 }
@@ -171,7 +171,7 @@ const ProjectSettingsPage: React.FC = () => {
   const [expandWithdrawals, setExpandWithdrawals] = useState(false);
   
   const isCreator = project && user ? project.createdBy === user.id : false;
-  const isMember = project && user ? project.members.includes(user.id) || project.createdBy === user.id : false;
+  const isMember = project && user && project.members ? project.members.includes(user.id) || project.createdBy === user.id : false;
   
   const theme = useTheme();
   
@@ -497,15 +497,9 @@ const ProjectSettingsPage: React.FC = () => {
             {error}
           </Alert>
         )}
-        
-        {successMessage && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage(null)}>
-            {successMessage}
-          </Alert>
-        )}
-        
+
         {/* Tabs */}
-        <Paper sx={{ mb: 3 }}>
+        <Paper sx={{ mb: 2 }}>
           <Tabs
             value={activeTab}
             onChange={(_, newValue) => setActiveTab(newValue)}
@@ -520,7 +514,7 @@ const ProjectSettingsPage: React.FC = () => {
             <Tab label="基本信息" />
             <Tab label="项目成员" />
             <Tab label="贡献度设置" />
-            {isMember && project && project.members.length > 1 && (
+            {isMember && project && project.members && project.members.length > 1 && (
               <Tab label="项目账户" />
             )}
             {isCreator && <Tab label="危险区域" />}
@@ -1021,7 +1015,7 @@ const ProjectSettingsPage: React.FC = () => {
         </TabPanel>
 
         {/* Tab 3: 项目账户管理 (条件渲染) */}
-        {isMember && project && project.members.length > 1 && (
+        {isMember && project && project.members && project.members.length > 1 && (
           <TabPanel value={activeTab} index={3}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>项目账户管理</Typography>
@@ -1164,6 +1158,13 @@ const ProjectSettingsPage: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* 成功提示放在底部 */}
+        {successMessage && (
+          <Alert severity="success" sx={{ mt: 2 }} onClose={() => setSuccessMessage(null)}>
+            {successMessage}
+          </Alert>
+        )}
       </Container>
     </Box>
   );
