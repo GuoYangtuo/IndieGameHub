@@ -422,7 +422,7 @@ const ProposalCardsPool: React.FC<ProposalCardsPoolProps> = ({
       </Box>
       
       {proposals.length === 0 ? (
-        <Alert severity="info">暂无提案，快来创建第一个提案吧！</Alert>
+        <Alert severity="info">暂无提案，快来记录一个想法或bug吧！</Alert>
       ) : proposalView === 'cards' ? (
         <Box>
           {/* 用户创建的提案专区 - 带边框 */}

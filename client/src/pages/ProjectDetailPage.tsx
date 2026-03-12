@@ -972,7 +972,7 @@ const ProjectDetailPage: React.FC = () => {
                     <Typography variant="h6" gutterBottom>任务队列</Typography>
                     
                     {proposals.filter(p => p.status === 'queued').length === 0 ? (
-                      <Alert severity="info" sx={{ mb: 2 }}>任务队列为空</Alert>
+                      <Alert severity="info" sx={{ mb: 2 }}>任务队列为空，选择几个提案加入任务队列吧！</Alert>
                     ) : (
                       <Paper variant="outlined" sx={{ p: 0 }}>
                         <List component="nav" disablePadding>

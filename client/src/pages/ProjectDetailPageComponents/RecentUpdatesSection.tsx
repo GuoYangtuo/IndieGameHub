@@ -243,7 +243,7 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
             {!project?.updates || !Array.isArray(project.updates) || 
             (selectedDate && selectedDateUpdates.length === 0) || 
             (!selectedDate && project?.updates.filter(u => !u.isVersion).length === 0) ? (
-              <Alert severity="info">暂无开发进度更新</Alert>
+              <Alert severity="info">暂无开发进度更新，发布一条更新日志，或者完成一个提案吧！</Alert>
             ) : (
               <Box sx={{ maxHeight: '200px', overflow: 'auto' }}>
                 <List dense>
