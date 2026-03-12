@@ -4,6 +4,7 @@ import {
   Paper,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   ListItemAvatar,
   Avatar,
@@ -75,7 +76,7 @@ const getNotificationIcon = (type: string) => {
     case 'proposal_queued':
       return <PlaylistAddCheck color="success" />;
     default:
-      return <Notifications color="default" />;
+      return <Notifications color="inherit" />;
   }
 };
 
@@ -334,10 +335,9 @@ const InboxPage: React.FC = () => {
               {filteredNotifications.map((notification, index) => (
                 <React.Fragment key={notification.id}>
                   <ListItem
-                    button
-                    onClick={() => handleNotificationClick(notification)}
+                    disablePadding
                     sx={{
-                      py: 1.5,
+                      py: 0,
                       bgcolor: selectedNotification?.id === notification.id
                         ? 'action.selected'
                         : notification.isRead
@@ -362,57 +362,59 @@ const InboxPage: React.FC = () => {
                       </Box>
                     }
                   >
-                    <ListItemAvatar>
-                      <Badge
-                        overlap="circular"
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        badgeContent={
-                          !notification.isRead ? (
-                            <Box
-                              sx={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                bgcolor: 'primary.main',
-                              }}
-                            />
-                          ) : null
+                    <ListItemButton sx={{ py: 1.5 }} onClick={() => handleNotificationClick(notification)}>
+                      <ListItemAvatar>
+                        <Badge
+                          overlap="circular"
+                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                          badgeContent={
+                            !notification.isRead ? (
+                              <Box
+                                sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  bgcolor: 'primary.main',
+                                }}
+                              />
+                            ) : null
+                          }
+                        >
+                          <Avatar sx={{ bgcolor: 'background.default' }}>
+                            {getNotificationIcon(notification.type)}
+                          </Avatar>
+                        </Badge>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: notification.isRead ? 'normal' : 'bold',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {notification.title}
+                          </Typography>
                         }
-                      >
-                        <Avatar sx={{ bgcolor: 'background.default' }}>
-                          {getNotificationIcon(notification.type)}
-                        </Avatar>
-                      </Badge>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: notification.isRead ? 'normal' : 'bold',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {notification.title}
-                        </Typography>
-                      }
-                      secondary={
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            display: 'block',
-                          }}
-                        >
-                          {notification.content}
-                        </Typography>
-                      }
-                    />
+                        secondary={
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              display: 'block',
+                            }}
+                          >
+                            {notification.content}
+                          </Typography>
+                        }
+                      />
+                    </ListItemButton>
                   </ListItem>
                   {index < filteredNotifications.length - 1 && <Divider />}
                 </React.Fragment>

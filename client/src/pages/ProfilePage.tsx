@@ -759,7 +759,7 @@ const ProfilePage: React.FC = () => {
                   站内通知
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -773,7 +773,7 @@ const ProfilePage: React.FC = () => {
                       label="项目新提案通知"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -787,7 +787,7 @@ const ProfilePage: React.FC = () => {
                       label="项目新评论通知"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -801,7 +801,7 @@ const ProfilePage: React.FC = () => {
                       label="意见征询提交通知"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -829,7 +829,7 @@ const ProfilePage: React.FC = () => {
                   开启邮件通知后，当上述事件发生时，您将收到电子邮件提醒
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -844,7 +844,7 @@ const ProfilePage: React.FC = () => {
                       label="新提案邮件通知"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -859,7 +859,7 @@ const ProfilePage: React.FC = () => {
                       label="新评论邮件通知"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -874,7 +874,7 @@ const ProfilePage: React.FC = () => {
                       label="征询提交邮件通知"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <FormControlLabel
                       control={
                         <Switch
