@@ -13,8 +13,7 @@ import {
   Chip,
   Autocomplete,
   createFilterOptions,
-  Checkbox,
-  FormControlLabel
+  Collapse,
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { projectAPI } from '../services/api';
@@ -22,6 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Delete } from '@mui/icons-material';
 import { useDebounce } from '../hooks/useDebounce';
+import FeaturePreview from '../components/FeaturePreview';
 
 interface Tag {
   id: string;
@@ -461,154 +461,113 @@ const CreateProjectPage: React.FC = () => {
             />
           </Box>
           
-          <Box sx={{ mt: 3, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              GitHub 仓库关联 (可选)
-            </Typography>
-            
-            <TextField
-              margin="normal"
-              fullWidth
-              id="githubRepoUrl"
-              label="GitHub 仓库 URL"
-              name="githubRepoUrl"
-              value={githubRepoUrl}
-              onChange={(e) => setGithubRepoUrl(e.target.value)}
-              placeholder="https://github.com/username/repository"
-              helperText="项目关联的GitHub仓库地址，用于代码管理和协作"
-            />
-            
-            <TextField
-              margin="normal"
-              fullWidth
-              id="githubAccessToken"
-              label="GitHub 访问令牌 (私有仓库需要)"
-              name="githubAccessToken"
-              type="password"
-              value={githubAccessToken}
-              onChange={(e) => setGithubAccessToken(e.target.value)}
-              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-              helperText="访问私有仓库需要提供Personal Access Token（仓库地址会在创建项目时自动验证）"
-            />
-
-          </Box>
-          
           {/* 功能模块启用设置 */}
           <Box sx={{ mt: 4, mb: 2 }}>
             <Typography variant="h6" gutterBottom>
-              功能模块设置
+              选择你想要启用的功能模块
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
               选择项目需要启用的功能模块，默认全部启用
             </Typography>
             
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={enableUpdates} 
-                    onChange={(e) => setEnableUpdates(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body1">
-                    更新日志系统
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      (用于让开发者发布更新日志，并向粉丝展示自己的更新频率，可以连接git/svn获取)
-                    </Typography>
-                  </Typography>
-                }
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <FeaturePreview
+                featureKey="updates"
+                label="更新日志系统"
+                description="(用于让开发者发布更新日志，并向粉丝展示自己的更新频率，可以连接git/svn获取)"
+                checked={enableUpdates}
+                onChange={setEnableUpdates}
+                darkImage="/images/features/updates-dark.png"
+                lightImage="/images/features/updates-light.png"
               />
               
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={enableSurveys} 
-                    onChange={(e) => setEnableSurveys(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body1">
-                    意见征询系统
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      (用于在开发者面临选择时，征求粉丝的看法，支持投票或自由发言)
-                    </Typography>
+              <Collapse in={enableUpdates}>
+                <Box sx={{ mt: 1, mb: 1, ml: 0, pl: 0, borderLeft: '3px solid', borderColor: 'primary.main' }}>
+                  <Typography variant="subtitle2" color="primary" sx={{ mb: 0.2, ml: 2 }}>
+                    GitHub 仓库关联 (可选)
                   </Typography>
-                }
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0, ml: 2 }}>
+                    关联GitHub仓库后可自动获取更新日志
+                  </Typography>
+                  
+                  <TextField
+                    margin="normal"
+                    fullWidth
+                    id="githubRepoUrl"
+                    label="GitHub 仓库 URL"
+                    name="githubRepoUrl"
+                    value={githubRepoUrl}
+                    onChange={(e) => setGithubRepoUrl(e.target.value)}
+                    placeholder="https://github.com/username/repository"
+                    size="small"
+                    sx={{ ml: 2, mt: 1 }}
+                  />
+                  
+                  <TextField
+                    margin="normal"
+                    fullWidth
+                    id="githubAccessToken"
+                    label="GitHub 访问令牌 (私有仓库需要)"
+                    name="githubAccessToken"
+                    type="password"
+                    value={githubAccessToken}
+                    onChange={(e) => setGithubAccessToken(e.target.value)}
+                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                    helperText="访问私有仓库需要提供Personal Access Token（仓库地址会在创建项目时自动验证）"
+                    size="small"
+                    sx={{ ml: 2, mt: 1 }}
+                  />
+                </Box>
+              </Collapse>
+              
+              <FeaturePreview
+                featureKey="surveys"
+                label="意见征询系统"
+                description="(用于在开发者面临选择时，征求粉丝的看法，支持投票或自由发言)"
+                checked={enableSurveys}
+                onChange={setEnableSurveys}
+                darkImage="/images/features/surveys-dark.png"
+                lightImage="/images/features/surveys-light.png"
               />
               
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={enableTaskQueue} 
-                    onChange={(e) => setEnableTaskQueue(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body1">
-                    任务队列
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      (一个待办清单Todo List，展示了开发者的工作计划或开发重心，同时也会展示给玩家)
-                    </Typography>
-                  </Typography>
-                }
+              <FeaturePreview
+                featureKey="taskQueue"
+                label="任务队列"
+                description="(一个待办清单Todo List，展示了开发者的工作计划或开发重心，同时也会展示给玩家)"
+                checked={enableTaskQueue}
+                onChange={setEnableTaskQueue}
+                darkImage="/images/features/taskqueue-dark.png"
+                lightImage="/images/features/taskqueue-light.png"
               />
               
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={enableProposals} 
-                    onChange={(e) => setEnableProposals(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body1">
-                    提案系统
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      (一个让开发者和粉丝共同记录想法或者bug的地方)
-                    </Typography>
-                  </Typography>
-                }
+              <FeaturePreview
+                featureKey="proposals"
+                label="提案系统"
+                description="(一个让开发者和粉丝共同记录想法或者bug的地方)"
+                checked={enableProposals}
+                onChange={setEnableProposals}
+                darkImage="/images/features/proposals-dark.png"
+                lightImage="/images/features/proposals-light.png"
               />
               
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={enableDiscussions} 
-                    onChange={(e) => setEnableDiscussions(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body1">
-                    讨论区
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      (粉丝可以自由留言，表达赞扬或否定，从讨论区诞生的创意，可以被创建为提案)
-                    </Typography>
-                  </Typography>
-                }
+              <FeaturePreview
+                featureKey="discussions"
+                label="讨论区"
+                description="(粉丝可以自由留言，表达赞扬或否定，从讨论区诞生的创意，可以被创建为提案)"
+                checked={enableDiscussions}
+                onChange={setEnableDiscussions}
+                darkImage="/images/features/discussions-dark.png"
+                lightImage="/images/features/discussions-light.png"
               />
               
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={enableContributions} 
-                    onChange={(e) => setEnableContributions(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Typography variant="body1">
-                    贡献度系统
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      (粉丝通过提案，捐赠，悬赏等方式获得贡献度，通过贡献度限制，开发者可以发布特殊版本。实验性功能，不建议启用)
-                    </Typography>
-                  </Typography>
-                }
+              <FeaturePreview
+                featureKey="contributions"
+                label="贡献度系统"
+                description="(粉丝通过提案，捐赠，悬赏等方式获得贡献度，通过贡献度限制，开发者可以发布特殊版本。实验性功能，不建议启用)"
+                checked={enableContributions}
+                onChange={setEnableContributions}
+                darkImage="/images/features/contributions-dark.png"
+                lightImage="/images/features/contributions-light.png"
               />
             </Box>
           </Box>
