@@ -43,8 +43,10 @@ const RechargeDialog: React.FC<RechargeDialogProps> = ({ open, onClose }) => {
       setError(null);
       setSuccess(false);
 
-      // 调用后端创建支付订单
-      const response = await userAPI.createCoinRechargeOrder(amount, {
+    // 调用后端创建支付订单
+    // 注意：前端显示的是金额，后端期望的是金币数量，需要转换
+    const coins = amount * 100; // 1元 = 100金币
+    const response = await userAPI.createCoinRechargeOrder(coins, {
         payType: payType,
         device: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'pc',
         method: 'jump'

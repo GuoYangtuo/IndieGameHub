@@ -242,11 +242,11 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
         projectData.githubRepoUrl || null, 
         projectData.githubAccessToken || null, 
         projectData.coverImage || null,
-        projectData.enableUpdates !== undefined ? projectData.enableUpdates : true,
-        projectData.enableSurveys !== undefined ? projectData.enableSurveys : true,
-        projectData.enableContributions !== undefined ? projectData.enableContributions : true,
-        projectData.enableTaskQueue !== undefined ? projectData.enableTaskQueue : true,
-        projectData.enableProposals !== undefined ? projectData.enableProposals : true,
+        projectData.enableUpdates !== undefined ? (projectData.enableUpdates ? 1 : 0) : 1,
+        projectData.enableSurveys !== undefined ? (projectData.enableSurveys ? 1 : 0) : 1,
+        projectData.enableContributions !== undefined ? (projectData.enableContributions ? 1 : 0) : 1,
+        projectData.enableTaskQueue !== undefined ? (projectData.enableTaskQueue ? 1 : 0) : 1,
+        projectData.enableProposals !== undefined ? (projectData.enableProposals ? 1 : 0) : 1,
         projectData.enableDiscussions !== undefined ? projectData.enableDiscussions : true
       ]
     );
