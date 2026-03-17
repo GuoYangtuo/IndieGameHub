@@ -370,7 +370,7 @@ const Navbar: React.FC = () => {
               textDecoration: 'none',
             }}
           >
-            {projectTitle || 'IndieGameHub'}
+            {projectTitle || '不鸽独立游戏社区（IndieGameHub.xyz）'}
           </Typography>
           
           {projectTitle && dataLoaded && (

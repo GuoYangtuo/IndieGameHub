@@ -286,12 +286,12 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       githubRepoUrl,
       githubAccessToken,
       coverImage,
-      enableUpdates: enableUpdates !== undefined ? enableUpdates : true,
-      enableSurveys: enableSurveys !== undefined ? enableSurveys : true,
-      enableContributions: enableContributions !== undefined ? enableContributions : true,
-      enableTaskQueue: enableTaskQueue !== undefined ? enableTaskQueue : true,
-      enableProposals: enableProposals !== undefined ? enableProposals : true,
-      enableDiscussions: enableDiscussions !== undefined ? enableDiscussions : true
+      enableUpdates: enableUpdates !== undefined ? (enableUpdates === true || enableUpdates === 'true' ? true : false) : true,
+      enableSurveys: enableSurveys !== undefined ? (enableSurveys === true || enableSurveys === 'true' ? true : false) : true,
+      enableContributions: enableContributions !== undefined ? (enableContributions === true || enableContributions === 'true' ? true : false) : true,
+      enableTaskQueue: enableTaskQueue !== undefined ? (enableTaskQueue === true || enableTaskQueue === 'true' ? true : false) : true,
+      enableProposals: enableProposals !== undefined ? (enableProposals === true || enableProposals === 'true' ? true : false) : true,
+      enableDiscussions: enableDiscussions !== undefined ? (enableDiscussions === true || enableDiscussions === 'true' ? true : false) : true
     });
 
     if (!project) {

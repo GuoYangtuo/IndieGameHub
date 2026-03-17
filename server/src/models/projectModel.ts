@@ -247,7 +247,7 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
         projectData.enableContributions !== undefined ? (projectData.enableContributions ? 1 : 0) : 1,
         projectData.enableTaskQueue !== undefined ? (projectData.enableTaskQueue ? 1 : 0) : 1,
         projectData.enableProposals !== undefined ? (projectData.enableProposals ? 1 : 0) : 1,
-        projectData.enableDiscussions !== undefined ? projectData.enableDiscussions : true
+        projectData.enableDiscussions !== undefined ? (projectData.enableDiscussions ? 1 : 0) : 1
       ]
     );
     
