@@ -358,7 +358,7 @@ const BetCampaignPage: React.FC = () => {
           />
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="body2">
-              已筹集：<strong style={{ color: theme.palette.primary.main }}>¥{campaign.totalRaised}</strong>
+              已筹到：<strong style={{ color: theme.palette.primary.main }}>¥{campaign.totalRaised}</strong>
             </Typography>
             <Typography variant="body2">
               目标：¥{campaign.targetAmount} ({progress.toFixed(1)}%)
