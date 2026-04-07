@@ -43,6 +43,7 @@ import {
   Grid,
   Slider
 } from '@mui/material';
+import MDEditor from '@uiw/react-md-editor';
 import {
   ArrowBack,
   AttachMoney,
@@ -422,15 +423,13 @@ const BetCampaignManagePage: React.FC = () => {
       {/* 进行中的对赌众筹 */}
       {activeCampaign && (
         <Paper sx={{ p: 3, mb: 3, border: 2, borderColor: 'primary.main' }}>
-          <Typography variant="h5" gutterBottom>
-            当前进行中的对赌众筹
-          </Typography>
-          <Chip
-            label={getStatusInfo(activeCampaign.status, activeCampaign.result).text}
-            color={getStatusInfo(activeCampaign.status).color as any}
-            sx={{ mb: 2 }}
-          />
-          <Typography variant="h6">{activeCampaign.title}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="h6">{activeCampaign.title}</Typography>
+            <Chip
+              label={getStatusInfo(activeCampaign.status, activeCampaign.result).text}
+              color={getStatusInfo(activeCampaign.status).color as any}
+            />
+          </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             目标：¥{activeCampaign.targetAmount} | 已筹集：¥{activeCampaign.totalRaised}
             {' | '}众筹：{activeCampaign.fundingDays}天 | 开发：{activeCampaign.developmentDays}天
@@ -596,7 +595,7 @@ const BetCampaignManagePage: React.FC = () => {
                 onChange={(e) => setFundingDays(parseInt(e.target.value) || 0)}
                 fullWidth
                 required
-                helperText={`从创建之时起${fundingDays}天`}
+                helperText={`创建之时起，众筹${fundingDays}天`}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
@@ -607,27 +606,31 @@ const BetCampaignManagePage: React.FC = () => {
                 onChange={(e) => setDevelopmentDays(parseInt(e.target.value) || 0)}
                 fullWidth
                 required
-                helperText={`众筹成功后${developmentDays}天`}
+                helperText={`众筹成功后，开发${developmentDays}天`}
               />
             </Box>
           </Box>
 
-          <TextField
-            label="开发目标（支持Markdown格式）"
-            value={developmentGoals}
-            onChange={(e) => setDevelopmentGoals(e.target.value)}
-            fullWidth
-            multiline
-            rows={5}
-            sx={{ mb: 2 }}
-            placeholder="# 主要目标&#10;&#10;## 子任务1&#10;- 任务1.1&#10;- 任务1.2&#10;&#10;## 子任务2&#10;- 任务2.1"
-            helperText="使用Markdown格式描述开发目标，支持标题、列表等格式"
-          />
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              详细描述你将在开发阶段完成的目标（支持Markdown格式）
+            </Typography>
+            <MDEditor
+              value={developmentGoals}
+              onChange={(val) => setDevelopmentGoals(val || '')}
+              preview="edit"
+              height={200}
+              style={{ marginBottom: 8 }}
+            />
+            {/* <Typography variant="caption" color="text.secondary">
+              支持Markdown格式
+            </Typography> */}
+          </Box>
 
           {/* 开发目标图片上传 */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              开发目标配图（可选，最多10张）
+              配图（思维导图，路线图，参考效果图等，可选，最多10张）
             </Typography>
             <Button
               variant="outlined"
