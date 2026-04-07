@@ -18,21 +18,27 @@ export const buildSignContent = (params: Record<string, any>): string => {
     .join('&');
 };
 
-const normalizePrivateKey = (key: string): string =>
-  key.includes('BEGIN') ? key : `-----BEGIN PRIVATE KEY-----\n${key}\n-----END PRIVATE KEY-----`;
+const wrapPem = (content: string, type: 'PRIVATE' | 'PUBLIC'): string => {
+  const cleaned = content.replace(/\\n/g, '\n');
+  if (cleaned.includes('BEGIN')) return cleaned;
+  const chunked = cleaned.match(/.{1,64}/g)?.join('\n') ?? cleaned;
+  return `-----BEGIN ${type} KEY-----\n${chunked}\n-----END ${type} KEY-----`;
+};
 
-const normalizePublicKey = (key: string): string =>
-  key.includes('BEGIN') ? key : `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`;
+const normalizePrivateKey = (key: string): string => wrapPem(key, 'PRIVATE');
+const normalizePublicKey = (key: string): string => wrapPem(key, 'PUBLIC');
 
 export const rsaSign = (params: Record<string, any>, rawPrivateKey: string): string => {
   const content = buildSignContent(params);
-  const privateKey = normalizePrivateKey(rawPrivateKey.replace(/\\n/g, '\n'));
+  const normalized = normalizePrivateKey(rawPrivateKey);
+  console.log('[rsaSign] PEM length:', normalized.length);
+  console.log('[rsaSign] PEM header:', normalized.substring(0, 50));
 
   const signer = crypto.createSign('RSA-SHA256');
   signer.update(content, 'utf8');
   signer.end();
 
-  return signer.sign(privateKey, 'base64');
+  return signer.sign(normalized, 'base64');
 };
 
 export const rsaVerify = (
@@ -41,7 +47,7 @@ export const rsaVerify = (
   rawPublicKey: string
 ): boolean => {
   const content = buildSignContent(params);
-  const publicKey = normalizePublicKey(rawPublicKey.replace(/\\n/g, '\n'));
+  const publicKey = normalizePublicKey(rawPublicKey);
 
   const verifier = crypto.createVerify('RSA-SHA256');
   verifier.update(content, 'utf8');

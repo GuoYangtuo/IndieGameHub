@@ -435,6 +435,7 @@ export const createCoinRechargeOrder = async (req: Request, res: Response): Prom
       res.status(400).json({ message: data.msg || '创建支付订单失败', detail: data });
       return;
     }
+    console.log(data);
 
     // 校验平台返回签名（如果返回了 sign）
     if (data.sign) {
