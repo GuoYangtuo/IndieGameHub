@@ -564,7 +564,7 @@ const BetCampaignManagePage: React.FC = () => {
           />
 
           <TextField
-            label="描述（可选）"
+            label="简述（可选）"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             fullWidth
@@ -630,7 +630,7 @@ const BetCampaignManagePage: React.FC = () => {
           {/* 开发目标图片上传 */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              配图（思维导图，路线图，参考效果图等，可选，最多10张）
+              配图（思维导图，路线图，已经有的素材样图，参考效果图等，可选，最多10张）
             </Typography>
             <Button
               variant="outlined"

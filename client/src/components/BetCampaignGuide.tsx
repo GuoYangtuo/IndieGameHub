@@ -93,8 +93,8 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
       sx={{ 
         p: 3, 
         mb: 3, 
-        bgcolor: 'info.main', 
-        color: 'info.contrastText',
+        bgcolor: '#58a6ff', 
+        color: 'black',
         position: 'relative',
         ...sx
       }}

@@ -45,7 +45,7 @@ import {
   AttachMoney,
   EmojiEvents,
   Warning,
-  CheckCircle,
+  FlagOutlined,
   Cancel,
   Timer,
   People,
@@ -106,6 +106,7 @@ const BetCampaignPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
 
   const [project, setProject] = useState<Project | null>(null);
   const [campaign, setCampaign] = useState<BetCampaign | null>(null);
@@ -113,7 +114,8 @@ const BetCampaignPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // 捐赠相关状态
-  const [selectedAmount, setSelectedAmount] = useState<number>(10);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [isCustomSelected, setIsCustomSelected] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [donationMessage, setDonationMessage] = useState('');
   const [donating, setDonating] = useState(false);
@@ -177,7 +179,14 @@ const BetCampaignPage: React.FC = () => {
       return;
     }
 
-    const amount = campaign.allowCustomAmount && customAmount ? parseInt(customAmount) : selectedAmount;
+    // 计算实际捐赠金额：如果选择了自定义档位则使用自定义金额，否则使用选中的固定档位
+    let amount = 0;
+    if (isCustomSelected && campaign.allowCustomAmount) {
+      amount = customAmount ? parseInt(customAmount) : 0;
+    } else if (selectedAmount !== null) {
+      amount = selectedAmount;
+    }
+
     if (!amount || amount <= 0) {
       alert('请选择或输入有效的捐赠金额');
       return;
@@ -205,9 +214,9 @@ const BetCampaignPage: React.FC = () => {
 
     switch (campaign.status) {
       case 'funding':
-        return { color: 'primary', text: '众筹中' };
+        return { color: 'primary', text: '正在众筹中' };
       case 'development':
-        return { color: 'warning', text: '开发中' };
+        return { color: 'info', text: '正在开发中' };
       case 'completed':
         return { color: 'success', text: '挑战成功' };
       case 'failed':
@@ -265,70 +274,47 @@ const BetCampaignPage: React.FC = () => {
 
       {/* 对赌众筹信息卡片 */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              {campaign.title}
-            </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5" component="h1">
+            {campaign.title}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip
+              label={`众筹${campaign.fundingDays}天`}
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`开发${campaign.developmentDays}天`}
+              size="small"
+              variant="outlined"
+            />
             <Chip
               label={statusInfo.text}
               color={statusInfo.color as any}
-              sx={{ mr: 1 }}
+              size="small"
+              sx={{
+                ...(statusInfo.color === 'info' && {
+                  backgroundColor: isDarkMode ? 'rgba(88, 166, 255, 0.2)' : 'rgba(9, 105, 218, 0.12)',
+                  color: isDarkMode ? '#79b8ff' : '#0550ae',
+                  fontWeight: 600,
+                }),
+              }}
             />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              目标金额：<strong>¥{campaign.targetAmount}</strong>
-              {' | '}众筹天数：<strong>{campaign.fundingDays}天</strong>
-              {' | '}开发天数：<strong>{campaign.developmentDays}天</strong>
-            </Typography>
           </Box>
         </Box>
-
         {campaign.description && (
           <Typography variant="body1" sx={{ mb: 3 }}>
             {campaign.description}
           </Typography>
         )}
 
-        {/* 进度显示 */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2">
-              已筹集：<strong style={{ color: theme.palette.primary.main }}>¥{campaign.totalRaised}</strong>
-            </Typography>
-            <Typography variant="body2">
-              目标：¥{campaign.targetAmount} ({progress.toFixed(1)}%)
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            sx={{ height: 10, borderRadius: 5 }}
-            color={progress >= 100 ? 'success' : 'primary'}
-          />
-        </Box>
-
-        {/* 剩余时间 */}
-        {remainingTime && campaign.status !== 'completed' && campaign.status !== 'failed' && campaign.status !== 'cancelled' && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 2 }}>
-            <Timer color="primary" />
-            <Typography variant="body1">
-              {campaign.status === 'funding' ? '众筹剩余时间' : '开发剩余时间'}：
-              <strong>
-                {remainingTime.days > 0 && `${remainingTime.days}天 `}
-                {remainingTime.hours > 0 && `${remainingTime.hours}小时 `}
-                {remainingTime.minutes > 0 && `${remainingTime.minutes}分钟`}
-                {remainingTime.days === 0 && remainingTime.hours === 0 && remainingTime.minutes === 0 && '已结束'}
-              </strong>
-            </Typography>
-          </Box>
-        )}
-
         {/* 开发目标 */}
         {campaign.developmentGoals && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              <CheckCircle sx={{ mr: 1, verticalAlign: 'middle' }} />
-              开发目标
+              <FlagOutlined sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
+              计划在开发阶段完成的目标（承诺你将会得到什么）
             </Typography>
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Box sx={{ '& img': { maxWidth: '100%', height: 'auto' } }}>
@@ -361,20 +347,63 @@ const BetCampaignPage: React.FC = () => {
           </Box>
         )}
 
+        {/* 众筹进度显示 - 仅在众筹阶段显示 */}
+        {campaign.status === 'funding' && (
+        <Box sx={{ mb: 2 }}>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{ height: 10, borderRadius: 5, mb: 0.5 }}
+            color={progress >= 100 ? 'success' : 'primary'}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="body2">
+              已筹集：<strong style={{ color: theme.palette.primary.main }}>¥{campaign.totalRaised}</strong>
+            </Typography>
+            <Typography variant="body2">
+              目标：¥{campaign.targetAmount} ({progress.toFixed(1)}%)
+            </Typography>
+          </Box>
+        </Box>
+        )}
+
+        {/* 剩余时间 */}
+        {remainingTime && campaign.status !== 'completed' && campaign.status !== 'failed' && campaign.status !== 'cancelled' && (
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            mb: 1,
+            p: 2,
+            bgcolor: isDarkMode ? 'rgba(63, 185, 80, 0.12)' : 'rgba(63, 185, 80, 0.08)',
+            borderRadius: 2,
+            border: `1px solid ${isDarkMode ? 'rgba(63, 185, 80, 0.25)' : 'rgba(63, 185, 80, 0.15)'}`,
+          }}>
+            <Timer color="primary" />
+            <Typography variant="body1">
+              {campaign.status === 'funding'
+                ? <>众筹将在 <strong>{remainingTime.days > 0 ? `${remainingTime.days}天 ` : ''}{remainingTime.hours > 0 ? `${remainingTime.hours}小时 ` : ''}{remainingTime.minutes > 0 ? `${remainingTime.minutes}分钟` : ''}</strong> 内结束，若达到目标金额则进入开发阶段，否则众筹失败退回已筹捐款</>
+                : <>开发将在 <strong>{remainingTime.days > 0 ? `${remainingTime.days}天 ` : ''}{remainingTime.hours > 0 ? `${remainingTime.hours}小时 ` : ''}{remainingTime.minutes > 0 ? `${remainingTime.minutes}分钟` : ''}</strong> 内结束，若未达成开发目标，将退回所有捐款</>
+              }
+            </Typography>
+          </Box>
+        )}
+
         {/* 捐赠档位 */}
         {campaign.status === 'funding' && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              <MonetizationOn sx={{ mr: 1, verticalAlign: 'middle' }} />
+              <MonetizationOn sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
               选择捐赠档位
             </Typography>
             <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
               {campaign.tierAmounts.map((amount) => (
                 <Button
                   key={amount}
-                  variant={selectedAmount === amount ? 'contained' : 'outlined'}
+                  variant={selectedAmount === amount && !isCustomSelected ? 'contained' : 'outlined'}
                   onClick={() => {
                     setSelectedAmount(amount);
+                    setIsCustomSelected(false);
                     setCustomAmount('');
                   }}
                   sx={{ minWidth: 80 }}
@@ -382,11 +411,23 @@ const BetCampaignPage: React.FC = () => {
                   ¥{amount}
                 </Button>
               ))}
+              {campaign.allowCustomAmount && (
+                <Button
+                  variant={isCustomSelected ? 'contained' : 'outlined'}
+                  onClick={() => {
+                    setIsCustomSelected(true);
+                    setSelectedAmount(null);
+                  }}
+                  sx={{ minWidth: 80 }}
+                >
+                  自定义
+                </Button>
+              )}
             </Stack>
 
-            {campaign.allowCustomAmount && (
+            {isCustomSelected && campaign.allowCustomAmount && (
               <TextField
-                label="自定义金额"
+                label="请输入自定义金额"
                 type="number"
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
@@ -395,6 +436,7 @@ const BetCampaignPage: React.FC = () => {
                 }}
                 sx={{ mb: 2 }}
                 fullWidth
+                autoFocus
               />
             )}
 
