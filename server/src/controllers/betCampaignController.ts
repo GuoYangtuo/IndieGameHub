@@ -351,18 +351,6 @@ export const donateToBetCampaign = async (req: Request, res: Response): Promise<
       [amount, campaignId]
     );
 
-    // 检查是否达成目标
-    const updatedCampaign = await query('SELECT * FROM bet_campaigns WHERE id = ?', [campaignId]);
-    const updatedData = (updatedCampaign as any[])[0];
-
-    if (updatedData.totalRaised >= updatedData.targetAmount) {
-      // 达成目标，自动进入开发阶段
-      await query(
-        "UPDATE bet_campaigns SET status = 'development' WHERE id = ?",
-        [campaignId]
-      );
-    }
-
     res.status(201).json({ success: true, message: '捐赠成功' });
   } catch (error) {
     console.error('捐赠失败:', error);
