@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
 import {
   Dialog,
   DialogContent,
@@ -7,39 +6,18 @@ import {
   Button,
   Box,
   Typography,
-  Paper,
-  LinearProgress,
-  Chip,
-  Stack,
   InputAdornment,
   IconButton,
   FormControlLabel,
   Checkbox,
-  Divider,
   Tabs,
   Tab,
-  Avatar,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  useTheme,
-  Tooltip,
-  Alert
+  Stack,
+  Chip,
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
-import {
-  CloudUpload,
-  Delete,
-  EmojiEvents,
-  FlagOutlined,
-  MonetizationOn,
-  People,
-  Timer,
-  ArrowBack
-} from '@mui/icons-material';
+import { CloudUpload, Delete } from '@mui/icons-material';
+import BetCampaignCard from './BetCampaignCard';
 
 interface BetDonation {
   id: string;
@@ -79,7 +57,6 @@ interface CreateBetCampaignDialogProps {
   onClose: () => void;
   onCreate: () => Promise<void>;
   creating: boolean;
-  // 表单数据
   title: string;
   setTitle: (value: string) => void;
   description: string;
@@ -100,7 +77,6 @@ interface CreateBetCampaignDialogProps {
   setTierAmounts: (amounts: number[]) => void;
   allowCustomAmount: boolean;
   setAllowCustomAmount: (value: boolean) => void;
-  // 项目信息
   projectName: string;
   projectSlug: string;
 }
@@ -133,11 +109,9 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
   projectName,
   projectSlug
 }) => {
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
   const [previewPhase, setPreviewPhase] = useState<'funding' | 'development' | 'completed'>('funding');
 
-  // 模拟捐赠者数据（用于预览）
+  // 模拟捐赠者数据
   const mockDonations: BetDonation[] = useMemo(() => [
     {
       id: '1',
@@ -171,7 +145,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
     }
   ], []);
 
-  // 计算模拟的众筹进度（用于预览）
+  // 计算模拟的众筹进度
   const mockProgress = useMemo(() => {
     if (!title || !targetAmount) return { raised: 350, percent: 0 };
     const raised = Math.floor(targetAmount * 0.7);
@@ -181,14 +155,9 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
     };
   }, [targetAmount, title]);
 
-  // 计算模拟的剩余时间
-  const getMockRemainingTime = (days: number): { days: number; hours: number; minutes: number } => {
-    return { days: Math.floor(days * 0.6), hours: Math.floor(Math.random() * 24), minutes: Math.floor(Math.random() * 60) };
-  };
-
   // 获取预览用的 campaign 对象
   const previewCampaign: BetCampaign = useMemo(() => {
-    const baseCampaign: BetCampaign = {
+    return {
       id: 'preview',
       projectId: 'preview-project',
       createdBy: 'preview-user',
@@ -209,22 +178,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
       createdAt: new Date().toISOString(),
       donations: mockDonations
     };
-    return baseCampaign;
   }, [title, description, targetAmount, fundingDays, developmentDays, developmentGoals, imagePreviews, tierAmounts, allowCustomAmount, previewPhase, mockProgress, mockDonations]);
-
-  // 格式化相对时间
-  const formatRelativeTime = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (days > 0) return `${days}天前`;
-    if (hours > 0) return `${hours}小时前`;
-    if (minutes > 0) return `${minutes}分钟前`;
-    return '刚刚';
-  };
 
   return (
     <Dialog
@@ -429,7 +383,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
         </Box>
 
         {/* 右侧：效果预览 */}
-        <Box sx={{ width: '50%', overflow: 'auto', bgcolor: isDarkMode ? '#121212' : '#f5f5f5' }}>
+        <Box sx={{ width: '50%', overflow: 'auto' }}>
           <Box sx={{ p: 2, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -462,239 +416,12 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
 
           <Box sx={{ p: 2 }}>
             <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-              {/* 返回按钮 */}
-              <Button
-                startIcon={<ArrowBack />}
-                sx={{ mb: 2 }}
-              >
-                返回项目
-              </Button>
-
-              {/* 对赌众筹信息卡片 */}
-              <Paper sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h5" component="h1">
-                    {previewCampaign.title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Chip
-                      label={`众筹${previewCampaign.fundingDays}天`}
-                      size="small"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={`开发${previewCampaign.developmentDays}天`}
-                      size="small"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={previewPhase === 'funding' ? '正在众筹中' : previewPhase === 'development' ? '正在开发中' : '挑战成功'}
-                      color={previewPhase === 'funding' ? 'primary' : previewPhase === 'development' ? 'info' : 'success'}
-                      size="small"
-                      sx={previewPhase === 'development' ? {
-                        backgroundColor: isDarkMode ? 'rgba(88, 166, 255, 0.2)' : 'rgba(9, 105, 218, 0.12)',
-                        color: isDarkMode ? '#79b8ff' : '#0550ae',
-                        fontWeight: 600,
-                      } : undefined}
-                    />
-                  </Box>
-                </Box>
-                {previewCampaign.description && (
-                  <Typography variant="body1" sx={{ mb: 3 }}>
-                    {previewCampaign.description}
-                  </Typography>
-                )}
-
-                {/* 开发目标 */}
-                {previewCampaign.developmentGoals && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                      <FlagOutlined sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
-                      计划在开发阶段完成的目标（承诺你将会得到什么）
-                    </Typography>
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <Box sx={{ '& img': { maxWidth: '100%', height: 'auto' } }}>
-                        <ReactMarkdown>{previewCampaign.developmentGoals}</ReactMarkdown>
-                      </Box>
-                    </Paper>
-                  </Box>
-                )}
-
-                {/* 开发目标图片 */}
-                {previewCampaign.developmentGoalImages && previewCampaign.developmentGoalImages.length > 0 && (
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                      {previewCampaign.developmentGoalImages.map((image, index) => (
-                        <Box
-                          key={index}
-                          component="img"
-                          src={image}
-                          alt={`开发目标配图 ${index + 1}`}
-                          sx={{
-                            maxWidth: '100%',
-                            maxHeight: 400,
-                            objectFit: 'contain',
-                            borderRadius: 2,
-                            boxShadow: 1
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-
-                {/* 众筹进度显示 - 仅在众筹阶段显示 */}
-                {previewPhase === 'funding' && (
-                  <Box sx={{ mb: 2 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={mockProgress.percent}
-                      sx={{ height: 10, borderRadius: 5, mb: 0.5 }}
-                      color={mockProgress.percent >= 100 ? 'success' : 'primary'}
-                    />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">
-                        已筹到：<strong style={{ color: theme.palette.primary.main }}>¥{mockProgress.raised}</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        目标：¥{previewCampaign.targetAmount} ({mockProgress.percent.toFixed(1)}%)
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-
-                {/* 剩余时间 */}
-                {(previewPhase === 'funding' || previewPhase === 'development') && (
-                  <Box sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    mb: 1,
-                    p: 2,
-                    bgcolor: isDarkMode ? 'rgba(63, 185, 80, 0.12)' : 'rgba(63, 185, 80, 0.08)',
-                    borderRadius: 2,
-                    border: `1px solid ${isDarkMode ? 'rgba(63, 185, 80, 0.25)' : 'rgba(63, 185, 80, 0.15)'}`,
-                  }}>
-                    <Timer color="primary" />
-                    <Typography variant="body1">
-                      {previewPhase === 'funding'
-                        ? <>众筹将在 <strong>{(() => { const t = getMockRemainingTime(fundingDays); return `${t.days > 0 ? `${t.days}天 ` : ''}${t.hours > 0 ? `${t.hours}小时 ` : ''}${t.minutes > 0 ? `${t.minutes}分钟` : ''}`; })()} </strong> 内结束，若达到目标金额则进入开发阶段，否则众筹失败退回已筹捐款</>
-                        : <>开发将在 <strong>{(() => { const t = getMockRemainingTime(developmentDays); return `${t.days > 0 ? `${t.days}天 ` : ''}${t.hours > 0 ? `${t.hours}小时 ` : ''}${t.minutes > 0 ? `${t.minutes}分钟` : ''}`; })()} </strong> 内结束，若未达成开发目标，将退回所有捐款</>
-                      }
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* 捐赠档位 - 仅在众筹阶段显示 */}
-                {previewPhase === 'funding' && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                      <MonetizationOn sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
-                      选择捐赠档位
-                    </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                      {previewCampaign.tierAmounts.map((amount) => (
-                        <Button
-                          key={amount}
-                          variant="outlined"
-                          sx={{ minWidth: 80 }}
-                        >
-                          ¥{amount}
-                        </Button>
-                      ))}
-                      {previewCampaign.allowCustomAmount && (
-                        <Button
-                          variant="outlined"
-                          sx={{ minWidth: 80 }}
-                        >
-                          自定义
-                        </Button>
-                      )}
-                    </Stack>
-
-                    <TextField
-                      label="给开发者的留言（可选）"
-                      multiline
-                      rows={2}
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-
-                    <Button
-                      variant="contained"
-                      size="large"
-                      fullWidth
-                      startIcon={<MonetizationOn />}
-                    >
-                      确认捐赠
-                    </Button>
-                  </Box>
-                )}
-
-                {/* 开发阶段结束后的结果提示 */}
-                {previewPhase === 'development' && (
-                  <Alert severity="info" sx={{ mt: 2 }}>
-                    开发阶段进行中，请耐心等待开发者完成目标。开发完成后，结果将在这里公布。
-                  </Alert>
-                )}
-
-                {(previewPhase === 'completed' || previewCampaign.result === 'success') && (
-                  <Alert severity="success" sx={{ mt: 2 }}>
-                    挑战成功！开发者已完成目标，感谢所有支持者的参与！
-                  </Alert>
-                )}
-              </Paper>
-
-              {/* 捐赠者列表 */}
-              {mockDonations.length > 0 && (
-                <Paper sx={{ p: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    <People sx={{ mr: 1, verticalAlign: 'middle' }} />
-                    捐赠者名单 ({mockDonations.length}人)
-                  </Typography>
-                  <TableContainer>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>排名</TableCell>
-                          <TableCell>用户</TableCell>
-                          <TableCell align="right">金额</TableCell>
-                          <TableCell>时间</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {mockDonations.map((donation, index) => (
-                          <TableRow key={donation.id}>
-                            <TableCell>
-                              {index === 0 && <EmojiEvents color="warning" />}
-                              {index === 1 && <EmojiEvents sx={{ color: '#c0c0c0' }} />}
-                              {index === 2 && <EmojiEvents sx={{ color: '#cd7f32' }} />}
-                              {index > 2 && index + 1}
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Avatar
-                                  src={donation.avatar_url}
-                                  sx={{ width: 32, height: 32, mr: 1 }}
-                                >
-                                  {donation.username?.[0]?.toUpperCase()}
-                                </Avatar>
-                                {donation.username}
-                              </Box>
-                            </TableCell>
-                            <TableCell align="right">
-                              <strong>¥{donation.amount}</strong>
-                            </TableCell>
-                            <TableCell>
-                              {formatRelativeTime(donation.createdAt)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Paper>
-              )}
+              <BetCampaignCard
+                campaign={previewCampaign}
+                mode="preview"
+                previewPhase={previewPhase}
+                mockProgress={mockProgress}
+              />
             </Box>
           </Box>
         </Box>
