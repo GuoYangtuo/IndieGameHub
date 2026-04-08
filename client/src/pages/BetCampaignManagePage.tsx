@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -21,10 +21,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   FormControl,
   InputLabel,
   Select,
@@ -43,7 +39,6 @@ import {
   Grid,
   Slider
 } from '@mui/material';
-import MDEditor from '@uiw/react-md-editor';
 import {
   ArrowBack,
   AttachMoney,
@@ -59,13 +54,13 @@ import {
   History,
   Create,
   Image as ImageIcon,
-  HelpOutline,
-  CloudUpload
+  HelpOutline
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
 import { formatDate, formatRelativeTime } from '../utils/dateUtils';
 import BetCampaignGuide from '../components/BetCampaignGuide';
+import CreateBetCampaignDialog from '../components/CreateBetCampaignDialog';
 
 interface BetDonation {
   id: string;
@@ -546,208 +541,34 @@ const BetCampaignManagePage: React.FC = () => {
       </Paper>
 
       {/* 创建对赌众筹对话框 */}
-      <Dialog
+      <CreateBetCampaignDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>创建对赌众筹</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="标题"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            required
-            sx={{ mb: 2, mt: 1 }}
-          />
-
-          <TextField
-            label="简述（可选）"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            multiline
-            rows={2}
-            sx={{ mb: 2 }}
-          />
-
-          <TextField
-            label="目标金额"
-            type="number"
-            value={targetAmount}
-            onChange={(e) => setTargetAmount(parseInt(e.target.value) || 0)}
-            fullWidth
-            required
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">¥</InputAdornment>,
-            }}
-          />
-
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <Box sx={{ flex: 1 }}>
-              <TextField
-                label="众筹阶段天数"
-                type="number"
-                value={fundingDays}
-                onChange={(e) => setFundingDays(parseInt(e.target.value) || 0)}
-                fullWidth
-                required
-                helperText={`创建之时起，众筹${fundingDays}天`}
-              />
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <TextField
-                label="开发阶段天数"
-                type="number"
-                value={developmentDays}
-                onChange={(e) => setDevelopmentDays(parseInt(e.target.value) || 0)}
-                fullWidth
-                required
-                helperText={`众筹成功后，开发${developmentDays}天`}
-              />
-            </Box>
-          </Box>
-
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              详细描述你将在开发阶段完成的目标（支持Markdown格式）
-            </Typography>
-            <MDEditor
-              value={developmentGoals}
-              onChange={(val) => setDevelopmentGoals(val || '')}
-              preview="edit"
-              height={200}
-              style={{ marginBottom: 8 }}
-            />
-            {/* <Typography variant="caption" color="text.secondary">
-              支持Markdown格式
-            </Typography> */}
-          </Box>
-
-          {/* 开发目标图片上传 */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              配图（思维导图，路线图，已经有的素材样图，参考效果图等，可选，最多10张）
-            </Typography>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<CloudUpload />}
-              sx={{ mb: 1 }}
-            >
-              上传图片
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (files) {
-                    const newFiles = Array.from(files);
-                    const totalFiles = goalImages.length + newFiles.length;
-                    if (totalFiles > 10) {
-                      alert('最多只能上传10张图片');
-                      return;
-                    }
-                    setGoalImages([...goalImages, ...newFiles]);
-                    // 创建预览
-                    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-                    setImagePreviews([...imagePreviews, ...newPreviews]);
-                  }
-                }}
-              />
-            </Button>
-            {imagePreviews.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                {imagePreviews.map((preview, index) => (
-                  <Box key={index} sx={{ position: 'relative' }}>
-                    <img
-                      src={preview}
-                      alt={`预览 ${index + 1}`}
-                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4 }}
-                    />
-                    <IconButton
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        bgcolor: 'error.main',
-                        color: 'white',
-                        '&:hover': { bgcolor: 'error.dark' },
-                        width: 24,
-                        height: 24
-                      }}
-                      onClick={() => {
-                        const newImages = goalImages.filter((_, i) => i !== index);
-                        const newPreviews = imagePreviews.filter((_, i) => i !== index);
-                        setGoalImages(newImages);
-                        setImagePreviews(newPreviews);
-                      }}
-                    >
-                      <Delete sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-
-          <Typography variant="subtitle2" gutterBottom>
-            捐赠档位（选择默认档位或自定义）
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-            {[5, 10, 20, 50, 100].map((amount) => (
-              <Chip
-                key={amount}
-                label={`¥${amount}`}
-                onClick={() => {
-                  if (!tierAmounts.includes(amount)) {
-                    setTierAmounts([...tierAmounts, amount].sort((a, b) => a - b));
-                  }
-                }}
-                color={tierAmounts.includes(amount) ? 'primary' : 'default'}
-              />
-            ))}
-          </Stack>
-          <TextField
-            label="自定义档位（用逗号分隔）"
-            value={tierAmounts.join(', ')}
-            onChange={(e) => {
-              const values = e.target.value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v) && v > 0);
-              if (values.length > 0) {
-                setTierAmounts(values.sort((a, b) => a - b));
-              }
-            }}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={allowCustomAmount}
-                onChange={(e) => setAllowCustomAmount(e.target.checked)}
-              />
-            }
-            label="允许自定义金额"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>取消</Button>
-          <Button
-            onClick={handleCreate}
-            variant="contained"
-            disabled={creating || !title || !targetAmount || !fundingDays || !developmentDays}
-          >
-            {creating ? '创建中...' : '创建'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onCreate={handleCreate}
+        creating={creating}
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        targetAmount={targetAmount}
+        setTargetAmount={setTargetAmount}
+        fundingDays={fundingDays}
+        setFundingDays={setFundingDays}
+        developmentDays={developmentDays}
+        setDevelopmentDays={setDevelopmentDays}
+        developmentGoals={developmentGoals}
+        setDevelopmentGoals={setDevelopmentGoals}
+        goalImages={goalImages}
+        imagePreviews={imagePreviews}
+        setGoalImages={setGoalImages}
+        setImagePreviews={setImagePreviews}
+        tierAmounts={tierAmounts}
+        setTierAmounts={setTierAmounts}
+        allowCustomAmount={allowCustomAmount}
+        setAllowCustomAmount={setAllowCustomAmount}
+        projectName={project?.name || ''}
+        projectSlug={slug || ''}
+      />
     </Container>
   );
 };
