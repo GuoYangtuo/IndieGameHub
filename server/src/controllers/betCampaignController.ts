@@ -470,15 +470,9 @@ export const deleteBetCampaign = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // 检查是否在众筹阶段
+    // 检查是否在众筹阶段（只要还没进入开发阶段都可以取消）
     if (campaignData.status !== 'funding') {
-      res.status(400).json({ error: '只能删除众筹阶段的对赌众筹' });
-      return;
-    }
-
-    // 检查是否已达成目标（已达成则不能删除）
-    if (campaignData.totalRaised >= campaignData.targetAmount) {
-      res.status(400).json({ error: '已达成目标的众筹不能删除' });
+      res.status(400).json({ error: '只能在众筹阶段取消对赌众筹' });
       return;
     }
 

@@ -204,7 +204,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
         <Typography component="li" variant="body2">希望全职开发独立游戏的（通过连续的对赌众筹，获得源源不断的支持）</Typography>
         <Typography component="li" variant="body2">进度缓慢，需要监督和动力的</Typography>
         <Typography component="li" variant="body2">害怕一次性众筹的高风险的，或者独狼没有团队的</Typography>
-        <Typography component="li" variant="body2">想挑战自己的</Typography>
+        <Typography component="li" variant="body2">想挑战自己，进行快速限时开发的</Typography>
       </Box>
 
       <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>

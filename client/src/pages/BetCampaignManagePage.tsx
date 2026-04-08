@@ -472,7 +472,7 @@ const BetCampaignManagePage: React.FC = () => {
             >
               查看详情
             </Button>
-            {activeCampaign.status === 'funding' && activeCampaign.totalRaised < activeCampaign.targetAmount && (
+            {activeCampaign.status === 'funding' && (
               <Button
                 variant="outlined"
                 color="error"
