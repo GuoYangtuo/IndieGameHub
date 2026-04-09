@@ -18,12 +18,12 @@ import {
   Stack,
   TextField,
   InputAdornment,
+  Tooltip,
   useTheme
 } from '@mui/material';
 import {
   FlagOutlined,
   MonetizationOn,
-  Timer,
   People,
   ArrowBack,
   EmojiEvents,
@@ -93,7 +93,6 @@ interface BetCampaignCardProps {
   donationState?: DonationState;
   onDonate?: (amount: number, message: string) => void;
   onDonationStateChange?: (state: Partial<DonationState>) => void;
-  showBackButton?: boolean;
   onBack?: () => void;
 }
 
@@ -105,24 +104,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
   donationState,
   onDonate,
   onDonationStateChange,
-  showBackButton = false,
   onBack
 }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-
-  // 计算剩余时间
-  const getRemainingTime = (endTime: string): { days: number; hours: number; minutes: number } | null => {
-    if (!endTime) return null;
-    const now = new Date();
-    const end = new Date(endTime);
-    const diff = end.getTime() - now.getTime();
-    if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return { days, hours, minutes };
-  };
 
   // 计算进度
   const progress = mode === 'preview' && mockProgress
@@ -164,13 +149,6 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 
   const statusInfo = getStatusInfo();
 
-  // 剩余时间
-  const remainingTime = currentStatus === 'funding'
-    ? getRemainingTime(campaign.fundingEndTime)
-    : currentStatus === 'development'
-      ? getRemainingTime(campaign.developmentEndTime)
-      : null;
-
   // 格式化相对时间
   const formatRelativeTime = (dateStr: string): string => {
     const date = new Date(dateStr);
@@ -206,14 +184,11 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 
   return (
     <Box>
-      {showBackButton && (
-        <Button startIcon={<ArrowBack />} sx={{ mb: 2 }} onClick={onBack}>
-          返回项目
-        </Button>
-      )}
+      {/* 时间线进度条 */}
+      <TimelineProgress campaign={campaign} />
 
       {/* 对赌众筹信息卡片 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: 3, mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h5" component="h1">
             {campaign.title}
@@ -239,19 +214,19 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
         </Box>
 
         {campaign.description && (
-          <Typography variant="body1" sx={{ mb: 3 }}>
+          <Typography variant="body1" sx={{ mb: 4 }}>
             {campaign.description}
           </Typography>
         )}
 
         {/* 开发目标 */}
         {campaign.developmentGoals && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 4 }}>
             <Typography variant="h6" gutterBottom>
               <FlagOutlined sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
               计划在开发阶段完成的目标（承诺你将会得到什么）
             </Typography>
-            <Paper variant="outlined" sx={{ p: 2 }}>
+            <Paper variant="outlined" sx={{ p: 0 }}>
               <Box sx={{ '& img': { maxWidth: '100%', height: 'auto' } }}>
                 <ReactMarkdown>{campaign.developmentGoals}</ReactMarkdown>
               </Box>
@@ -261,7 +236,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 
         {/* 开发目标图片 */}
         {campaign.developmentGoalImages && campaign.developmentGoalImages.length > 0 && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {campaign.developmentGoalImages.map((image, index) => (
                 <Box
@@ -302,31 +277,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
           </Box>
         )}
 
-        {/* 剩余时间 */}
-        {remainingTime && currentStatus !== 'completed' && currentStatus !== 'failed' && currentStatus !== 'cancelled' && (
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            mb: 1,
-            p: 2,
-            bgcolor: isDarkMode ? 'rgba(63, 185, 80, 0.12)' : 'rgba(63, 185, 80, 0.08)',
-            borderRadius: 2,
-            border: `1px solid ${isDarkMode ? 'rgba(63, 185, 80, 0.25)' : 'rgba(63, 185, 80, 0.15)'}`,
-          }}>
-            <Timer color="primary" />
-            <Typography variant="body1">
-              {currentStatus === 'funding'
-                ? <>众筹将在 <strong>{remainingTime.days > 0 ? `${remainingTime.days}天 ` : ''}{remainingTime.hours > 0 ? `${remainingTime.hours}小时 ` : ''}{remainingTime.minutes > 0 ? `${remainingTime.minutes}分钟` : ''}</strong> 内结束，若达到目标金额则进入开发阶段，否则众筹失败退回已筹捐款</>
-                : <>开发将在 <strong>{remainingTime.days > 0 ? `${remainingTime.days}天 ` : ''}{remainingTime.hours > 0 ? `${remainingTime.hours}小时 ` : ''}{remainingTime.minutes > 0 ? `${remainingTime.minutes}分钟` : ''}</strong> 内结束，若未达成开发目标，将退回所有捐款</>
-              }
-            </Typography>
-          </Box>
-        )}
 
         {/* 捐赠档位 - 仅在众筹阶段显示 */}
         {currentStatus === 'funding' && mode === 'view' && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="h6" gutterBottom>
               <MonetizationOn sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
               选择捐赠档位
@@ -392,21 +346,31 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               onClick={handleDonate}
               disabled={donationState?.donating}
               startIcon={<MonetizationOn />}
+              sx={{ mb: 1 }}
             >
               {donationState?.donating ? '处理中...' : '确认捐赠'}
             </Button>
 
             {donationState?.donationSuccess && (
-              <Alert severity="success" sx={{ mt: 2 }}>
+              <Alert severity="success" sx={{ mt: 0.5 }}>
                 捐赠成功！感谢您的支持！
               </Alert>
             )}
+
+            <Box sx={{ mt: 0.5, mb: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                若众筹未达目标，将退回所有捐款
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                众筹成功后，若开发目标未达成，将退回所有捐款
+              </Typography>
+            </Box>
           </Box>
         )}
 
         {/* 预览模式下的捐赠档位（静态展示） */}
         {currentStatus === 'funding' && mode === 'preview' && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 4 }}>
             <Typography variant="h6" gutterBottom>
               <MonetizationOn sx={{ mr: 1, verticalAlign: 'middle', fontSize: 28, color: 'primary.main' }} />
               选择捐赠档位
@@ -439,9 +403,18 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               size="large"
               fullWidth
               startIcon={<MonetizationOn />}
+              sx={{ mb: 1 }}
             >
               确认捐赠
             </Button>
+            <Box sx={{ mt: 0.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                若众筹未达目标，将退回所有捐款
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                众筹成功后，若开发目标未达成，将退回所有捐款
+              </Typography>
+            </Box>
           </Box>
         )}
 
@@ -618,3 +591,178 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 };
 
 export default BetCampaignCard;
+
+// 时间线进度条组件
+interface TimelineProgressProps {
+  campaign: BetCampaign;
+}
+
+const TimelineProgress: React.FC<TimelineProgressProps> = ({ campaign }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
+  // 审核终止时间 = 开发结束时间 + 3天
+  const reviewDeadline = new Date(campaign.developmentEndTime);
+  reviewDeadline.setDate(reviewDeadline.getDate() + 3);
+
+  // 格式化相对时间（可显示"X天X小时前/后"，最多到小时，不显示分钟）
+  const formatRelativeTime = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const absDays = Math.floor(Math.abs(diff) / 86400000);
+    const absHours = Math.floor((Math.abs(diff) % 86400000) / 3600000);
+
+    const isPast = diff > 0;
+    const suffix = isPast ? '前' : '后';
+
+    if (Math.abs(diff) < 60000) return '刚刚';
+    if (absDays > 0) return `${absDays}天${absHours > 0 ? `${absHours}小时` : ''}${suffix}`;
+    if (absHours > 0) return `${absHours}小时${suffix}`;
+    return `1小时${suffix}`;
+  };
+
+  // 格式化绝对时间
+  const formatAbsoluteTime = (dateStr: string): string => {
+    return new Date(dateStr).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  // 计算总时间跨度
+  const totalStart = new Date(campaign.createdAt).getTime();
+  const totalEnd = reviewDeadline.getTime();
+  const totalDuration = totalEnd - totalStart;
+
+  // 计算当前进度百分比
+  const now = new Date();
+  const currentProgress = Math.min(Math.max(((now.getTime() - totalStart) / totalDuration) * 100, 0), 100);
+
+  // 计算各时间点在进度条上的位置（按比例）
+  const getPosition = (time: string): number => {
+    const timeMs = new Date(time).getTime();
+    return Math.min(Math.max(((timeMs - totalStart) / totalDuration) * 100, 0), 100);
+  };
+
+  // 时间点数据（按实际时间比例分布位置）
+  const milestones = [
+    { key: 'created', label: '众筹创建', time: campaign.createdAt },
+    { key: 'fundingEnd', label: '众筹结束', time: campaign.fundingEndTime },
+    { key: 'devEnd', label: '开发结束', time: campaign.developmentEndTime },
+    { key: 'reviewEnd', label: '审核终止', time: reviewDeadline.toISOString() },
+  ].map(m => ({ ...m, position: getPosition(m.time) }));
+
+  return (
+    <Box sx={{ mb: 8 }}>
+      <Box sx={{ position: 'relative', px: 1 }}>
+        {/* 背景进度条 */}
+        <Box
+          sx={{
+            height: 8,
+            borderRadius: 4,
+            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* 已过时间（深色部分） */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: '100%',
+              width: `${currentProgress}%`,
+              borderRadius: 4,
+              bgcolor: 'primary.main',
+              transition: 'width 0.3s ease',
+            }}
+          />
+          {/* 当前时间指示器（小三角） */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: `${currentProgress}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid',
+              borderLeftColor: 'primary.main',
+              borderTop: '6px solid transparent',
+              borderBottom: '6px solid transparent',
+            }}
+          />
+        </Box>
+
+        {/* 节点标签 */}
+        <Box sx={{ position: 'relative', mt: -1.2 }}>
+          {milestones.map((m, index) => {
+            const isPast = new Date(m.time).getTime() <= now.getTime();
+            return (
+              <Tooltip
+                key={m.key}
+                title={<Box sx={{ textAlign: 'center' }}>绝对时间：{formatAbsoluteTime(m.time)}</Box>}
+                arrow
+                placement="top"
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: `${m.position}%`,
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    cursor: 'default',
+                    minWidth: 70,
+                  }}
+                >
+                  {/* 节点圆点 */}
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: isPast ? 'primary.main' : (isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'),
+                      border: `2px solid ${isPast ? 'primary.main' : (isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)')}`,
+                    }}
+                  />
+                  {/* 标签文字 */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      mt: 0.25,
+                      fontWeight: 500,
+                      color: isPast ? 'primary.main' : 'text.secondary',
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {m.label}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: isPast ? 'text.primary' : 'text.secondary',
+                      textAlign: 'center',
+                      fontSize: '0.7rem',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {formatRelativeTime(m.time)}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            );
+          })}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
