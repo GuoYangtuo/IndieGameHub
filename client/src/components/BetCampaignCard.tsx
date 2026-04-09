@@ -359,10 +359,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 
             <Box sx={{ mt: 0.5, mb: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                若众筹未达目标，将退回所有捐款
+                众筹结束时，若未达目标金额，将退回所有捐款
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                众筹成功后，若开发目标未达成，将退回所有捐款
+                众筹成功后，进入开发阶段，若对开发目标完成情况不满意，将退回你的捐款
               </Typography>
             </Box>
           </Box>
@@ -409,10 +409,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
             </Button>
             <Box sx={{ mt: 0.5 }}>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                若众筹未达目标，将退回所有捐款
+                众筹结束时，若未达目标金额，将退回所有捐款
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                众筹成功后，若开发目标未达成，将退回所有捐款
+                众筹成功后，进入开发阶段，若对开发目标完成情况不满意，将退回你的捐款
               </Typography>
             </Box>
           </Box>

@@ -15,7 +15,8 @@ import {
   EmojiEvents,
   Close,
   VisibilityOff,
-  Close as CloseIcon
+  Close as CloseIcon,
+  CheckCircle
 } from '@mui/icons-material';
 
 const STORAGE_KEY = 'bet_campaign_guide_hidden';
@@ -200,11 +201,9 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
         哪些开发者可能需要？
       </Typography>
       <Box component="ul" sx={{ pl: 3.5, mb: 2, m: 1, '& li': { mb: 0.5 } }}>
-        <Typography component="li" variant="body2">开发初期缺钱的</Typography>
-        <Typography component="li" variant="body2">希望全职开发独立游戏的（通过连续的对赌众筹，获得源源不断的支持）</Typography>
-        <Typography component="li" variant="body2">进度缓慢，需要监督和动力的</Typography>
-        <Typography component="li" variant="body2">害怕一次性众筹的高风险的，或者独狼没有团队的</Typography>
-        <Typography component="li" variant="body2">想挑战自己，进行快速限时开发的</Typography>
+        <Typography component="li" variant="body2">开发初期缺钱，或者希望全职开发独立游戏的（通过连续的对赌众筹，获得源源不断的支持）</Typography>
+        <Typography component="li" variant="body2">进度缓慢，需要监督和动力的；想挑战自己，进行快速限时开发的</Typography>
+        <Typography component="li" variant="body2">害怕一次性创业式众筹的高风险的，或者独狼没有团队的</Typography>
       </Box>
 
       <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
@@ -215,6 +214,16 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
         <Typography component="li" variant="body2">想要支持梦想，但担心捐款打水漂的</Typography>
         <Typography component="li" variant="body2">觉得开发者进度慢，想激励他的</Typography>
         <Typography component="li" variant="body2">看见有人想挑战自己，想看热闹捧个场的</Typography>
+      </Box>
+
+      <Typography variant="body2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+        <CheckCircle sx={{ mr: 1, fontSize: 18, color: 'info.dark' }} />
+        审核机制是怎样的？
+      </Typography>
+      <Box component="ul" sx={{ pl: 3.5, m: 1, '& li': { mb: 0.5 } }}>
+        <Typography component="li" variant="body2">开发阶段结束后，开发者会提交最新版Demo，截图等成果，粉丝有三天时间审核</Typography>
+        <Typography component="li" variant="body2">只有捐款者可参与审核，判断开发者的开发成果是否满意（即使没有达到预定目标），决定是否兑现自己的那笔捐款</Typography>
+        <Typography component="li" variant="body2">三天内没有进行的审核，则默认为通过</Typography>
       </Box>
     </Paper>
   );
