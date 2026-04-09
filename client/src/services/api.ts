@@ -568,7 +568,22 @@ export const betCampaignAPI = {
   deleteBetCampaign: (campaignId: string) =>
     api.delete(`/bet-campaigns/${campaignId}`),
 
-  // 设置开发结果
-  setDevelopmentResult: (campaignId: string, result: 'success' | 'failed') =>
-    api.put(`/bet-campaigns/${campaignId}/result`, { result })
+  // 设置开发结果（支持上传交付图片）
+  setDevelopmentResult: (campaignId: string, result: 'success' | 'failed', deliveryContent?: string, deliveryImages?: File[]) => {
+    const formData = new FormData();
+    formData.append('result', result);
+    if (deliveryContent) {
+      formData.append('deliveryContent', deliveryContent);
+    }
+    if (deliveryImages && deliveryImages.length > 0) {
+      deliveryImages.forEach((file) => {
+        formData.append('deliveryImages', file);
+      });
+    }
+    return api.put(`/bet-campaigns/${campaignId}/result`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
 }; 

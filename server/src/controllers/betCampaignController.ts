@@ -25,8 +25,35 @@ const storage = multer.diskStorage({
   }
 });
 
+// 配置multer中间件用于交付图片上传
+const deliveryStorage = multer.diskStorage({
+  destination: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+    const uploadDir = path.join(__dirname, '../../uploads/bet-campaign-delivery');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'delivery-image-' + uniqueSuffix + ext);
+  }
+});
+
 export const uploadGoalImages = multer({
   storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('只允许上传图片文件'));
+    }
+    cb(null, true);
+  }
+});
+
+export const uploadDeliveryImages = multer({
+  storage: deliveryStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -137,6 +164,8 @@ export const getBetCampaigns = async (req: Request, res: Response): Promise<void
       let parsedTierAmounts = [];
       let parsedDevelopmentGoals = null;
       let parsedDevelopmentGoalImages: string[] = [];
+      let parsedDeliveryContent = null;
+      let parsedDeliveryImages: string[] = [];
 
       try {
         parsedTierAmounts = JSON.parse(campaign.tierAmounts || '[]');
@@ -159,11 +188,25 @@ export const getBetCampaigns = async (req: Request, res: Response): Promise<void
         parsedDevelopmentGoalImages = [];
       }
 
+      try {
+        parsedDeliveryContent = campaign.deliveryContent ? campaign.deliveryContent : null;
+      } catch (e) {
+        parsedDeliveryContent = null;
+      }
+
+      try {
+        parsedDeliveryImages = campaign.deliveryImages ? JSON.parse(campaign.deliveryImages) : [];
+      } catch (e) {
+        parsedDeliveryImages = [];
+      }
+
       return {
         ...campaign,
         tierAmounts: parsedTierAmounts,
         developmentGoals: parsedDevelopmentGoals,
-        developmentGoalImages: parsedDevelopmentGoalImages
+        developmentGoalImages: parsedDevelopmentGoalImages,
+        deliveryContent: parsedDeliveryContent,
+        deliveryImages: parsedDeliveryImages
       };
     });
 
@@ -192,6 +235,8 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
     let parsedTierAmounts = [];
     let parsedDevelopmentGoals = null;
     let parsedDevelopmentGoalImages: string[] = [];
+    let parsedDeliveryContent = null;
+    let parsedDeliveryImages: string[] = [];
 
     try {
       parsedTierAmounts = JSON.parse(campaignData.tierAmounts || '[]');
@@ -214,6 +259,19 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       parsedDevelopmentGoalImages = [];
     }
 
+    try {
+      parsedDeliveryContent = campaignData.deliveryContent ? campaignData.deliveryContent : null;
+    } catch (e) {
+      parsedDeliveryContent = null;
+    }
+
+    try {
+      parsedDeliveryImages = campaignData.deliveryImages ? JSON.parse(campaignData.deliveryImages) : [];
+    } catch (e) {
+      console.warn(`解析 deliveryImages 失败，campaignId: ${campaignData.id}, 值: ${campaignData.deliveryImages}`);
+      parsedDeliveryImages = [];
+    }
+
     // 获取捐赠列表
     const donations = await query(
       'SELECT bd.*, u.username, u.avatar_url FROM bet_donations bd LEFT JOIN users u ON bd.userId = u.id WHERE bd.campaignId = ? ORDER BY bd.amount DESC',
@@ -225,6 +283,8 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       tierAmounts: parsedTierAmounts,
       developmentGoals: parsedDevelopmentGoals,
       developmentGoalImages: parsedDevelopmentGoalImages,
+      deliveryContent: parsedDeliveryContent,
+      deliveryImages: parsedDeliveryImages,
       donations: donations || []
     });
   } catch (error) {
@@ -254,6 +314,8 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
     let parsedTierAmounts = [];
     let parsedDevelopmentGoals = null;
     let parsedDevelopmentGoalImages: string[] = [];
+    let parsedDeliveryContent = null;
+    let parsedDeliveryImages: string[] = [];
 
     try {
       parsedTierAmounts = JSON.parse(campaignData.tierAmounts || '[]');
@@ -276,6 +338,18 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       parsedDevelopmentGoalImages = [];
     }
 
+    try {
+      parsedDeliveryContent = campaignData.deliveryContent ? campaignData.deliveryContent : null;
+    } catch (e) {
+      parsedDeliveryContent = null;
+    }
+
+    try {
+      parsedDeliveryImages = campaignData.deliveryImages ? JSON.parse(campaignData.deliveryImages) : [];
+    } catch (e) {
+      parsedDeliveryImages = [];
+    }
+
     // 获取捐赠列表
     const donations = await query(
       'SELECT bd.*, u.username, u.avatar_url FROM bet_donations bd LEFT JOIN users u ON bd.userId = u.id WHERE bd.campaignId = ? ORDER BY bd.amount DESC',
@@ -287,6 +361,8 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       tierAmounts: parsedTierAmounts,
       developmentGoals: parsedDevelopmentGoals,
       developmentGoalImages: parsedDevelopmentGoalImages,
+      deliveryContent: parsedDeliveryContent,
+      deliveryImages: parsedDeliveryImages,
       donations: donations || []
     });
   } catch (error) {
@@ -534,11 +610,33 @@ export const setDevelopmentResult = async (req: Request, res: Response): Promise
       return;
     }
 
-    // 更新结果
-    await query(
-      'UPDATE bet_campaigns SET result = ?, status = ? WHERE id = ?',
-      [result, result === 'success' ? 'completed' : 'failed', campaignId]
-    );
+    // 处理交付图片
+    const files = req.files as Express.Multer.File[];
+    const deliveryImages = files && files.length > 0
+      ? files.map(file => `/uploads/bet-campaign-delivery/${file.filename}`)
+      : [];
+
+    // 构建更新 SQL：根据是否有新内容决定是否更新 deliveryContent
+    // 如果请求中没有 deliveryContent（或为空），则保留原值
+    const hasDeliveryContent = req.body.deliveryContent && req.body.deliveryContent.trim() !== '';
+    const hasDeliveryImages = deliveryImages.length > 0;
+
+    if (hasDeliveryContent || hasDeliveryImages) {
+      const deliveryContentValue = hasDeliveryContent ? req.body.deliveryContent : campaignData.deliveryContent;
+      const deliveryImagesValue = hasDeliveryImages
+        ? JSON.stringify([...(campaignData.deliveryImages ? JSON.parse(campaignData.deliveryImages) : []), ...deliveryImages])
+        : campaignData.deliveryImages;
+
+      await query(
+        'UPDATE bet_campaigns SET result = ?, status = ?, deliveryContent = ?, deliveryImages = ? WHERE id = ?',
+        [result, result === 'success' ? 'completed' : 'failed', deliveryContentValue, deliveryImagesValue, campaignId]
+      );
+    } else {
+      await query(
+        'UPDATE bet_campaigns SET result = ?, status = ? WHERE id = ?',
+        [result, result === 'success' ? 'completed' : 'failed', campaignId]
+      );
+    }
 
     res.json({ success: true, message: result === 'success' ? '挑战成功！' : '挑战失败，已退回所有捐款' });
   } catch (error) {

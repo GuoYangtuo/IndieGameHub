@@ -42,6 +42,8 @@ interface BetCampaign {
   result: 'pending' | 'success' | 'failed';
   totalRaised: number;
   createdAt: string;
+  deliveryContent?: string;
+  deliveryImages?: string[];
   donations?: BetDonation[];
 }
 

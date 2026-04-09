@@ -566,6 +566,20 @@ export const migrateDatabase = async (): Promise<void> => {
       console.log('已添加 developmentGoalImages 字段到 bet_campaigns 表');
     }
 
+    // 检查 bet_campaigns 表是否有 deliveryContent 字段（交付结果/放弃原因）
+    const [deliveryContentColumns] = await conn.query('SHOW COLUMNS FROM bet_campaigns LIKE "deliveryContent"');
+    if (Array.isArray(deliveryContentColumns) && deliveryContentColumns.length === 0) {
+      await conn.query('ALTER TABLE bet_campaigns ADD COLUMN deliveryContent TEXT AFTER result');
+      console.log('已添加 deliveryContent 字段到 bet_campaigns 表');
+    }
+
+    // 检查 bet_campaigns 表是否有 deliveryImages 字段（交付图片）
+    const [deliveryImagesColumns] = await conn.query('SHOW COLUMNS FROM bet_campaigns LIKE "deliveryImages"');
+    if (Array.isArray(deliveryImagesColumns) && deliveryImagesColumns.length === 0) {
+      await conn.query('ALTER TABLE bet_campaigns ADD COLUMN deliveryImages TEXT AFTER deliveryContent');
+      console.log('已添加 deliveryImages 字段到 bet_campaigns 表');
+    }
+
     // 检查是否存在 chat_rooms 表
     const [tables] = await conn.query('SHOW TABLES LIKE "chat_rooms"');
     if (Array.isArray(tables) && tables.length === 0) {

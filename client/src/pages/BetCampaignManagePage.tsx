@@ -61,6 +61,7 @@ import { betCampaignAPI, projectAPI } from '../services/api';
 import { formatDate, formatRelativeTime } from '../utils/dateUtils';
 import BetCampaignGuide from '../components/BetCampaignGuide';
 import CreateBetCampaignDialog from '../components/CreateBetCampaignDialog';
+import SetResultDialog from '../components/SetResultDialog';
 
 interface BetDonation {
   id: string;
@@ -92,6 +93,8 @@ interface BetCampaign {
   result: 'pending' | 'success' | 'failed';
   totalRaised: number;
   createdAt: string;
+  deliveryContent?: string;
+  deliveryImages?: string[];
   donations?: BetDonation[];
 }
 
@@ -120,6 +123,10 @@ const BetCampaignManagePage: React.FC = () => {
     return localStorage.getItem('bet_campaign_guide_hidden') === 'true';
   });
   const [guideForceShow, setGuideForceShow] = useState(0);
+
+  // 交付结果对话框状态
+  const [resultDialogOpen, setResultDialogOpen] = useState(false);
+  const [resultDialogType, setResultDialogType] = useState<'success' | 'failed'>('success');
 
   // 创建对话框状态
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -263,32 +270,30 @@ const BetCampaignManagePage: React.FC = () => {
     }
   };
 
-  // 处理设置开发结果
-  const handleSetResult = async (campaignId: string, result: 'success' | 'failed') => {
-    if (!project) return;
+  // 打开交付结果对话框
+  const handleOpenResultDialog = (result: 'success' | 'failed') => {
+    setResultDialogType(result);
+    setResultDialogOpen(true);
+  };
 
-    const confirmMessage = result === 'success'
-      ? '确定要标记为挑战成功吗？这将把捐款转给开发者。'
-      : '确定要标记为挑战失败吗？这将退还所有捐款。';
-
-    if (!confirm(confirmMessage)) {
-      return;
-    }
+  // 提交交付结果
+  const handleSubmitResult = async (content: string, images: File[]) => {
+    if (!activeCampaign) return;
 
     try {
-      await betCampaignAPI.setDevelopmentResult(campaignId, result);
+      await betCampaignAPI.setDevelopmentResult(activeCampaign.id, resultDialogType, content, images);
 
       // 刷新数据
-      const campaignsResponse = await betCampaignAPI.getBetCampaigns(project.id);
+      const campaignsResponse = await betCampaignAPI.getBetCampaigns(project!.id);
       setCampaigns(campaignsResponse.data);
 
-      const activeResponse = await betCampaignAPI.getActiveBetCampaign(project.id);
+      const activeResponse = await betCampaignAPI.getActiveBetCampaign(project!.id);
       setActiveCampaign(activeResponse.data);
 
-      alert(result === 'success' ? '已标记为挑战成功！' : '已标记为挑战失败，捐款已退还。');
+      alert(resultDialogType === 'success' ? '已标记为挑战成功！' : '已标记为挑战失败，捐款已退还。');
     } catch (err: any) {
       console.error('设置结果失败:', err);
-      alert(err.response?.data?.error || '操作失败，请稍后再试');
+      throw err; // 让对话框处理错误
     }
   };
 
@@ -446,17 +451,17 @@ const BetCampaignManagePage: React.FC = () => {
                   variant="contained"
                   color="success"
                   startIcon={<CheckCircle />}
-                  onClick={() => handleSetResult(activeCampaign.id, 'success')}
+                  onClick={() => handleOpenResultDialog('success')}
                 >
-                  标记为成功
+                  任务完成
                 </Button>
                 <Button
                   variant="contained"
                   color="error"
                   startIcon={<Cancel />}
-                  onClick={() => handleSetResult(activeCampaign.id, 'failed')}
+                  onClick={() => handleOpenResultDialog('failed')}
                 >
-                  标记为失败
+                  放弃开发
                 </Button>
               </Stack>
             </>
@@ -568,6 +573,14 @@ const BetCampaignManagePage: React.FC = () => {
         setAllowCustomAmount={setAllowCustomAmount}
         projectName={project?.name || ''}
         projectSlug={slug || ''}
+      />
+
+      {/* 交付结果对话框 */}
+      <SetResultDialog
+        open={resultDialogOpen}
+        onClose={() => setResultDialogOpen(false)}
+        onSubmit={handleSubmitResult}
+        resultType={resultDialogType}
       />
     </Container>
   );

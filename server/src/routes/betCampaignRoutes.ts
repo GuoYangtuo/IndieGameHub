@@ -8,7 +8,8 @@ import {
   checkDevelopmentStatus,
   deleteBetCampaign,
   setDevelopmentResult,
-  uploadGoalImages
+  uploadGoalImages,
+  uploadDeliveryImages
 } from '../controllers/betCampaignController';
 import { verifyToken } from '../middleware/authMiddleware';
 
@@ -35,7 +36,7 @@ router.get('/:campaignId/status', checkDevelopmentStatus);
 // 删除对赌众筹（需要登录）
 router.delete('/:campaignId', verifyToken, deleteBetCampaign);
 
-// 标记开发结果（需要登录）
-router.put('/:campaignId/result', verifyToken, setDevelopmentResult);
+// 标记开发结果（需要登录，支持上传交付图片）
+router.put('/:campaignId/result', verifyToken, uploadDeliveryImages.array('deliveryImages', 10), setDevelopmentResult);
 
 export default router;

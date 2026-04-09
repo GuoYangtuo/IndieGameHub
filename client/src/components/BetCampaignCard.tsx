@@ -26,7 +26,8 @@ import {
   Timer,
   People,
   ArrowBack,
-  EmojiEvents
+  EmojiEvents,
+  CheckCircle
 } from '@mui/icons-material';
 
 interface BetDonation {
@@ -59,6 +60,8 @@ interface BetCampaign {
   result: 'pending' | 'success' | 'failed';
   totalRaised: number;
   createdAt: string;
+  deliveryContent?: string;
+  deliveryImages?: string[];
   donations?: BetDonation[];
 }
 
@@ -451,6 +454,47 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
           <Alert severity="warning" sx={{ mt: 2 }}>
             挑战失败，所有捐款已退回给捐赠者。感谢您的参与！
           </Alert>
+        )}
+
+        {/* 交付结果/失败原因 */}
+        {(currentStatus === 'completed' || currentStatus === 'failed') && campaign.deliveryContent && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              <CheckCircle sx={{ mr: 1, verticalAlign: 'middle', fontSize: 24, color: currentStatus === 'completed' ? 'success.main' : 'error.main' }} />
+              {currentStatus === 'completed' ? '交付成果' : '放弃说明'}
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: currentStatus === 'completed' ? 'rgba(63, 185, 80, 0.08)' : 'rgba(244, 67, 54, 0.08)' }}>
+              <Box sx={{ '& img': { maxWidth: '100%', height: 'auto' } }}>
+                <ReactMarkdown>{campaign.deliveryContent}</ReactMarkdown>
+              </Box>
+            </Paper>
+          </Box>
+        )}
+
+        {/* 交付图片 */}
+        {campaign.deliveryImages && campaign.deliveryImages.length > 0 && (currentStatus === 'completed' || currentStatus === 'failed') && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              相关截图
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {campaign.deliveryImages.map((image, index) => (
+                <Box
+                  key={index}
+                  component="img"
+                  src={image}
+                  alt={`交付截图 ${index + 1}`}
+                  sx={{
+                    maxWidth: '100%',
+                    maxHeight: 300,
+                    objectFit: 'contain',
+                    borderRadius: 2,
+                    boxShadow: 1
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
         )}
       </Paper>
 
