@@ -272,11 +272,19 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       parsedDeliveryImages = [];
     }
 
-    // 获取捐赠列表
+    // 获取捐赠列表（包含审核状态）
     const donations = await query(
       'SELECT bd.*, u.username, u.avatar_url FROM bet_donations bd LEFT JOIN users u ON bd.userId = u.id WHERE bd.campaignId = ? ORDER BY bd.amount DESC',
       [campaignId]
     );
+
+    // 补充审核状态字段（兼容旧数据中没有这些字段的情况）
+    const enrichedDonations = (donations as any[]).map(d => ({
+      ...d,
+      reviewStatus: d.reviewStatus || 'pending',
+      reviewComment: d.reviewComment || null,
+      reviewedAt: d.reviewedAt || null,
+    }));
 
     res.json({
       ...campaignData,
@@ -285,7 +293,7 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       developmentGoalImages: parsedDevelopmentGoalImages,
       deliveryContent: parsedDeliveryContent,
       deliveryImages: parsedDeliveryImages,
-      donations: donations || []
+      donations: enrichedDonations
     });
   } catch (error) {
     console.error('获取对赌众筹详情失败:', error);
@@ -350,11 +358,19 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       parsedDeliveryImages = [];
     }
 
-    // 获取捐赠列表
+    // 获取捐赠列表（包含审核状态）
     const donations = await query(
       'SELECT bd.*, u.username, u.avatar_url FROM bet_donations bd LEFT JOIN users u ON bd.userId = u.id WHERE bd.campaignId = ? ORDER BY bd.amount DESC',
       [campaignData.id]
     );
+
+    // 补充审核状态字段
+    const enrichedDonations = (donations as any[]).map(d => ({
+      ...d,
+      reviewStatus: d.reviewStatus || 'pending',
+      reviewComment: d.reviewComment || null,
+      reviewedAt: d.reviewedAt || null,
+    }));
 
     res.json({
       ...campaignData,
@@ -363,7 +379,7 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       developmentGoalImages: parsedDevelopmentGoalImages,
       deliveryContent: parsedDeliveryContent,
       deliveryImages: parsedDeliveryImages,
-      donations: donations || []
+      donations: enrichedDonations
     });
   } catch (error) {
     console.error('获取进行中的对赌众筹失败:', error);
@@ -641,6 +657,88 @@ export const setDevelopmentResult = async (req: Request, res: Response): Promise
     res.json({ success: true, message: result === 'success' ? '挑战成功！' : '挑战失败，已退回所有捐款' });
   } catch (error) {
     console.error('设置开发结果失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+};
+
+// 审核对赌众筹捐赠
+export const reviewDonation = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { campaignId, donationId } = req.params;
+    const { approved, comment } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: '请先登录' });
+      return;
+    }
+
+    if (typeof approved !== 'boolean') {
+      res.status(400).json({ error: '缺少 approved 参数' });
+      return;
+    }
+
+    // 检查众筹是否存在
+    const campaign = await query('SELECT * FROM bet_campaigns WHERE id = ?', [campaignId]);
+    if (!campaign || (campaign as any[]).length === 0) {
+      res.status(404).json({ error: '对赌众筹不存在' });
+      return;
+    }
+
+    const campaignData = (campaign as any[])[0];
+
+    // 只有挑战成功的众筹才能审核
+    if (campaignData.status !== 'completed' || campaignData.result !== 'success') {
+      res.status(400).json({ error: '当前众筹尚未成功，无法审核' });
+      return;
+    }
+
+    // 检查捐赠记录是否存在
+    const donation = await query('SELECT * FROM bet_donations WHERE id = ? AND campaignId = ?', [donationId, campaignId]);
+    if (!donation || (donation as any[]).length === 0) {
+      res.status(404).json({ error: '捐赠记录不存在' });
+      return;
+    }
+
+    const donationData = (donation as any[])[0];
+
+    // 只有捐赠者本人才能审核
+    if (donationData.userId !== userId) {
+      res.status(403).json({ error: '只有捐赠者本人才能审核' });
+      return;
+    }
+
+    // 检查是否已审核（防止重复操作）
+    if (donationData.reviewStatus !== 'pending') {
+      res.status(400).json({ error: '该捐赠已审核，请勿重复操作' });
+      return;
+    }
+
+    const now = new Date();
+
+    // 更新审核状态
+    await query(
+      'UPDATE bet_donations SET reviewStatus = ?, reviewComment = ?, reviewedAt = ? WHERE id = ?',
+      [approved ? 'approved' : 'rejected', comment || null, now, donationId]
+    );
+
+    if (approved) {
+      // 认可通过：将金币转给项目创建者（加到项目余额）
+      await query(
+        'UPDATE projects SET projectBalance = projectBalance + ? WHERE id = ?',
+        [donationData.amount, campaignData.projectId]
+      );
+      res.json({ success: true, message: '审核通过，金币已转给开发者' });
+    } else {
+      // 拒绝通过：将金币退回给捐赠者
+      await query(
+        'UPDATE users SET coins = coins + ? WHERE id = ?',
+        [donationData.amount, donationData.userId]
+      );
+      res.json({ success: true, message: '已拒绝，金币已退回您的账户' });
+    }
+  } catch (error) {
+    console.error('审核失败:', error);
     res.status(500).json({ error: '服务器错误' });
   }
 };

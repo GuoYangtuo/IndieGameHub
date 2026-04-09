@@ -27,7 +27,10 @@ import {
   People,
   ArrowBack,
   EmojiEvents,
-  CheckCircle
+  CheckCircle,
+  ThumbUp,
+  ThumbDown,
+  HourglassEmpty,
 } from '@mui/icons-material';
 
 interface BetDonation {
@@ -39,6 +42,9 @@ interface BetDonation {
   createdAt: string;
   username?: string;
   avatar_url?: string;
+  reviewStatus?: 'pending' | 'approved' | 'rejected';
+  reviewComment?: string;
+  reviewedAt?: string;
 }
 
 interface BetCampaign {
@@ -135,6 +141,8 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
   const currentResult = mode === 'preview' && previewPhase === 'completed'
     ? 'success'
     : campaign.result;
+
+  const isSuccessCampaign = currentStatus === 'completed' && currentResult === 'success';
 
   // 获取状态颜色和文字
   const getStatusInfo = () => {
@@ -512,37 +520,94 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
                   <TableCell>排名</TableCell>
                   <TableCell>用户</TableCell>
                   <TableCell align="right">金额</TableCell>
+                  {isSuccessCampaign && <TableCell>审核状态</TableCell>}
                   <TableCell>时间</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {campaign.donations.map((donation, index) => (
-                  <TableRow key={donation.id}>
-                    <TableCell>
-                      {index === 0 && <EmojiEvents color="warning" />}
-                      {index === 1 && <EmojiEvents sx={{ color: '#c0c0c0' }} />}
-                      {index === 2 && <EmojiEvents sx={{ color: '#cd7f32' }} />}
-                      {index > 2 && index + 1}
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                          src={donation.avatar_url}
-                          sx={{ width: 32, height: 32, mr: 1 }}
-                        >
-                          {donation.username?.[0]?.toUpperCase()}
-                        </Avatar>
-                        {donation.username}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">
-                      <strong>¥{donation.amount}</strong>
-                    </TableCell>
-                    <TableCell>
-                      {formatRelativeTime(donation.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {campaign.donations.map((donation, index) => {
+                  const reviewStatus = donation.reviewStatus || 'pending';
+                  const isApproved = reviewStatus === 'approved';
+                  const isRejected = reviewStatus === 'rejected';
+
+                  return (
+                    <TableRow key={donation.id}>
+                      <TableCell>
+                        {index === 0 && <EmojiEvents color="warning" />}
+                        {index === 1 && <EmojiEvents sx={{ color: '#c0c0c0' }} />}
+                        {index === 2 && <EmojiEvents sx={{ color: '#cd7f32' }} />}
+                        {index > 2 && index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar
+                            src={donation.avatar_url}
+                            sx={{ width: 32, height: 32, mr: 1 }}
+                          >
+                            {donation.username?.[0]?.toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2">{donation.username}</Typography>
+                            {donation.message && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {donation.message}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        <strong>¥{donation.amount}</strong>
+                      </TableCell>
+                      {isSuccessCampaign && (
+                        <TableCell>
+                          {reviewStatus === 'pending' && (
+                            <Chip
+                              icon={<HourglassEmpty sx={{ fontSize: 16 }} />}
+                              label="待审核"
+                              size="small"
+                              variant="outlined"
+                              color="default"
+                            />
+                          )}
+                          {isApproved && (
+                            <Box>
+                              <Chip
+                                icon={<ThumbUp sx={{ fontSize: 16 }} />}
+                                label="已通过"
+                                size="small"
+                                color="success"
+                              />
+                              {donation.reviewComment && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  &quot;{donation.reviewComment}&quot;
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                          {isRejected && (
+                            <Box>
+                              <Chip
+                                icon={<ThumbDown sx={{ fontSize: 16 }} />}
+                                label="已拒绝"
+                                size="small"
+                                color="error"
+                              />
+                              {donation.reviewComment && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  &quot;{donation.reviewComment}&quot;
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        {formatRelativeTime(donation.createdAt)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>

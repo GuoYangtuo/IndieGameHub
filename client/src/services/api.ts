@@ -585,5 +585,9 @@ export const betCampaignAPI = {
         'Content-Type': 'multipart/form-data'
       }
     });
-  }
+  },
+
+  // 审核对赌众筹捐赠
+  reviewDonation: (campaignId: string, donationId: string, approved: boolean, comment?: string) =>
+    api.put(`/bet-campaigns/${campaignId}/donations/${donationId}/review`, { approved, comment }),
 }; 

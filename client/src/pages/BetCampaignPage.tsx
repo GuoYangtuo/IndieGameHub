@@ -5,8 +5,19 @@ import {
   Alert,
   CircularProgress,
   Button,
+  Paper,
+  Typography,
+  Box,
+  TextField,
+  Avatar,
+  Chip,
+  Stack,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import {
+  ArrowBack,
+  ThumbUp,
+  ThumbDown,
+} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
 import BetCampaignGuide from '../components/BetCampaignGuide';
@@ -21,6 +32,9 @@ interface BetDonation {
   createdAt: string;
   username?: string;
   avatar_url?: string;
+  reviewStatus?: 'pending' | 'approved' | 'rejected';
+  reviewComment?: string;
+  reviewedAt?: string;
 }
 
 interface BetCampaign {
@@ -74,6 +88,12 @@ const BetCampaignPage: React.FC = () => {
     donationMessage: '',
     donating: false,
     donationSuccess: false,
+  });
+
+  // 审核相关状态
+  const [reviewState, setReviewState] = useState({
+    comment: '',
+    submitting: false,
   });
 
   // 获取项目和对赌众筹数据
@@ -133,6 +153,33 @@ const BetCampaignPage: React.FC = () => {
     }
   };
 
+  // 处理审核提交
+  const handleReview = async (approved: boolean) => {
+    if (!campaign || !user) return;
+
+    const myDonation = campaign.donations?.find(d => d.userId === user.id);
+    if (!myDonation) return;
+
+    try {
+      setReviewState(prev => ({ ...prev, submitting: true }));
+      await betCampaignAPI.reviewDonation(campaign.id, myDonation.id, approved, reviewState.comment.trim() || undefined);
+
+      // 刷新数据
+      const campaignResponse = await betCampaignAPI.getBetCampaignById(campaign.id);
+      setCampaign(campaignResponse.data);
+    } catch (err: any) {
+      console.error('审核失败:', err);
+      alert(err.response?.data?.error || '审核失败，请稍后再试');
+    } finally {
+      setReviewState(prev => ({ ...prev, submitting: false }));
+    }
+  };
+
+  // 派生状态
+  const myDonation = campaign?.donations?.find(d => user && d.userId === user.id);
+  const isSuccessCampaign = campaign?.status === 'completed' && campaign?.result === 'success';
+  const showReviewArea = isSuccessCampaign && user && myDonation && myDonation.reviewStatus === 'pending';
+
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
@@ -176,6 +223,79 @@ const BetCampaignPage: React.FC = () => {
         onDonate={handleDonate}
         onDonationStateChange={(state) => setDonationState(prev => ({ ...prev, ...state }))}
       />
+
+      {/* 审核区域 - 仅在挑战成功且当前用户有捐赠且未审核时显示 */}
+      {showReviewArea && (
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            请审核开发者交付结果
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            您在此众筹中捐赠了 <strong>¥{myDonation?.amount}</strong>，请评估开发者是否完成了承诺的开发目标。
+          </Typography>
+
+          <TextField
+            label="评论（可选）"
+            value={reviewState.comment}
+            onChange={(e) => setReviewState(prev => ({ ...prev, comment: e.target.value }))}
+            multiline
+            rows={3}
+            fullWidth
+            placeholder="分享您的评价或意见..."
+            sx={{ mb: 2 }}
+            disabled={reviewState.submitting}
+          />
+
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={reviewState.submitting ? undefined : <ThumbUp />}
+              onClick={() => handleReview(true)}
+              disabled={reviewState.submitting}
+            >
+              {reviewState.submitting ? '提交中...' : '认可通过'}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={reviewState.submitting ? undefined : <ThumbDown />}
+              onClick={() => handleReview(false)}
+              disabled={reviewState.submitting}
+            >
+              拒绝（退回捐款）
+            </Button>
+          </Stack>
+
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+            认可通过 = 确认开发者完成任务，捐款将转给开发者；拒绝 = 退回您的捐款。操作不可撤销。
+          </Typography>
+        </Paper>
+      )}
+
+      {/* 已审核状态提示 - 用户已审核后显示 */}
+      {isSuccessCampaign && user && myDonation && myDonation.reviewStatus !== 'pending' && (
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {myDonation.reviewStatus === 'approved' ? (
+              <Chip icon={<ThumbUp />} label="您已认可通过" color="success" />
+            ) : (
+              <Chip icon={<ThumbDown />} label="您已拒绝" color="error" />
+            )}
+          </Box>
+          {myDonation.reviewComment && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                您的评论：
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {myDonation.reviewComment}
+              </Typography>
+            </Box>
+          )}
+        </Paper>
+      )}
     </Container>
   );
 };

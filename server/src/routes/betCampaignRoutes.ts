@@ -8,6 +8,7 @@ import {
   checkDevelopmentStatus,
   deleteBetCampaign,
   setDevelopmentResult,
+  reviewDonation,
   uploadGoalImages,
   uploadDeliveryImages
 } from '../controllers/betCampaignController';
@@ -38,5 +39,8 @@ router.delete('/:campaignId', verifyToken, deleteBetCampaign);
 
 // 标记开发结果（需要登录，支持上传交付图片）
 router.put('/:campaignId/result', verifyToken, uploadDeliveryImages.array('deliveryImages', 10), setDevelopmentResult);
+
+// 审核捐赠（需要登录，捐赠者本人操作）
+router.put('/:campaignId/donations/:donationId/review', verifyToken, reviewDonation);
 
 export default router;
