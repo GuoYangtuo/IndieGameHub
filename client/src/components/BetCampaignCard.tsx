@@ -109,10 +109,11 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
 
-  // 计算进度
+  // 计算进度（进度条最大100%，但显示真实百分比）
+  const rawPercent = (campaign.totalRaised / campaign.targetAmount) * 100;
   const progress = mode === 'preview' && mockProgress
     ? mockProgress.percent
-    : Math.min((campaign.totalRaised / campaign.targetAmount) * 100, 100);
+    : Math.min(rawPercent, 100);
 
   const raised = mode === 'preview' && mockProgress
     ? mockProgress.raised
@@ -263,15 +264,25 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
             <LinearProgress
               variant="determinate"
               value={progress}
-              sx={{ height: 10, borderRadius: 5, mb: 0.5 }}
-              color={progress >= 100 ? 'success' : 'primary'}
+              sx={{
+                height: 10,
+                borderRadius: 5,
+                mb: 0.5,
+                bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 5,
+                  background: progress >= 100
+                    ? theme.palette.success.main
+                    : `linear-gradient(90deg, ${theme.palette.success.main}, ${isDarkMode ? '#a3e635' : '#65a30d'})`,
+                },
+              }}
             />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography variant="body2">
                 已筹到：<strong style={{ color: theme.palette.primary.main }}>¥{raised}</strong>
               </Typography>
               <Typography variant="body2">
-                目标：¥{campaign.targetAmount} ({progress.toFixed(1)}%)
+                目标：¥{campaign.targetAmount} ({rawPercent.toFixed(1)}%)
               </Typography>
             </Box>
           </Box>
@@ -359,10 +370,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 
             <Box sx={{ mt: 0.5, mb: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                众筹结束时，若未达目标金额，将退回所有捐款
+                - 众筹结束时，若未达目标金额，将退回所有捐款
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                众筹成功后，进入开发阶段，若对开发目标完成情况不满意，将退回你的捐款
+                - 众筹成功后，进入开发阶段；开发结束后，若对目标完成情况不满意，将退回你的捐款
               </Typography>
             </Box>
           </Box>
@@ -409,10 +420,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
             </Button>
             <Box sx={{ mt: 0.5 }}>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                众筹结束时，若未达目标金额，将退回所有捐款
+                - 众筹结束时，若未达目标金额，将退回所有捐款
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                众筹成功后，进入开发阶段，若对开发目标完成情况不满意，将退回你的捐款
+                - 众筹成功后，进入开发阶段；开发结束后，若对目标完成情况不满意，将退回你的捐款
               </Typography>
             </Box>
           </Box>
@@ -707,7 +718,7 @@ const TimelineProgress: React.FC<TimelineProgressProps> = ({ campaign }) => {
             return (
               <Tooltip
                 key={m.key}
-                title={<Box sx={{ textAlign: 'center' }}>绝对时间：{formatAbsoluteTime(m.time)}</Box>}
+                title={<Box sx={{ textAlign: 'center' }}>{formatAbsoluteTime(m.time)}</Box>}
                 arrow
                 placement="top"
               >

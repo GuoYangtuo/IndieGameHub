@@ -4,18 +4,12 @@ import {
   Box,
   Paper,
   IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText
 } from '@mui/material';
 import {
   TrendingUp,
   Schedule,
   EmojiEvents,
   Close,
-  VisibilityOff,
-  Close as CloseIcon,
   CheckCircle
 } from '@mui/icons-material';
 
@@ -50,7 +44,6 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
   onNeverShow
 }) => {
   const [visible, setVisible] = useState(true);
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
   // 检查 localStorage 状态
   useEffect(() => {
@@ -66,24 +59,10 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
     return null;
   }
 
-  // 处理关闭按钮点击
-  const handleCloseClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (showCloseButton) {
-      setMenuAnchor(event.currentTarget);
-    }
-  };
-
-  // 仅关闭一次
-  const handleCloseOnce = () => {
-    setVisible(false);
-    setMenuAnchor(null);
-  };
-
-  // 不再显示
-  const handleNeverShow = () => {
+  // 处理关闭按钮点击 - 直接设为不再显示
+  const handleClose = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
     setVisible(false);
-    setMenuAnchor(null);
     if (onNeverShow) {
       onNeverShow();
     }
@@ -103,7 +82,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
       {/* 关闭按钮 */}
       {showCloseButton && (
         <IconButton
-          onClick={handleCloseClick}
+          onClick={handleClose}
           sx={{
             position: 'absolute',
             top: 8,
@@ -118,34 +97,6 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
           <Close />
         </IconButton>
       )}
-
-      {/* 关闭选项菜单 */}
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        <MenuItem onClick={handleCloseOnce}>
-          <ListItemIcon>
-            <CloseIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>仅关闭一次</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleNeverShow}>
-          <ListItemIcon>
-            <VisibilityOff fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>不再显示</ListItemText>
-        </MenuItem>
-      </Menu>
 
       <Typography variant="h6" gutterBottom>
         什么是"对赌众筹"？

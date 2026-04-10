@@ -12,11 +12,14 @@ import {
   Avatar,
   Chip,
   Stack,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
 import {
   ArrowBack,
   ThumbUp,
   ThumbDown,
+  HelpOutline,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
@@ -95,6 +98,11 @@ const BetCampaignPage: React.FC = () => {
     comment: '',
     submitting: false,
   });
+
+  const [guideHidden, setGuideHidden] = useState(() => {
+    return localStorage.getItem('bet_campaign_guide_hidden') === 'true';
+  });
+  const [guideForceShow, setGuideForceShow] = useState(0);
 
   // 获取项目和对赌众筹数据
   useEffect(() => {
@@ -204,16 +212,31 @@ const BetCampaignPage: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {/* 返回按钮 */}
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate(`/projects/${slug}`)}
-        sx={{ mb: 2 }}
-      >
-        返回项目
-      </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate(`/projects/${slug}`)}
+        >
+          返回项目
+        </Button>
+        {guideHidden && (
+          <Tooltip title="显示对赌众筹说明">
+            <IconButton
+              onClick={() => {
+                localStorage.removeItem('bet_campaign_guide_hidden');
+                setGuideHidden(false);
+                setGuideForceShow(prev => prev + 1);
+              }}
+              size="small"
+            >
+              <HelpOutline />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
 
       {/* 对赌众筹说明 */}
-      <BetCampaignGuide />
+      <BetCampaignGuide forceShow={guideForceShow} onNeverShow={() => setGuideHidden(true)} />
 
       {/* 对赌众筹卡片 */}
       <BetCampaignCard
