@@ -11,7 +11,7 @@
     "ZBL_PAY_PUBLIC_KEY": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAndNIeM1ZwImAihZ9nAgj6URaCSWZnJHdnlhASzYpvS50ieoNjKgpTJkk4pulvMq77v6QUe02jrbBxMbx6tJ4YGiMyqaqAd4fGWY8rXE0Slj6rP/V3kclSlrisWUSnh18ONfdmUcShs3WnVnepq6NbsSV+x+JzdlMF3B8NkVBcts0KsB8qhjzmngum/kCJ0nodP1jyNHn28lZQl5LSJlgSeicfRdme6SWavbNfqRitwbH6RbhTTbwLpI9NiSH0USRU7+ElyUFp+RauUWSE8tw5j5+bKjke440Of+jZxWmaMul8WxXknVsBsA7/PV1jbfpPSFMln9frQSgTOn96W2OZQIDAQAB",
     "ZBL_PAY_NOTIFY_URL": "http://indiegamehub.xyz/api/users/coins/recharge/notify",
     "ZBL_PAY_RETURN_URL": "http://indiegamehub.xyz/pay-result",
-    "ZBL_PAY_BET_DONATION_NOTIFY_URL": "http://pay.indiegamehub.xyz/api/bet-campaigns/notify",
+    "ZBL_PAY_BET_DONATION_NOTIFY_URL": "http://indiegamehub.xyz/api/bet-campaign/notify",
     "ZBL_PAY_BET_DONATION_RETURN_URL": "http://indiegamehub.xyz/projects/{slug}/bet-campaign/{campaignId}"
   },
   "delay": "500"
