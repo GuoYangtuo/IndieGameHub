@@ -17,6 +17,11 @@ import { verifyToken } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
+// 支付回调（无需登录，通用接口 - 支付平台只配置这一个地址）
+// 必须放在 /:campaignId 等动态路由之前，避免被误匹配
+router.get('/notify', handleBetDonationNotify);
+router.post('/notify', handleBetDonationNotify);
+
 // 获取项目的对赌众筹列表
 router.get('/project/:projectId', getBetCampaigns);
 
@@ -43,9 +48,5 @@ router.put('/:campaignId/result', verifyToken, uploadDeliveryImages.array('deliv
 
 // 审核捐赠（需要登录，捐赠者本人操作）
 router.put('/:campaignId/donations/:donationId/review', verifyToken, reviewDonation);
-
-// 支付回调（无需登录，通用接口 - 支付平台只配置这一个地址）
-router.get('/notify', handleBetDonationNotify);
-router.post('/notify', handleBetDonationNotify);
 
 export default router;
