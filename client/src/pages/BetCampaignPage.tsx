@@ -147,19 +147,61 @@ const BetCampaignPage: React.FC = () => {
     }
 
     try {
-      setDonationState(prev => ({ ...prev, donating: true }));
-      await betCampaignAPI.donateToBetCampaign(campaign.id, amount, message);
-      setDonationState(prev => ({ ...prev, donationSuccess: true, donating: false }));
+      setDonationState(prev => ({ ...prev, donating: true, donationSuccess: false }));
+      const response = await betCampaignAPI.donateToBetCampaign(campaign.id, amount, message, {
+        payType: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'alipay',
+        device: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'pc',
+        method: 'jump'
+      });
 
-      // 刷新数据
-      const campaignResponse = await betCampaignAPI.getBetCampaignById(campaign.id);
-      setCampaign(campaignResponse.data);
+      const data = response.data;
+
+      // 处理支付跳转（与金币充值相同的逻辑）
+      const payTypeResult = data.pay_type;
+      const payInfo = data.pay_info as string;
+
+      if (payTypeResult === 'jump') {
+        window.location.href = payInfo;
+      } else if (payTypeResult === 'html') {
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(payInfo);
+          win.document.close();
+        }
+      } else if (payTypeResult === 'qrcode' || payTypeResult === 'urlscheme') {
+        window.open(payInfo, '_blank');
+      } else {
+        window.open(payInfo, '_blank');
+      }
+
+      setDonationState(prev => ({ ...prev, donationSuccess: true, donating: false }));
     } catch (err: any) {
-      console.error('捐赠失败:', err);
-      alert(err.response?.data?.error || '捐赠失败，请稍后再试');
+      console.error('创建捐赠订单失败:', err);
+      alert(err.response?.data?.error || '创建订单失败，请稍后再试');
       setDonationState(prev => ({ ...prev, donating: false }));
     }
   };
+
+  // 检查支付结果（从支付页面返回后调用）
+  useEffect(() => {
+    const checkPaymentResult = async () => {
+      if (!campaign || campaign.status !== 'funding') return;
+
+      try {
+        const response = await betCampaignAPI.getBetCampaignById(campaign.id);
+        setCampaign(response.data);
+      } catch (err) {
+        console.error('检查支付结果失败:', err);
+      }
+    };
+
+    // 如果 URL 中有支付相关的参数（返回页面会携带），尝试刷新数据
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('out_trade_no') || urlParams.has('trade_no') || urlParams.has('trade_status')) {
+      // 有支付相关参数，说明是从支付页面返回的，等待 2 秒后刷新数据
+      setTimeout(checkPaymentResult, 2000);
+    }
+  }, [campaign?.id]);
 
   // 处理审核提交
   const handleReview = async (approved: boolean) => {

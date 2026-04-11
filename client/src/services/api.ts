@@ -556,9 +556,15 @@ export const betCampaignAPI = {
     });
   },
 
-  // 捐赠对赌众筹
-  donateToBetCampaign: (campaignId: string, amount: number, message?: string) =>
-    api.post(`/bet-campaigns/${campaignId}/donate`, { amount, message }),
+  // 捐赠对赌众筹（接入支付系统）
+  donateToBetCampaign: (campaignId: string, amount: number, message?: string, options?: { payType?: string; device?: string; method?: string }) =>
+    api.post(`/bet-campaigns/${campaignId}/donate`, {
+      amount,
+      message,
+      payType: options?.payType ?? 'alipay',
+      device: options?.device ?? 'pc',
+      method: options?.method ?? 'jump'
+    }),
 
   // 检查开发阶段状态
   checkDevelopmentStatus: (campaignId: string) =>

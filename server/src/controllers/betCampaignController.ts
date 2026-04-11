@@ -3,6 +3,8 @@ import { query } from '../utils/dbTools';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import axios from 'axios';
+import { rsaSign, rsaVerify } from '../utils/zblPay';
 
 // 生成唯一ID
 const generateId = (): string => {
@@ -387,11 +389,11 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
   }
 };
 
-// 捐赠对赌众筹
+// 捐赠对赌众筹（接入支付系统）
 export const donateToBetCampaign = async (req: Request, res: Response): Promise<void> => {
   try {
     const { campaignId } = req.params;
-    const { amount, message } = req.body;
+    const { amount, message, payType = 'alipay', device = 'pc', method = 'web' } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -399,7 +401,8 @@ export const donateToBetCampaign = async (req: Request, res: Response): Promise<
       return;
     }
 
-    if (!amount || amount <= 0) {
+    const amountNumber = Number(amount);
+    if (!amountNumber || amountNumber <= 0) {
       res.status(400).json({ error: '捐赠金额必须大于0' });
       return;
     }
@@ -430,22 +433,102 @@ export const donateToBetCampaign = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const donationId = generateId();
+    // 获取支付配置
+    const pid = process.env.ZBL_PAY_PID;
+    const privateKey = process.env.ZBL_PAY_PRIVATE_KEY;
+    const publicKey = process.env.ZBL_PAY_PUBLIC_KEY;
+    const notifyUrl = process.env.ZBL_PAY_BET_DONATION_NOTIFY_URL;
+    const returnUrl = process.env.ZBL_PAY_BET_DONATION_RETURN_URL;
 
+    if (!pid || !privateKey || !publicKey || !notifyUrl || !returnUrl) {
+      res.status(500).json({ error: '支付配置未完成，请联系管理员配置环境变量' });
+      return;
+    }
+
+    // 生成订单号
+    const outTradeNo = 'BD' + Date.now().toString() + Math.floor(Math.random() * 1000).toString();
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+
+    // 获取众筹标题作为商品名称
+    const campaignTitle = campaignData.title || '对赌众筹捐赠';
+
+    // 构建支付请求参数
+    const requestParams: Record<string, any> = {
+      pid,
+      method,
+      device,
+      type: payType,
+      out_trade_no: outTradeNo,
+      notify_url: notifyUrl,
+      return_url: returnUrl,
+      name: `众筹捐赠: ${campaignTitle}`,
+      money: amountNumber.toFixed(2),
+      clientip: (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+        (req.socket.remoteAddress ?? ''),
+      param: `${userId}:${campaignId}`,
+      timestamp,
+      sign_type: 'RSA',
+    };
+
+    // 添加签名
+    const sign = rsaSign(requestParams, privateKey);
+    requestParams.sign = sign;
+
+    // 创建本地捐赠订单记录（初始状态为 pending）
+    const donationId = Date.now().toString() + Math.floor(Math.random() * 1000).toString();
     await query(
-      'INSERT INTO bet_donations (id, campaignId, userId, amount, message) VALUES (?, ?, ?, ?, ?)',
-      [donationId, campaignId, userId, amount, message || null]
+      `INSERT INTO bet_donations (id, campaignId, userId, amount, message, out_trade_no, pay_type, status, reviewStatus)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+      [donationId, campaignId, userId, amountNumber, message || null, outTradeNo, payType]
     );
 
-    // 更新众筹总金额
-    await query(
-      'UPDATE bet_campaigns SET totalRaised = totalRaised + ? WHERE id = ?',
-      [amount, campaignId]
+    // 调用支付平台创建订单
+    const response = await axios.post(
+      'https://pay.zhenbianli.cn/api/pay/create',
+      new URLSearchParams(requestParams as Record<string, string>).toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        timeout: 10000,
+      }
     );
 
-    res.status(201).json({ success: true, message: '捐赠成功' });
+    const data = response.data;
+
+    if (!data || typeof data !== 'object') {
+      res.status(502).json({ error: '支付平台响应异常' });
+      return;
+    }
+
+    if (data.code !== 0) {
+      res.status(400).json({ error: data.msg || '创建支付订单失败', detail: data });
+      return;
+    }
+
+    // 校验平台返回签名
+    if (data.sign) {
+      const verifyParams = { ...data };
+      const valid = rsaVerify(verifyParams, data.sign, publicKey);
+      if (!valid) {
+        res.status(502).json({ error: '支付平台返回签名校验失败' });
+        return;
+      }
+    }
+
+    // 返回支付信息给前端
+    res.status(200).json({
+      out_trade_no: outTradeNo,
+      donationId: donationId,
+      trade_no: data.trade_no,
+      pay_type: data.pay_type,
+      pay_info: data.pay_info,
+      timestamp: data.timestamp,
+      sign: data.sign,
+      sign_type: data.sign_type,
+    });
   } catch (error) {
-    console.error('捐赠失败:', error);
+    console.error('创建捐赠订单失败:', error);
     res.status(500).json({ error: '服务器错误' });
   }
 };
@@ -632,6 +715,34 @@ export const setDevelopmentResult = async (req: Request, res: Response): Promise
       ? files.map(file => `/uploads/bet-campaign-delivery/${file.filename}`)
       : [];
 
+    let refundedCount = 0;
+
+    // 如果开发者放弃（result === 'failed'），退款所有已支付的捐款
+    if (result === 'failed') {
+      // 获取所有已支付的捐赠订单
+      const paidDonations = await query(
+        `SELECT * FROM bet_donations WHERE campaignId = ? AND status = 'paid'`,
+        [campaignId]
+      ) as any[];
+
+      if (paidDonations && paidDonations.length > 0) {
+        // 逐个退款：将金币退回给捐赠者
+        for (const donation of paidDonations) {
+          await query(
+            `UPDATE users SET coins = coins + ? WHERE id = ?`,
+            [donation.amount, donation.userId]
+          );
+          // 标记为已退款
+          await query(
+            `UPDATE bet_donations SET status = 'refunded' WHERE id = ?`,
+            [donation.id]
+          );
+        }
+        console.log(`开发者放弃众筹 ${campaignId}，已退款 ${paidDonations.length} 笔捐赠，共 ${paidDonations.reduce((sum: number, d: any) => sum + d.amount, 0)} 金币`);
+        refundedCount = paidDonations.length;
+      }
+    }
+
     // 构建更新 SQL：根据是否有新内容决定是否更新 deliveryContent
     // 如果请求中没有 deliveryContent（或为空），则保留原值
     const hasDeliveryContent = req.body.deliveryContent && req.body.deliveryContent.trim() !== '';
@@ -654,10 +765,90 @@ export const setDevelopmentResult = async (req: Request, res: Response): Promise
       );
     }
 
-    res.json({ success: true, message: result === 'success' ? '挑战成功！' : '挑战失败，已退回所有捐款' });
+    res.json({
+      success: true,
+      message: result === 'success' ? '挑战成功！' : '挑战失败，已退回所有捐款',
+      refundedCount: result === 'failed' ? refundedCount : 0
+    });
   } catch (error) {
     console.error('设置开发结果失败:', error);
     res.status(500).json({ error: '服务器错误' });
+  }
+};
+
+// 处理对赌众筹捐赠支付回调
+export const handleBetDonationNotify = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const publicKey = process.env.ZBL_PAY_PUBLIC_KEY;
+    if (!publicKey) {
+      res.status(500).send('配置错误');
+      return;
+    }
+
+    // 通知参数可能在 query（同步回调）或 body（异步通知）中
+    const params: Record<string, any> = {};
+    const source = Object.keys(req.query).length > 0 ? req.query : req.body;
+    Object.keys(source).forEach((key) => {
+      const value = source[key as keyof typeof source];
+      params[key] = Array.isArray(value) ? value[0] : value;
+    });
+
+    const sign = params.sign as string | undefined;
+    if (!sign) {
+      res.status(400).send('missing sign');
+      return;
+    }
+
+    const isValid = rsaVerify(params, sign, publicKey);
+    if (!isValid) {
+      res.status(400).send('invalid sign');
+      return;
+    }
+
+    const tradeStatus = params.trade_status;
+    const outTradeNo = params.out_trade_no as string | undefined;
+    const tradeNo = params.trade_no as string | undefined;
+
+    if (!outTradeNo) {
+      res.status(400).send('missing out_trade_no');
+      return;
+    }
+
+    // 查询捐赠订单
+    const rows = await query(
+      `SELECT * FROM bet_donations WHERE out_trade_no = ?`,
+      [outTradeNo]
+    );
+
+    if (!rows || (rows as any[]).length === 0) {
+      res.status(404).send('donation not found');
+      return;
+    }
+
+    const donation = (rows as any[])[0];
+
+    // 幂等处理：只有首次成功支付需要更新状态并增加众筹金额
+    if (donation.status !== 'paid' && tradeStatus === 'TRADE_SUCCESS') {
+      // 更新捐赠订单状态
+      await query(
+        `UPDATE bet_donations
+         SET trade_no = ?, status = 'paid', raw_notify = ?
+         WHERE out_trade_no = ?`,
+        [tradeNo || '', JSON.stringify(params), outTradeNo]
+      );
+
+      // 更新众筹总金额
+      await query(
+        'UPDATE bet_campaigns SET totalRaised = totalRaised + ? WHERE id = ?',
+        [donation.amount, donation.campaignId]
+      );
+    }
+
+    // 按文档要求返回 success 表示已接收通知
+    res.send('success');
+  } catch (error) {
+    console.error('处理众筹捐赠支付通知失败:', error);
+    res.status(500).send('error');
   }
 };
 
@@ -702,6 +893,12 @@ export const reviewDonation = async (req: Request, res: Response): Promise<void>
 
     const donationData = (donation as any[])[0];
 
+    // 只有已支付的捐赠才能审核
+    if (donationData.status !== 'paid') {
+      res.status(400).json({ error: '该捐赠尚未支付，无法审核' });
+      return;
+    }
+
     // 只有捐赠者本人才能审核
     if (donationData.userId !== userId) {
       res.status(403).json({ error: '只有捐赠者本人才能审核' });
@@ -730,12 +927,20 @@ export const reviewDonation = async (req: Request, res: Response): Promise<void>
       );
       res.json({ success: true, message: '审核通过，金币已转给开发者' });
     } else {
-      // 拒绝通过：将金币退回给捐赠者
-      await query(
-        'UPDATE users SET coins = coins + ? WHERE id = ?',
-        [donationData.amount, donationData.userId]
-      );
-      res.json({ success: true, message: '已拒绝，金币已退回您的账户' });
+      // 拒绝通过：只有已支付的订单才退款
+      if (donationData.status === 'paid') {
+        await query(
+          'UPDATE users SET coins = coins + ? WHERE id = ?',
+          [donationData.amount, donationData.userId]
+        );
+        await query(
+          'UPDATE bet_donations SET status = ? WHERE id = ?',
+          ['refunded', donationId]
+        );
+        res.json({ success: true, message: '已拒绝，金币已退回您的账户' });
+      } else {
+        res.json({ success: true, message: '已拒绝（订单未支付，无需退款）' });
+      }
     }
   } catch (error) {
     console.error('审核失败:', error);

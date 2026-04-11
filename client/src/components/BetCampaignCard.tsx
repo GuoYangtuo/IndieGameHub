@@ -363,8 +363,8 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
             </Button>
 
             {donationState?.donationSuccess && (
-              <Alert severity="success" sx={{ mt: 0.5 }}>
-                捐赠成功！感谢您的支持！
+              <Alert severity="info" sx={{ mt: 0.5 }}>
+                已发起支付，请在打开的页面完成支付。支付成功后，稍等几秒刷新页面即可查看捐赠结果。
               </Alert>
             )}
 

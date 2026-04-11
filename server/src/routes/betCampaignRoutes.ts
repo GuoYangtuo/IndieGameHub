@@ -9,6 +9,7 @@ import {
   deleteBetCampaign,
   setDevelopmentResult,
   reviewDonation,
+  handleBetDonationNotify,
   uploadGoalImages,
   uploadDeliveryImages
 } from '../controllers/betCampaignController';
@@ -42,5 +43,9 @@ router.put('/:campaignId/result', verifyToken, uploadDeliveryImages.array('deliv
 
 // 审核捐赠（需要登录，捐赠者本人操作）
 router.put('/:campaignId/donations/:donationId/review', verifyToken, reviewDonation);
+
+// 支付回调（无需登录，通用接口 - 支付平台只配置这一个地址）
+router.get('/notify', handleBetDonationNotify);
+router.post('/notify', handleBetDonationNotify);
 
 export default router;
