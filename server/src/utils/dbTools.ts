@@ -568,14 +568,39 @@ export const migrateDatabase = async (): Promise<void> => {
       console.log('已添加审核相关字段到 bet_donations 表');
     }
 
-    // 检查 bet_donations 表是否有支付相关字段
+    // 检查 bet_donations 表是否有支付相关字段（分别检查每个字段）
     const [outTradeNoColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "out_trade_no"');
     if (Array.isArray(outTradeNoColumns) && outTradeNoColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN out_trade_no VARCHAR(64) AFTER campaignId');
+    }
+
+    const [tradeNoColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "trade_no"');
+    if (Array.isArray(tradeNoColumns) && tradeNoColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN trade_no VARCHAR(64) AFTER out_trade_no');
+    }
+
+    const [payTypeColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "pay_type"');
+    if (Array.isArray(payTypeColumns) && payTypeColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN pay_type VARCHAR(20) AFTER trade_no');
+    }
+
+    const [statusColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "status"');
+    if (Array.isArray(statusColumns) && statusColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN status ENUM("pending", "paid", "refunded", "failed") DEFAULT "pending" AFTER reviewComment');
+    }
+
+    const [rawNotifyColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "raw_notify"');
+    if (Array.isArray(rawNotifyColumns) && rawNotifyColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN raw_notify TEXT AFTER status');
+    }
+
+    if (
+      (Array.isArray(outTradeNoColumns) && outTradeNoColumns.length === 0) ||
+      (Array.isArray(tradeNoColumns) && tradeNoColumns.length === 0) ||
+      (Array.isArray(payTypeColumns) && payTypeColumns.length === 0) ||
+      (Array.isArray(statusColumns) && statusColumns.length === 0) ||
+      (Array.isArray(rawNotifyColumns) && rawNotifyColumns.length === 0)
+    ) {
       console.log('已添加支付相关字段到 bet_donations 表');
     }
 
