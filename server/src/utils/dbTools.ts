@@ -559,12 +559,27 @@ export const migrateDatabase = async (): Promise<void> => {
       console.log('已添加 campaignId 字段到 bet_donations 表');
     }
 
-    // 检查 bet_donations 表是否有审核相关字段
+    // 检查 bet_donations 表是否有审核相关字段（分别检查每个字段）
     const [reviewStatusColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "reviewStatus"');
     if (Array.isArray(reviewStatusColumns) && reviewStatusColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN reviewStatus ENUM("pending", "approved", "rejected") DEFAULT "pending" AFTER message');
+    }
+
+    const [reviewCommentColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "reviewComment"');
+    if (Array.isArray(reviewCommentColumns) && reviewCommentColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN reviewComment TEXT AFTER reviewStatus');
+    }
+
+    const [reviewedAtColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "reviewedAt"');
+    if (Array.isArray(reviewedAtColumns) && reviewedAtColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN reviewedAt TIMESTAMP NULL AFTER reviewComment');
+    }
+
+    if (
+      (Array.isArray(reviewStatusColumns) && reviewStatusColumns.length === 0) ||
+      (Array.isArray(reviewCommentColumns) && reviewCommentColumns.length === 0) ||
+      (Array.isArray(reviewedAtColumns) && reviewedAtColumns.length === 0)
+    ) {
       console.log('已添加审核相关字段到 bet_donations 表');
     }
 
@@ -586,7 +601,7 @@ export const migrateDatabase = async (): Promise<void> => {
 
     const [statusColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "status"');
     if (Array.isArray(statusColumns) && statusColumns.length === 0) {
-      await conn.query('ALTER TABLE bet_donations ADD COLUMN status ENUM("pending", "paid", "refunded", "failed") DEFAULT "pending" AFTER reviewComment');
+      await conn.query('ALTER TABLE bet_donations ADD COLUMN status ENUM("pending", "paid", "refunded", "failed") DEFAULT "pending" AFTER reviewedAt');
     }
 
     const [rawNotifyColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "raw_notify"');
