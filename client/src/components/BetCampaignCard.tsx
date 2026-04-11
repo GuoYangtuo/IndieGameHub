@@ -375,6 +375,9 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 - 众筹成功后，进入开发阶段；开发结束后，若对目标完成情况不满意，将退回你的捐款
               </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                - 众筹目标达到后也可以继续捐赠哦，开发者动力会更强哦！
+              </Typography>
             </Box>
           </Box>
         )}
@@ -424,6 +427,9 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 - 众筹成功后，进入开发阶段；开发结束后，若对目标完成情况不满意，将退回你的捐款
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                - 众筹目标达到后也可以继续捐赠哦，开发者动力会更强哦！
               </Typography>
             </Box>
           </Box>
