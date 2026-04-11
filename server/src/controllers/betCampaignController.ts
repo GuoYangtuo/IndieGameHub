@@ -438,12 +438,18 @@ export const donateToBetCampaign = async (req: Request, res: Response): Promise<
     const privateKey = process.env.ZBL_PAY_PRIVATE_KEY;
     const publicKey = process.env.ZBL_PAY_PUBLIC_KEY;
     const notifyUrl = process.env.ZBL_PAY_BET_DONATION_NOTIFY_URL;
-    const returnUrl = process.env.ZBL_PAY_BET_DONATION_RETURN_URL;
+    const baseReturnUrl = process.env.ZBL_PAY_BET_DONATION_RETURN_URL;
 
-    if (!pid || !privateKey || !publicKey || !notifyUrl || !returnUrl) {
+    if (!pid || !privateKey || !publicKey || !notifyUrl || !baseReturnUrl) {
       res.status(500).json({ error: '支付配置未完成，请联系管理员配置环境变量' });
       return;
     }
+
+    // 获取项目的 slug，用于构建 return_url
+    const projectResult = await query('SELECT slug FROM projects WHERE id = ?', [campaignData.projectId]);
+    const projectSlug = projectResult && (projectResult as any[]).length > 0
+      ? (projectResult as any[])[0].slug
+      : 'unknown';
 
     // 生成订单号
     const outTradeNo = 'BD' + Date.now().toString() + Math.floor(Math.random() * 1000).toString();
@@ -451,6 +457,11 @@ export const donateToBetCampaign = async (req: Request, res: Response): Promise<
 
     // 获取众筹标题作为商品名称
     const campaignTitle = campaignData.title || '对赌众筹捐赠';
+
+    // 构建 return_url，替换占位符
+    const returnUrl = baseReturnUrl
+      .replace('{slug}', encodeURIComponent(projectSlug))
+      .replace('{campaignId}', encodeURIComponent(campaignId));
 
     // 构建支付请求参数
     const requestParams: Record<string, any> = {
