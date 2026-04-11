@@ -36,6 +36,7 @@ const initApp = async () => {
     app.use(cors());
     app.use(morgan('dev'));
     app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
 
     // 配置静态文件服务
     app.use(express.static(path.join(__dirname, '../../public')));
