@@ -149,7 +149,7 @@ const BetCampaignPage: React.FC = () => {
     try {
       setDonationState(prev => ({ ...prev, donating: true, donationSuccess: false }));
       const response = await betCampaignAPI.donateToBetCampaign(campaign.id, amount, message, {
-        payType: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'alipay',
+        payType: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wxpay' : 'alipay',
         device: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'pc',
         method: 'jump'
       });
