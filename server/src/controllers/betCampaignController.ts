@@ -275,19 +275,33 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       parsedDeliveryImages = [];
     }
 
-    // 获取捐赠列表（包含审核状态）
+    // 获取捐赠列表（排除 pending 状态，按用户合并，返回用户总捐赠金额和统一的审核状态）
+    // donatedCount: 该用户在当前众筹中已支付捐赠的订单数
     const donations = await query(
-      'SELECT bd.*, u.username, u.avatar_url FROM bet_donations bd LEFT JOIN users u ON bd.userId = u.id WHERE bd.campaignId = ? ORDER BY bd.amount DESC',
+      `SELECT
+         bd.userId,
+         SUM(bd.amount) as totalAmount,
+         COUNT(bd.id) as donatedCount,
+         MAX(bd.message) as lastMessage,
+         MIN(bd.createdAt) as firstDonationAt,
+         u.username,
+         u.avatar_url,
+         CASE
+           WHEN MAX(bd.reviewStatus) = MAX(bd.reviewStatus) AND MAX(bd.reviewStatus) = 'approved' THEN 'approved'
+           WHEN MAX(bd.reviewStatus) = MAX(bd.reviewStatus) AND MAX(bd.reviewStatus) = 'rejected' THEN 'rejected'
+           WHEN MAX(bd.reviewStatus) = 'pending' AND COUNT(*) = SUM(CASE WHEN bd.reviewStatus = 'pending' THEN 1 ELSE 0 END) THEN 'pending'
+           ELSE 'pending'
+         END as reviewStatus,
+         MAX(bd.reviewComment) as reviewComment,
+         MAX(bd.reviewedAt) as reviewedAt
+       FROM bet_donations bd
+       LEFT JOIN users u ON bd.userId = u.id
+       WHERE bd.campaignId = ? AND bd.status != 'pending'
+       GROUP BY bd.userId, u.username, u.avatar_url
+       ORDER BY totalAmount DESC`,
       [campaignId]
     );
-
-    // 补充审核状态字段（兼容旧数据中没有这些字段的情况）
-    const enrichedDonations = (donations as any[]).map(d => ({
-      ...d,
-      reviewStatus: d.reviewStatus || 'pending',
-      reviewComment: d.reviewComment || null,
-      reviewedAt: d.reviewedAt || null,
-    }));
+    console.log(donations);
 
     res.json({
       ...campaignData,
@@ -296,7 +310,7 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
       developmentGoalImages: parsedDevelopmentGoalImages,
       deliveryContent: parsedDeliveryContent,
       deliveryImages: parsedDeliveryImages,
-      donations: enrichedDonations
+      donations
     });
   } catch (error) {
     console.error('获取对赌众筹详情失败:', error);
@@ -361,19 +375,32 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       parsedDeliveryImages = [];
     }
 
-    // 获取捐赠列表（包含审核状态）
+    // 获取捐赠列表（排除 pending 状态，按用户合并，返回用户总捐赠金额和统一的审核状态）
+    // donatedCount: 该用户在当前众筹中已支付捐赠的订单数
     const donations = await query(
-      'SELECT bd.*, u.username, u.avatar_url FROM bet_donations bd LEFT JOIN users u ON bd.userId = u.id WHERE bd.campaignId = ? ORDER BY bd.amount DESC',
+      `SELECT
+         bd.userId,
+         SUM(bd.amount) as totalAmount,
+         COUNT(bd.id) as donatedCount,
+         MAX(bd.message) as lastMessage,
+         MIN(bd.createdAt) as firstDonationAt,
+         u.username,
+         u.avatar_url,
+         CASE
+           WHEN MAX(bd.reviewStatus) = MAX(bd.reviewStatus) AND MAX(bd.reviewStatus) = 'approved' THEN 'approved'
+           WHEN MAX(bd.reviewStatus) = MAX(bd.reviewStatus) AND MAX(bd.reviewStatus) = 'rejected' THEN 'rejected'
+           WHEN MAX(bd.reviewStatus) = 'pending' AND COUNT(*) = SUM(CASE WHEN bd.reviewStatus = 'pending' THEN 1 ELSE 0 END) THEN 'pending'
+           ELSE 'pending'
+         END as reviewStatus,
+         MAX(bd.reviewComment) as reviewComment,
+         MAX(bd.reviewedAt) as reviewedAt
+       FROM bet_donations bd
+       LEFT JOIN users u ON bd.userId = u.id
+       WHERE bd.campaignId = ? AND bd.status != 'pending'
+       GROUP BY bd.userId, u.username, u.avatar_url
+       ORDER BY totalAmount DESC`,
       [campaignData.id]
     );
-
-    // 补充审核状态字段
-    const enrichedDonations = (donations as any[]).map(d => ({
-      ...d,
-      reviewStatus: d.reviewStatus || 'pending',
-      reviewComment: d.reviewComment || null,
-      reviewedAt: d.reviewedAt || null,
-    }));
 
     res.json({
       ...campaignData,
@@ -382,7 +409,7 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
       developmentGoalImages: parsedDevelopmentGoalImages,
       deliveryContent: parsedDeliveryContent,
       deliveryImages: parsedDeliveryImages,
-      donations: enrichedDonations
+      donations
     });
   } catch (error) {
     console.error('获取进行中的对赌众筹失败:', error);
@@ -813,10 +840,10 @@ export const handleBetDonationNotify = async (req: Request, res: Response): Prom
   }
 };
 
-// 审核对赌众筹捐赠
+// 审核对赌众筹捐赠（按用户维度，一次审核变更该用户所有捐赠订单）
 export const reviewDonation = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { campaignId, donationId } = req.params;
+    const { campaignId, userId: donorUserId } = req.params;
     const { approved, comment } = req.body;
     const userId = req.user?.id;
 
@@ -845,63 +872,74 @@ export const reviewDonation = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // 检查捐赠记录是否存在
-    const donation = await query('SELECT * FROM bet_donations WHERE id = ? AND campaignId = ?', [donationId, campaignId]);
-    if (!donation || (donation as any[]).length === 0) {
-      res.status(404).json({ error: '捐赠记录不存在' });
-      return;
-    }
+    // 查询该用户在该众筹中所有已支付的捐赠
+    const userDonations = await query(
+      `SELECT * FROM bet_donations WHERE campaignId = ? AND userId = ? AND status = 'paid'`,
+      [campaignId, donorUserId]
+    ) as any[];
 
-    const donationData = (donation as any[])[0];
-
-    // 只有已支付的捐赠才能审核
-    if (donationData.status !== 'paid') {
-      res.status(400).json({ error: '该捐赠尚未支付，无法审核' });
+    if (!userDonations || userDonations.length === 0) {
+      res.status(404).json({ error: '该用户没有已支付的捐赠记录' });
       return;
     }
 
     // 只有捐赠者本人才能审核
-    if (donationData.userId !== userId) {
+    if (userDonations[0].userId !== userId) {
       res.status(403).json({ error: '只有捐赠者本人才能审核' });
       return;
     }
 
     // 检查是否已审核（防止重复操作）
-    if (donationData.reviewStatus !== 'pending') {
-      res.status(400).json({ error: '该捐赠已审核，请勿重复操作' });
+    const allReviewed = userDonations.every(d => d.reviewStatus !== 'pending');
+    if (allReviewed) {
+      res.status(400).json({ error: '该用户的所有捐赠已审核，请勿重复操作' });
       return;
     }
 
     const now = new Date();
 
-    // 更新审核状态
-    await query(
-      'UPDATE bet_donations SET reviewStatus = ?, reviewComment = ?, reviewedAt = ? WHERE id = ?',
-      [approved ? 'approved' : 'rejected', comment || null, now, donationId]
-    );
-
     if (approved) {
-      // 认可通过：将金币转给项目创建者（加到项目余额）
+      // 认可通过：批量更新该用户所有待审核订单的状态
       await query(
-        'UPDATE projects SET projectBalance = projectBalance + ? WHERE id = ?',
-        [donationData.amount, campaignData.projectId]
+        `UPDATE bet_donations
+         SET reviewStatus = 'approved', reviewComment = ?, reviewedAt = ?
+         WHERE campaignId = ? AND userId = ? AND status = 'paid' AND reviewStatus = 'pending'`,
+        [comment || null, now, campaignId, donorUserId]
       );
-      res.json({ success: true, message: '审核通过，金币已转给开发者' });
-    } else {
-      // 拒绝通过：退还该粉丝在此众筹上的所有已支付捐赠
-      const userDonations = await query(
-        `SELECT * FROM bet_donations WHERE campaignId = ? AND userId = ? AND status = 'paid'`,
-        [campaignId, donationData.userId]
-      ) as any[];
 
+      // 计算本次实际通过审核的订单总金额
+      const pendingDonations = userDonations.filter(d => d.reviewStatus === 'pending');
+      const totalAmount = pendingDonations.reduce((sum, d) => sum + d.amount, 0);
+
+      // 将金币转给项目创建者（加到项目余额）
+      if (totalAmount > 0) {
+        await query(
+          'UPDATE projects SET projectBalance = projectBalance + ? WHERE id = ?',
+          [totalAmount, campaignData.projectId]
+        );
+      }
+
+      res.json({
+        success: true,
+        message: `审核通过，金币已转给开发者（${pendingDonations.length}笔，共¥${totalAmount}）`
+      });
+    } else {
+      // 拒绝通过：退还该用户在此众筹上的所有已支付捐赠（仅退还未审核的）
+      const pendingDonations = userDonations.filter(d => d.reviewStatus === 'pending');
       const refundResults: { donationId: string; success: boolean; message: string }[] = [];
 
-      for (const d of userDonations) {
+      for (const d of pendingDonations) {
         const refundRes = await refundViaPayment(d.trade_no, d.amount);
         if (refundRes.success) {
           await query(
-            `UPDATE bet_donations SET status = 'refunded' WHERE id = ?`,
-            [d.id]
+            `UPDATE bet_donations SET status = 'refunded', reviewStatus = 'rejected', reviewComment = ?, reviewedAt = ? WHERE id = ?`,
+            [comment || null, now, d.id]
+          );
+        } else {
+          // 退款失败也标记为拒绝
+          await query(
+            `UPDATE bet_donations SET reviewStatus = 'rejected', reviewComment = ?, reviewedAt = ? WHERE id = ?`,
+            [comment || null, now, d.id]
           );
         }
         refundResults.push({
@@ -911,10 +949,12 @@ export const reviewDonation = async (req: Request, res: Response): Promise<void>
         });
       }
 
-      console.log(`粉丝 ${donationData.userId} 拒绝众筹 ${campaignId} 审核，退款结果:`, refundResults);
+      console.log(`粉丝 ${donorUserId} 拒绝众筹 ${campaignId} 审核，退款结果:`, refundResults);
       res.json({
         success: true,
-        message: refundResults.length > 0 ? `已拒绝，已退款您的 ${refundResults.length} 笔捐赠` : '已拒绝（无已支付订单）',
+        message: refundResults.length > 0
+          ? `已拒绝，已退款您的 ${refundResults.filter(r => r.success).length} 笔捐赠`
+          : '已拒绝（无有效退款）',
         refundResults,
       });
     }

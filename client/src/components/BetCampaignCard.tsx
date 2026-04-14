@@ -34,12 +34,11 @@ import {
 } from '@mui/icons-material';
 
 interface BetDonation {
-  id: string;
-  campaignId: string;
   userId: string;
-  amount: number;
-  message?: string;
-  createdAt: string;
+  totalAmount: number;
+  donatedCount: number;
+  lastMessage?: string;
+  firstDonationAt: string;
   username?: string;
   avatar_url?: string;
   reviewStatus?: 'pending' | 'approved' | 'rejected';
@@ -496,7 +495,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
         )}
       </Paper>
 
-      {/* 捐赠者列表 */}
+      {/* 捐赠者名单 */}
       {campaign.donations && campaign.donations.length > 0 && (
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -509,9 +508,9 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
                 <TableRow>
                   <TableCell>排名</TableCell>
                   <TableCell>用户</TableCell>
-                  <TableCell align="right">金额</TableCell>
+                  <TableCell align="right">累计金额</TableCell>
                   {isSuccessCampaign && <TableCell>审核状态</TableCell>}
-                  <TableCell>时间</TableCell>
+                  <TableCell>首次捐赠</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -521,7 +520,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
                   const isRejected = reviewStatus === 'rejected';
 
                   return (
-                    <TableRow key={donation.id}>
+                    <TableRow key={donation.userId}>
                       <TableCell>
                         {index === 0 && <EmojiEvents color="warning" />}
                         {index === 1 && <EmojiEvents sx={{ color: '#c0c0c0' }} />}
@@ -538,16 +537,21 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
                           </Avatar>
                           <Box>
                             <Typography variant="body2">{donation.username}</Typography>
-                            {donation.message && (
+                            {donation.donatedCount > 1 && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                {donation.donatedCount}笔订单
+                              </Typography>
+                            )}
+                            {donation.lastMessage && (
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {donation.message}
+                                {donation.lastMessage}
                               </Typography>
                             )}
                           </Box>
                         </Box>
                       </TableCell>
                       <TableCell align="right">
-                        <strong>¥{donation.amount}</strong>
+                        <strong>¥{donation.totalAmount}</strong>
                       </TableCell>
                       {isSuccessCampaign && (
                         <TableCell>
@@ -593,7 +597,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
                         </TableCell>
                       )}
                       <TableCell>
-                        {formatRelativeTime(donation.createdAt)}
+                        {formatRelativeTime(donation.firstDonationAt)}
                       </TableCell>
                     </TableRow>
                   );

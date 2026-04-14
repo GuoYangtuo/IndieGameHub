@@ -47,6 +47,6 @@ router.delete('/:campaignId', verifyToken, deleteBetCampaign);
 router.put('/:campaignId/result', verifyToken, uploadDeliveryImages.array('deliveryImages', 10), setDevelopmentResult);
 
 // 审核捐赠（需要登录，捐赠者本人操作）
-router.put('/:campaignId/donations/:donationId/review', verifyToken, reviewDonation);
+router.put('/:campaignId/donations/:userId/review', verifyToken, reviewDonation);
 
 export default router;

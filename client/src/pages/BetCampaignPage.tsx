@@ -27,12 +27,11 @@ import BetCampaignGuide from '../components/BetCampaignGuide';
 import BetCampaignCard from '../components/BetCampaignCard';
 
 interface BetDonation {
-  id: string;
-  campaignId: string;
   userId: string;
-  amount: number;
-  message?: string;
-  createdAt: string;
+  totalAmount: number;
+  donatedCount: number;
+  lastMessage?: string;
+  firstDonationAt: string;
   username?: string;
   avatar_url?: string;
   reviewStatus?: 'pending' | 'approved' | 'rejected';
@@ -207,12 +206,9 @@ const BetCampaignPage: React.FC = () => {
   const handleReview = async (approved: boolean) => {
     if (!campaign || !user) return;
 
-    const myDonation = campaign.donations?.find(d => d.userId === user.id);
-    if (!myDonation) return;
-
     try {
       setReviewState(prev => ({ ...prev, submitting: true }));
-      await betCampaignAPI.reviewDonation(campaign.id, myDonation.id, approved, reviewState.comment.trim() || undefined);
+      await betCampaignAPI.reviewDonation(campaign.id, user.id, approved, reviewState.comment.trim() || undefined);
 
       // 刷新数据
       const campaignResponse = await betCampaignAPI.getBetCampaignById(campaign.id);
@@ -297,7 +293,7 @@ const BetCampaignPage: React.FC = () => {
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            您在此众筹中捐赠了 <strong>¥{myDonation?.amount}</strong>，请评估开发者是否完成了承诺的开发目标。
+            您在此众筹中累计捐赠了 <strong>¥{myDonation?.totalAmount}</strong>（共{myDonation?.donatedCount}笔订单），请评估开发者是否完成了承诺的开发目标。
           </Typography>
 
           <TextField

@@ -593,7 +593,7 @@ export const betCampaignAPI = {
     });
   },
 
-  // 审核对赌众筹捐赠
-  reviewDonation: (campaignId: string, donationId: string, approved: boolean, comment?: string) =>
-    api.put(`/bet-campaigns/${campaignId}/donations/${donationId}/review`, { approved, comment }),
+  // 审核对赌众筹捐赠（按用户维度）
+  reviewDonation: (campaignId: string, userId: string, approved: boolean, comment?: string) =>
+    api.put(`/bet-campaigns/${campaignId}/donations/${userId}/review`, { approved, comment }),
 }; 
