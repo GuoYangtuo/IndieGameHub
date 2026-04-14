@@ -12,6 +12,7 @@ import notificationRouter from './routes/notificationRoutes';
 import betCampaignRouter from './routes/betCampaignRoutes';
 import { initDatabase, migrateDatabase, migrateProjectFeatures } from './utils/dbTools';
 import { initializeWebSocket } from './websocket';
+import { startBetCampaignScheduler } from './scheduler';
 import dotenv from 'dotenv';
 
 // 加载环境变量
@@ -64,6 +65,9 @@ const initApp = async () => {
     server.listen(PORT, () => {
       console.log(`服务器运行在端口: ${PORT}`);
     });
+
+    // 启动对赌众筹定时调度器
+    startBetCampaignScheduler();
     
   } catch (error) {
     console.error('应用初始化失败:', error);
