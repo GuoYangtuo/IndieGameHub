@@ -301,7 +301,6 @@ export const getBetCampaignById = async (req: Request, res: Response): Promise<v
        ORDER BY totalAmount DESC`,
       [campaignId]
     );
-    console.log(donations);
 
     res.json({
       ...campaignData,

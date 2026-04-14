@@ -293,7 +293,7 @@ const BetCampaignPage: React.FC = () => {
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            您在此众筹中累计捐赠了 <strong>¥{myDonation?.totalAmount}</strong>（共{myDonation?.donatedCount}笔订单），请评估开发者是否完成了承诺的开发目标。
+            在此众筹中，您累计捐赠了 <strong>¥{myDonation?.totalAmount}</strong>（共{myDonation?.donatedCount}笔订单），评估开发者的目标完成情况是否让你满意？是否愿意继续捐款？
           </Typography>
 
           <TextField
@@ -303,7 +303,7 @@ const BetCampaignPage: React.FC = () => {
             multiline
             rows={3}
             fullWidth
-            placeholder="分享您的评价或意见..."
+            placeholder="分享您的赞美，鼓励，或建议..."
             sx={{ mb: 2 }}
             disabled={reviewState.submitting}
           />
@@ -316,7 +316,7 @@ const BetCampaignPage: React.FC = () => {
               onClick={() => handleReview(true)}
               disabled={reviewState.submitting}
             >
-              {reviewState.submitting ? '提交中...' : '认可通过'}
+              {reviewState.submitting ? '提交中...' : '完美！/ 还不错~'}
             </Button>
             <Button
               variant="outlined"
@@ -325,12 +325,15 @@ const BetCampaignPage: React.FC = () => {
               onClick={() => handleReview(false)}
               disabled={reviewState.submitting}
             >
-              拒绝（退回捐款）
+              太差了！下次加油~（退回捐款）
             </Button>
           </Stack>
 
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
-            认可通过 = 确认开发者完成任务，捐款将转给开发者；拒绝 = 退回您的捐款。操作不可撤销。
+            即使目标未完成，只要您认可开发者这段时间的努力，也可以选择“通过”，让捐款继续给到开发者哦~
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0 }}>
+            操作不可撤销
           </Typography>
         </Paper>
       )}
@@ -340,9 +343,9 @@ const BetCampaignPage: React.FC = () => {
         <Paper sx={{ p: 3, mt: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {myDonation.reviewStatus === 'approved' ? (
-              <Chip icon={<ThumbUp />} label="您已认可通过" color="success" />
+              <Chip icon={<ThumbUp />} label="您已认可通过，捐款已转给开发者" color="success" />
             ) : (
-              <Chip icon={<ThumbDown />} label="您已拒绝" color="error" />
+              <Chip icon={<ThumbDown />} label="已退回您的所有捐赠款" color="error" />
             )}
           </Box>
           {myDonation.reviewComment && (

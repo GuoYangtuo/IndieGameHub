@@ -460,7 +460,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               <CheckCircle sx={{ mr: 1, verticalAlign: 'middle', fontSize: 24, color: currentStatus === 'completed' ? 'success.main' : 'error.main' }} />
               {currentStatus === 'completed' ? '交付成果' : '放弃说明'}
             </Typography>
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: currentStatus === 'completed' ? 'rgba(63, 185, 80, 0.08)' : 'rgba(244, 67, 54, 0.08)' }}>
+            <Paper variant="outlined" sx={{ px: 2, bgcolor: currentStatus === 'completed' ? 'rgba(63, 185, 80, 0.08)' : 'rgba(244, 67, 54, 0.08)' }}>
               <Box sx={{ '& img': { maxWidth: '100%', height: 'auto' } }}>
                 <ReactMarkdown>{campaign.deliveryContent}</ReactMarkdown>
               </Box>
@@ -583,7 +583,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
                             <Box>
                               <Chip
                                 icon={<ThumbDown sx={{ fontSize: 16 }} />}
-                                label="已拒绝"
+                                label="已退款"
                                 size="small"
                                 color="error"
                               />
