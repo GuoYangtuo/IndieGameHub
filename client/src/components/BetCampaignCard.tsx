@@ -33,42 +33,7 @@ import {
   HourglassEmpty,
 } from '@mui/icons-material';
 
-interface BetDonation {
-  userId: string;
-  totalAmount: number;
-  donatedCount: number;
-  lastMessage?: string;
-  firstDonationAt: string;
-  username?: string;
-  avatar_url?: string;
-  reviewStatus?: 'pending' | 'approved' | 'rejected';
-  reviewComment?: string;
-  reviewedAt?: string;
-}
-
-interface BetCampaign {
-  id: string;
-  projectId: string;
-  createdBy: string;
-  title: string;
-  description?: string;
-  targetAmount: number;
-  fundingDays: number;
-  developmentDays: number;
-  fundingEndTime: string;
-  developmentEndTime: string;
-  developmentGoals?: string;
-  developmentGoalImages?: string[];
-  tierAmounts: number[];
-  allowCustomAmount: boolean;
-  status: 'funding' | 'development' | 'completed' | 'failed' | 'cancelled';
-  result: 'pending' | 'success' | 'failed';
-  totalRaised: number;
-  createdAt: string;
-  deliveryContent?: string;
-  deliveryImages?: string[];
-  donations?: BetDonation[];
-}
+import { BetCampaign, BetDonation } from '../types/betCampaign';
 
 interface MockProgress {
   raised: number;

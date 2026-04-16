@@ -57,46 +57,7 @@ import {
   HelpOutline
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { betCampaignAPI, projectAPI } from '../services/api';
-import { formatDate, formatRelativeTime } from '../utils/dateUtils';
-import BetCampaignGuide from '../components/BetCampaignGuide';
-import CreateBetCampaignDialog from '../components/CreateBetCampaignDialog';
-import SetResultDialog from '../components/SetResultDialog';
-
-interface BetDonation {
-  id: string;
-  campaignId: string;
-  userId: string;
-  amount: number;
-  message?: string;
-  createdAt: string;
-  username?: string;
-  avatar_url?: string;
-}
-
-interface BetCampaign {
-  id: string;
-  projectId: string;
-  createdBy: string;
-  title: string;
-  description?: string;
-  targetAmount: number;
-  fundingDays: number;
-  developmentDays: number;
-  fundingEndTime: string;
-  developmentEndTime: string;
-  developmentGoals?: string;
-  developmentGoalImages?: string[];
-  tierAmounts: number[];
-  allowCustomAmount: boolean;
-  status: 'funding' | 'development' | 'completed' | 'failed' | 'cancelled';
-  result: 'pending' | 'success' | 'failed';
-  totalRaised: number;
-  createdAt: string;
-  deliveryContent?: string;
-  deliveryImages?: string[];
-  donations?: BetDonation[];
-}
+import { BetCampaign, BetDonation } from '../types/betCampaign';
 
 interface Project {
   id: string;
