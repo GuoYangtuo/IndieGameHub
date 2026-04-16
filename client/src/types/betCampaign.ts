@@ -48,6 +48,6 @@ export interface BetCampaign {
   createdAt: string;
   deliveryContent?: string;
   deliveryImages?: string[];
-  donations?: BetDonation[];
+  donations?: BetDonationAggregate[];
   donorAggregates?: BetDonationAggregate[];
 }

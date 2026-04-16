@@ -33,7 +33,7 @@ import {
   HourglassEmpty,
 } from '@mui/icons-material';
 
-import { BetCampaign, BetDonation } from '../types/betCampaign';
+import { BetCampaign, BetDonationAggregate } from '../types/betCampaign';
 
 interface MockProgress {
   raised: number;

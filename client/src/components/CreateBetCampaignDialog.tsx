@@ -17,7 +17,8 @@ import {
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { CloudUpload, Delete } from '@mui/icons-material';
-import { BetCampaign, BetDonation } from '../types/betCampaign';
+import { BetCampaign, BetDonationAggregate } from '../types/betCampaign';
+import BetCampaignCard from './BetCampaignCard';
 
 interface CreateBetCampaignDialogProps {
   open: boolean;
@@ -79,34 +80,31 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
   const [previewPhase, setPreviewPhase] = useState<'funding' | 'development' | 'completed'>('funding');
 
   // 模拟捐赠者数据
-  const mockDonations: BetDonation[] = useMemo(() => [
+  const mockDonations: BetDonationAggregate[] = useMemo(() => [
     {
-      id: '1',
-      campaignId: 'preview',
       userId: 'user1',
-      amount: 100,
-      message: '期待这个项目！',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      totalAmount: 100,
+      donatedCount: 1,
+      lastMessage: '期待这个项目！',
+      firstDonationAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       username: '开发者A',
       avatar_url: ''
     },
     {
-      id: '2',
-      campaignId: 'preview',
       userId: 'user2',
-      amount: 50,
-      message: '加油！',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      totalAmount: 50,
+      donatedCount: 1,
+      lastMessage: '加油！',
+      firstDonationAt: new Date(Date.now() - 86400000).toISOString(),
       username: '支持者B',
       avatar_url: ''
     },
     {
-      id: '3',
-      campaignId: 'preview',
       userId: 'user3',
-      amount: 200,
-      message: '',
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      totalAmount: 200,
+      donatedCount: 1,
+      lastMessage: '',
+      firstDonationAt: new Date(Date.now() - 3600000).toISOString(),
       username: '资深玩家C',
       avatar_url: ''
     }

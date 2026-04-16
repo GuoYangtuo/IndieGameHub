@@ -25,7 +25,9 @@ import {
 import { Snackbar } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
-import { BetCampaign, BetDonation } from '../types/betCampaign';
+import { BetCampaign, BetDonation, BetDonationAggregate } from '../types/betCampaign';
+import BetCampaignGuide from '../components/BetCampaignGuide';
+import BetCampaignCard from '../components/BetCampaignCard';
 
 interface Project {
   id: string;
