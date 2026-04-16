@@ -202,7 +202,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
       <DialogContent sx={{ p: 0, display: 'flex', height: '100vh' }}>
         {/* 左侧：创建表单 */}
         <Box sx={{ width: '50%', borderRight: 1, borderColor: 'divider', overflow: 'auto', p: 3 }}>
-          <Typography variant="h6" gutterBottom>填写对赌众筹信息</Typography>
+          <Typography variant="h6" gutterBottom>填写众筹信息</Typography>
 
           <TextField
             label="标题"
@@ -389,7 +389,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
           <Box sx={{ p: 2, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="subtitle1" fontWeight="bold">效果预览</Typography>
+                <Typography variant="h6" fontWeight="bold">效果预览</Typography>
                 <Tabs
                   value={previewPhase}
                   onChange={(_, newValue) => setPreviewPhase(newValue)}

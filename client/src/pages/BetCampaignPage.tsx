@@ -20,7 +20,9 @@ import {
   ThumbUp,
   ThumbDown,
   HelpOutline,
+  Share,
 } from '@mui/icons-material';
+import { Snackbar } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { betCampaignAPI, projectAPI } from '../services/api';
 import BetCampaignGuide from '../components/BetCampaignGuide';
@@ -90,6 +92,7 @@ const BetCampaignPage: React.FC = () => {
     donationMessage: '',
     donating: false,
     donationSuccess: false,
+    payType: 'alipay',
   });
 
   // 审核相关状态
@@ -102,6 +105,23 @@ const BetCampaignPage: React.FC = () => {
     return localStorage.getItem('bet_campaign_guide_hidden') === 'true';
   });
   const [guideForceShow, setGuideForceShow] = useState(0);
+
+  // 分享相关状态
+  const [shareSnackbar, setShareSnackbar] = useState({ open: false, message: '' });
+
+  // 处理分享（复制链接到剪贴板）
+  const handleShare = async () => {
+    if (!project || !campaign) return;
+
+    const shareText = `${user?.username || '开发者'}邀请你参与${project.name}项目的对赌众筹：${campaign.title}\n${window.location.href}`;
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setShareSnackbar({ open: true, message: '分享链接已复制到剪贴板' });
+    } catch {
+      setShareSnackbar({ open: true, message: '复制失败，请手动复制链接' });
+    }
+  };
 
   // 获取项目和对赌众筹数据
   useEffect(() => {
@@ -139,7 +159,7 @@ const BetCampaignPage: React.FC = () => {
   }, [slug, campaignId]);
 
   // 处理捐赠
-  const handleDonate = async (amount: number, message: string) => {
+  const handleDonate = async (amount: number, message: string, payType: string) => {
     if (!campaign || !user) {
       alert('请先登录');
       return;
@@ -148,7 +168,7 @@ const BetCampaignPage: React.FC = () => {
     try {
       setDonationState(prev => ({ ...prev, donating: true, donationSuccess: false }));
       const response = await betCampaignAPI.donateToBetCampaign(campaign.id, amount, message, {
-        payType: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wxpay' : 'alipay',
+        payType: payType,
         device: /MicroMessenger/i.test(window.navigator.userAgent) ? 'wechat' : 'pc',
         method: 'jump'
       });
@@ -258,18 +278,25 @@ const BetCampaignPage: React.FC = () => {
           返回项目
         </Button>
         {guideHidden && (
-          <Tooltip title="显示对赌众筹说明">
-            <IconButton
-              onClick={() => {
-                localStorage.removeItem('bet_campaign_guide_hidden');
-                setGuideHidden(false);
-                setGuideForceShow(prev => prev + 1);
-              }}
-              size="small"
-            >
-              <HelpOutline />
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title="分享">
+              <IconButton onClick={handleShare} size="small">
+                <Share />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="显示对赌众筹说明">
+              <IconButton
+                onClick={() => {
+                  localStorage.removeItem('bet_campaign_guide_hidden');
+                  setGuideHidden(false);
+                  setGuideForceShow(prev => prev + 1);
+                }}
+                size="small"
+              >
+                <HelpOutline />
+              </IconButton>
+            </Tooltip>
+          </Box>
         )}
       </Box>
 
@@ -330,10 +357,10 @@ const BetCampaignPage: React.FC = () => {
           </Stack>
 
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
-            即使目标未完成，只要您认可开发者这段时间的努力，也可以选择“通过”，让捐款继续给到开发者哦~
+            即使目标未完成，只要您认可开发者这段时间的努力，也可以选择“通过”哦，有时鼓励与支持比批评更有用~
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0 }}>
-            操作不可撤销
+            此操作不可撤销
           </Typography>
         </Paper>
       )}
@@ -360,6 +387,18 @@ const BetCampaignPage: React.FC = () => {
           )}
         </Paper>
       )}
+
+      {/* 分享成功提示 */}
+      <Snackbar
+        open={shareSnackbar.open}
+        autoHideDuration={2000}
+        onClose={() => setShareSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" variant="filled">
+          {shareSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

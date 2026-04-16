@@ -82,6 +82,7 @@ interface DonationState {
   donationMessage: string;
   donating: boolean;
   donationSuccess: boolean;
+  payType: string;
 }
 
 interface BetCampaignCardProps {
@@ -90,7 +91,7 @@ interface BetCampaignCardProps {
   previewPhase?: 'funding' | 'development' | 'completed';
   mockProgress?: MockProgress;
   donationState?: DonationState;
-  onDonate?: (amount: number, message: string) => void;
+  onDonate?: (amount: number, message: string, payType: string) => void;
   onDonationStateChange?: (state: Partial<DonationState>) => void;
   onBack?: () => void;
 }
@@ -173,7 +174,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
       amount = donationState.selectedAmount;
     }
     if (!amount || amount <= 0) return;
-    onDonate(amount, donationState.donationMessage);
+    onDonate(amount, donationState.donationMessage, donationState.payType);
   };
 
   const statusInfoSx = statusInfo.color === 'info' ? {
@@ -349,6 +350,26 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               sx={{ mb: 2 }}
             />
 
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Typography variant="subtitle2">选择支付方式</Typography>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant={donationState?.payType === 'alipay' ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => onDonationStateChange?.({ payType: 'alipay' })}
+                >
+                  支付宝
+                </Button>
+                <Button
+                  variant={donationState?.payType === 'wxpay' ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => onDonationStateChange?.({ payType: 'wxpay' })}
+                >
+                  微信支付
+                </Button>
+              </Stack>
+            </Box>
+
             <Button
               variant="contained"
               size="large"
@@ -369,13 +390,16 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
 
             <Box sx={{ mt: 0.5, mb: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                - 感谢你支持有梦想的人！！
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 - 众筹结束时，若未达目标金额，将退回所有捐款
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 - 众筹成功后，进入开发阶段；开发结束后，若对目标完成情况不满意，将退回你的捐款
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                - 众筹目标达到后也可以继续捐赠哦，开发者动力会更强哦！
+                - 众筹目标达到后也可以继续捐赠哦，开发者动力会更强哦！感谢你支持有梦想的人！！
               </Typography>
             </Box>
           </Box>
@@ -421,6 +445,9 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               确认捐赠
             </Button>
             <Box sx={{ mt: 0.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                - 感谢你支持有梦想的人！！
+              </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 - 众筹结束时，若未达目标金额，将退回所有捐款
               </Typography>
