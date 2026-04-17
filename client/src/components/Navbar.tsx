@@ -104,7 +104,6 @@ const Navbar: React.FC = () => {
 
   // 导航栏折叠状态（仅在创建项目页生效）
   const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false);
-  const navbarRef = useRef<HTMLDivElement>(null);
 
   // 当路由参数slug变化时更新currentSlug
   useEffect(() => {
@@ -385,39 +384,17 @@ const Navbar: React.FC = () => {
 
   return (
     <Box
-      ref={navbarRef}
       onMouseEnter={handleNavbarMouseEnter}
       onMouseLeave={handleNavbarMouseLeave}
-      sx={{ position: 'relative' }}
     >
-      {/* 折叠时的透明占位层，用于捕获鼠标事件 */}
-      {isCollapsed && (
-        <Box
-          sx={{
-            height: '8px',
-            width: '100%',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            zIndex: 0,
-            cursor: 'default',
-          }}
-        />
-      )}
       <AppBar
         position="static"
         sx={{
           py: 0,
-          height: isCollapsed ? 0 : 'auto',
-          minHeight: isCollapsed ? 0 : '64px',
+          visibility: isCollapsed ? 'hidden' : 'visible',
           opacity: isCollapsed ? 0 : 1,
-          overflow: 'visible',
-          position: isCollapsed ? 'absolute' : 'relative',
-          top: 0,
-          left: 0,
-          width: '100%',
-          zIndex: isCollapsed ? 0 : 1100,
-          transition: 'height 0.3s ease-in-out, opacity 0.3s ease-in-out',
+          transition: 'opacity 0.3s ease-in-out',
+          pointerEvents: isCollapsed ? 'none' : 'auto',
         }}
       >
           <Container maxWidth="xl">

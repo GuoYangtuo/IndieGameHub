@@ -12,6 +12,7 @@ import { useTheme } from '../contexts/ThemeContext';
 interface FeatureImage {
   dark: string;
   light: string;
+  description?: string;
 }
 
 interface FeatureStepPanelProps {
@@ -106,7 +107,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
             onClick={onDisable}
             sx={{ flex: 1 }}
           >
-            不启用
+            用不上 / 没兴趣
           </Button>
         </Box>
       </Box>
@@ -131,6 +132,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
           overflow: 'hidden',
           bgcolor: 'background.default',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -142,14 +144,29 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
             alt={`${title} 预览`}
             sx={{
               width: '100%',
-              height: '100%',
+              flex: 1,
               objectFit: 'contain',
               p: 2,
+              minHeight: 0,
             }}
           />
         ) : (
           <Typography variant="body2" color="text.secondary">
             暂无预览图
+          </Typography>
+        )}
+        {hasMultipleImages && images[currentImageIndex]?.description && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              p: { xs: 1, md: 2 },
+              textAlign: 'center',
+              width: '100%',
+              flexShrink: 0,
+            }}
+          >
+            {images[currentImageIndex].description}
           </Typography>
         )}
       </Box>
@@ -160,45 +177,22 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
             size="small"
             onClick={handlePrev}
             disabled={currentImageIndex === 0}
-            startIcon={<KeyboardArrowLeft />}
             sx={{
               position: 'absolute',
               left: { xs: 8, md: 16 },
-              top: '50%',
-              transform: 'translateY(-50%)',
+              bottom: { xs: 8, md: 16 },
               bgcolor: 'background.paper',
               border: '1px solid',
               borderColor: 'divider',
               minWidth: 40,
+              p: '6px 8px',
               '&:hover': {
                 bgcolor: 'action.hover',
               },
             }}
           >
-            {isMobile ? '' : '上一张'}
+            <KeyboardArrowLeft />
           </Button>
-          <Button
-            size="small"
-            onClick={handleNext}
-            disabled={currentImageIndex === images.length - 1}
-            endIcon={<KeyboardArrowRight />}
-            sx={{
-              position: 'absolute',
-              right: { xs: 8, md: 16 },
-              top: '50%',
-              transform: 'translateY(-50%)',
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
-              minWidth: 40,
-              '&:hover': {
-                bgcolor: 'action.hover',
-              },
-            }}
-          >
-            {isMobile ? '' : '下一张'}
-          </Button>
-
           <Box
             sx={{
               position: 'absolute',
@@ -224,6 +218,26 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
               />
             ))}
           </Box>
+          <Button
+            size="small"
+            onClick={handleNext}
+            disabled={currentImageIndex === images.length - 1}
+            sx={{
+              position: 'absolute',
+              right: { xs: 8, md: 16 },
+              bottom: { xs: 8, md: 16 },
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              minWidth: 40,
+              p: '6px 8px',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
+            <KeyboardArrowRight />
+          </Button>
         </>
       )}
     </Box>
@@ -235,8 +249,9 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
         display: { xs: 'flex', md: 'grid' },
         flexDirection: { xs: 'column', md: 'grid' },
         gridTemplateColumns: { md: '1fr 1fr' },
-        height: { md: 'calc(100vh - 180px)' },
         minHeight: { xs: 'auto', md: 500 },
+        flex: 1,
+        overflow: 'hidden',
       }}
     >
       {isMobile ? (

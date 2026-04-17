@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container,
   Box,
   Typography,
   TextField,
@@ -16,7 +15,6 @@ import {
   FormControlLabel,
   Collapse,
   Slide,
-  Checkbox,
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { projectAPI } from '../services/api';
@@ -57,10 +55,10 @@ const CreateProjectPage: React.FC = () => {
   const [loadingTags, setLoadingTags] = useState(false);
 
   // 功能模块启用状态
-  const [enableUpdates, setEnableUpdates] = useState(true);
+  const [enableUpdates, setEnableUpdates] = useState(false);
   const [enableSurveys, setEnableSurveys] = useState(true);
-  const [enableContributions, setEnableContributions] = useState(false);
-  const [enableTaskQueue, setEnableTaskQueue] = useState(true);
+  const [enableContributions, setEnableContributions] = useState(true);
+  const [enableTaskQueue, setEnableTaskQueue] = useState(false);
   const [enableProposals, setEnableProposals] = useState(true);
   const [enableDiscussions, setEnableDiscussions] = useState(true);
   const [enableBetCampaign, setEnableBetCampaign] = useState(false);
@@ -166,6 +164,22 @@ const CreateProjectPage: React.FC = () => {
   const handleNext = async () => {
     setError(null);
     setSlideDirection('left');
+
+    if (currentStep === 0) {
+      if (!name.trim()) {
+        setError('项目名称不能为空');
+        return;
+      }
+      if (nameError) {
+        setError(nameError);
+        return;
+      }
+      if (!description.trim()) {
+        setError('项目描述不能为空');
+        return;
+      }
+    }
+
     setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
 
@@ -179,21 +193,6 @@ const CreateProjectPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!user) {
       setError('请先登录');
-      return;
-    }
-
-    if (!name.trim()) {
-      setError('项目名称不能为空');
-      return;
-    }
-
-    if (nameError) {
-      setError(nameError);
-      return;
-    }
-
-    if (!description.trim()) {
-      setError('项目描述不能为空');
       return;
     }
 
@@ -235,6 +234,7 @@ const CreateProjectPage: React.FC = () => {
         formData.append('enableTaskQueue', String(enableTaskQueue));
         formData.append('enableProposals', String(enableProposals));
         formData.append('enableDiscussions', String(enableDiscussions));
+        formData.append('enableContributions', String(enableContributions));
 
         projectResponse = await projectAPI.createProjectWithCover(formData);
       } else {
@@ -251,10 +251,11 @@ const CreateProjectPage: React.FC = () => {
           existingTagIds,
           enableUpdates,
           enableSurveys,
-          enableBetCampaign,
+          enableContributions,
           enableTaskQueue,
           enableProposals,
-          enableDiscussions
+          enableDiscussions,
+          enableBetCampaign
         );
       }
 
@@ -281,10 +282,11 @@ const CreateProjectPage: React.FC = () => {
     switch (currentStep) {
       case 0:
         return (
-          <Container maxWidth="md">
-            <Typography variant="h5">
-              填写项目信息
-            </Typography>
+          <Box sx={{ maxWidth: 'md', width: '100%', mx: 'auto', pt: 0, display: 'flex', flexDirection: 'column', minHeight: 500 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h5">
+                填写项目信息
+              </Typography>
 
             <TextField
               margin="normal"
@@ -460,7 +462,18 @@ const CreateProjectPage: React.FC = () => {
                 )}
               />
             </Box>
-          </Container>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="contained"
+                endIcon={<ArrowForward />}
+                onClick={handleNext}
+              >
+                下一步
+              </Button>
+            </Box>
+          </Box>
         );
 
       case 1:
@@ -498,6 +511,7 @@ const CreateProjectPage: React.FC = () => {
             description="一个让开发者和粉丝共同记录想法或者bug的地方"
             images={[
               { dark: '/images/features/proposals-dark.png', light: '/images/features/proposals-light.png' },
+              { dark: '/images/features/proposals-dark.png', light: '/images/features/proposals-light.png' },
             ]}
             onEnable={() => { setEnableProposals(true); handleNext(); }}
             onDisable={() => { setEnableProposals(false); handleNext(); }}
@@ -525,7 +539,7 @@ const CreateProjectPage: React.FC = () => {
                     />
                   }
                   label={
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <Typography variant="subtitle1">更新日志系统</Typography>
                       <Typography variant="caption" color="text.secondary">
                         用于发布更新日志，展示项目进展
@@ -535,7 +549,7 @@ const CreateProjectPage: React.FC = () => {
                   sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
                 />
                 <Collapse in={enableUpdates}>
-                  <Box sx={{ mt: 2, ml: 4, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                  <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
                     <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
                       GitHub 仓库关联 (可选)
                     </Typography>
@@ -580,7 +594,7 @@ const CreateProjectPage: React.FC = () => {
                     />
                   }
                   label={
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <Typography variant="subtitle1">任务队列</Typography>
                       <Typography variant="caption" color="text.secondary">
                         展示开发者的工作计划，待办清单
@@ -600,7 +614,7 @@ const CreateProjectPage: React.FC = () => {
                     />
                   }
                   label={
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <Typography variant="subtitle1">讨论区</Typography>
                       <Typography variant="caption" color="text.secondary">
                         粉丝可以自由留言，从讨论区诞生的创意可以被创建为提案
@@ -614,14 +628,14 @@ const CreateProjectPage: React.FC = () => {
               <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                 <FormControlLabel
                   control={
-                    <Checkbox
+                    <Switch
                       checked={enableContributions}
                       onChange={(e) => setEnableContributions(e.target.checked)}
-                      color="warning"
+                      color="primary"
                     />
                   }
                   label={
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <Typography variant="subtitle1">贡献度系统</Typography>
                       <Typography variant="caption" color="text.secondary">
                         粉丝通过提案、捐赠、悬赏等方式获得贡献度（实验性功能）
@@ -634,17 +648,18 @@ const CreateProjectPage: React.FC = () => {
             </Box>
 
             {/* 摘要 */}
-            <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
+            <Box sx={{ mt: 4, bgcolor: 'background.default', borderRadius: 2 }}>
               <Typography variant="subtitle1" gutterBottom>
                 配置摘要
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {enableUpdates && <Chip label="更新日志" size="small" color="primary" />}
                 {enableSurveys && <Chip label="意见征询" size="small" color="primary" />}
-                {enableBetCampaign && <Chip label="对赌众筹" size="small" color="warning" />}
+                {enableBetCampaign && <Chip label="对赌众筹" size="small" color="primary" />}
                 {enableTaskQueue && <Chip label="任务队列" size="small" color="primary" />}
                 {enableProposals && <Chip label="提案系统" size="small" color="primary" />}
                 {enableDiscussions && <Chip label="讨论区" size="small" color="primary" />}
+                {enableContributions && <Chip label="贡献度系统" size="small" color="primary" />}
               </Box>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
                 共启用 {[
@@ -653,7 +668,8 @@ const CreateProjectPage: React.FC = () => {
                   enableBetCampaign,
                   enableTaskQueue,
                   enableProposals,
-                  enableDiscussions
+                  enableDiscussions,
+                  enableContributions
                 ].filter(Boolean).length} 个功能模块
               </Typography>
             </Box>
@@ -666,7 +682,7 @@ const CreateProjectPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', px: { xs: 2, md: 4 }, py: 3 }}>
+    <Box sx={{ width: '100%', px: { xs: 2, md: 4 }, pt: (currentStep === 0 || currentStep === 4) ? 0 : 3, pb: 3 }}>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -675,41 +691,31 @@ const CreateProjectPage: React.FC = () => {
         )}
 
         <Slide in={true} direction={slideDirection === 'left' ? 'right' : 'left'}>
-          <Box sx={{ my: 3 }}>
+          <Box sx={{ mt: (currentStep === 0 || currentStep === 4) ? 0 : 3, mb: 3 }}>
             {renderStepContent()}
           </Box>
         </Slide>
 
-        {currentStep === 0 || currentStep === 4 ? (
+        {currentStep === 4 ? (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
             <Button
               variant="outlined"
               startIcon={<ArrowBack />}
               onClick={handleBack}
-              disabled={currentStep === 0 || loading}
+              disabled={loading}
             >
               上一步
             </Button>
 
-            {currentStep < 4 ? (
-              <Button
-                variant="contained"
-                endIcon={<ArrowForward />}
-                onClick={handleNext}
-              >
-                下一步
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<Check />}
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? '创建中...' : '创建项目'}
-              </Button>
-            )}
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<Check />}
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? '创建中...' : '创建项目'}
+            </Button>
           </Box>
         ) : null}
       </Box>
