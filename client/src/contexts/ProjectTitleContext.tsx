@@ -7,6 +7,7 @@ interface SharedProjectData {
   members: string[];
   isFavorite: boolean;
   userContribution: number | null;
+  enableBetCampaign?: boolean;
 }
 
 interface ProjectTitleContextType {

@@ -22,6 +22,7 @@ export interface Project {
   enableTaskQueue?: boolean; // 是否启用任务队列
   enableProposals?: boolean; // 是否启用提案系统
   enableDiscussions?: boolean; // 是否启用讨论区
+  enableBetCampaign?: boolean; // 是否启用对赌众筹系统
 }
 
 // 项目成员接口
@@ -59,6 +60,7 @@ export interface CreateProjectData {
   enableTaskQueue?: boolean;
   enableProposals?: boolean;
   enableDiscussions?: boolean;
+  enableBetCampaign?: boolean;
 }
 
 // 更新项目接口
@@ -83,6 +85,7 @@ export interface UpdateProjectInfoData {
   enableTaskQueue?: boolean;
   enableProposals?: boolean;
   enableDiscussions?: boolean;
+  enableBetCampaign?: boolean;
 }
 
 // 项目图片接口
@@ -227,27 +230,28 @@ export const createProject = async (projectData: CreateProjectData): Promise<Pro
     const createdAt = now.toISOString(); // 保留ISO格式用于返回的项目对象
     
     await query(
-      `INSERT INTO projects 
-       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken, coverImage, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO projects
+       (id, name, slug, description, demoLink, createdBy, createdAt, projectBalance, githubRepoUrl, githubAccessToken, coverImage, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions, enableBetCampaign)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id, 
-        projectData.name, 
-        uniqueSlug, 
-        projectData.description, 
-        projectData.demoLink || '', 
-        projectData.createdBy, 
-        mysqlDateFormat, 
-        0, 
-        projectData.githubRepoUrl || null, 
-        projectData.githubAccessToken || null, 
+        id,
+        projectData.name,
+        uniqueSlug,
+        projectData.description,
+        projectData.demoLink || '',
+        projectData.createdBy,
+        mysqlDateFormat,
+        0,
+        projectData.githubRepoUrl || null,
+        projectData.githubAccessToken || null,
         projectData.coverImage || null,
         projectData.enableUpdates !== undefined ? (projectData.enableUpdates ? 1 : 0) : 1,
         projectData.enableSurveys !== undefined ? (projectData.enableSurveys ? 1 : 0) : 1,
         projectData.enableContributions !== undefined ? (projectData.enableContributions ? 1 : 0) : 1,
         projectData.enableTaskQueue !== undefined ? (projectData.enableTaskQueue ? 1 : 0) : 1,
         projectData.enableProposals !== undefined ? (projectData.enableProposals ? 1 : 0) : 1,
-        projectData.enableDiscussions !== undefined ? (projectData.enableDiscussions ? 1 : 0) : 1
+        projectData.enableDiscussions !== undefined ? (projectData.enableDiscussions ? 1 : 0) : 1,
+        projectData.enableBetCampaign !== undefined ? (projectData.enableBetCampaign ? 1 : 0) : 0
       ]
     );
     
@@ -427,7 +431,8 @@ export const updateProject = async (
   enableContributions?: boolean,
   enableTaskQueue?: boolean,
   enableProposals?: boolean,
-  enableDiscussions?: boolean
+  enableDiscussions?: boolean,
+  enableBetCampaign?: boolean
 ): Promise<Project | null> => {
   try {
     // 构建动态更新语句
@@ -475,7 +480,11 @@ export const updateProject = async (
       updateFields.push('enableDiscussions = ?');
       params.push(enableDiscussions);
     }
-    
+    if (enableBetCampaign !== undefined) {
+      updateFields.push('enableBetCampaign = ?');
+      params.push(enableBetCampaign);
+    }
+
     params.push(id);
     
     await query(

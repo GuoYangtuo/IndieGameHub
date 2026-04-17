@@ -365,6 +365,7 @@ const ProjectDetailPage: React.FC = () => {
           members: data.project.members || [],
           isFavorite: data.isFavorite || false,
           userContribution: currentUserContribution,
+          enableBetCampaign: data.project.enableBetCampaign ?? false,
         });
         
         

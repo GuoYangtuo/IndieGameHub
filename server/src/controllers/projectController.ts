@@ -237,7 +237,7 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       return;
     }
 
-    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, colors, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, colors, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions, enableBetCampaign } = req.body;
 
     // 处理封面上传
     let coverImage: string | undefined;
@@ -291,7 +291,8 @@ export const createNewProject = async (req: Request & { file?: Express.Multer.Fi
       enableContributions: enableContributions !== undefined ? (enableContributions === true || enableContributions === 'true' ? true : false) : true,
       enableTaskQueue: enableTaskQueue !== undefined ? (enableTaskQueue === true || enableTaskQueue === 'true' ? true : false) : true,
       enableProposals: enableProposals !== undefined ? (enableProposals === true || enableProposals === 'true' ? true : false) : true,
-      enableDiscussions: enableDiscussions !== undefined ? (enableDiscussions === true || enableDiscussions === 'true' ? true : false) : true
+      enableDiscussions: enableDiscussions !== undefined ? (enableDiscussions === true || enableDiscussions === 'true' ? true : false) : true,
+      enableBetCampaign: enableBetCampaign !== undefined ? (enableBetCampaign === true || enableBetCampaign === 'true' ? true : false) : false
     });
 
     if (!project) {
@@ -606,7 +607,7 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
     }
 
     const { projectId } = req.params;
-    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, colors, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions } = req.body;
+    const { name, description, demoLink, githubRepoUrl, githubAccessToken, tagNames, tagIds, colors, enableUpdates, enableSurveys, enableContributions, enableTaskQueue, enableProposals, enableDiscussions, enableBetCampaign } = req.body;
 
     // 验证请求数据
     if (!name || !description) {
@@ -659,7 +660,8 @@ export const updateProjectInfo = async (req: Request, res: Response): Promise<vo
       enableContributions,
       enableTaskQueue,
       enableProposals,
-      enableDiscussions
+      enableDiscussions,
+      enableBetCampaign
     );
 
     if (!updatedProject) {

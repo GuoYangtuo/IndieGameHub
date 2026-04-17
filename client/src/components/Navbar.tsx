@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -64,6 +64,9 @@ const Navbar: React.FC = () => {
   const { projectTitle, demoLink, sharedProjectData, updateFavoriteStatus } = useProjectTitle();
   const navigate = useNavigate();
   const { slug } = useParams<{ slug?: string }>();
+  const location = useLocation();
+
+  const isCreateProjectPage = location.pathname === '/create-project';
   
   // 用户项目状态（仅保留这一个需要独立请求的数据）
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
@@ -99,12 +102,39 @@ const Navbar: React.FC = () => {
   // 未读通知数量
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
+  // 导航栏折叠状态（仅在创建项目页生效）
+  const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false);
+  const navbarRef = useRef<HTMLDivElement>(null);
+
   // 当路由参数slug变化时更新currentSlug
   useEffect(() => {
     if (slug) {
       setCurrentSlug(slug);
     }
   }, [slug]);
+
+  // 创建项目页自动折叠，鼠标靠近展开
+  useEffect(() => {
+    if (isCreateProjectPage) {
+      setIsNavbarCollapsed(true);
+    } else {
+      setIsNavbarCollapsed(false);
+    }
+  }, [isCreateProjectPage]);
+
+  const handleNavbarMouseEnter = () => {
+    if (isCreateProjectPage && isNavbarCollapsed) {
+      setIsNavbarCollapsed(false);
+    }
+  };
+
+  const handleNavbarMouseLeave = () => {
+    if (isCreateProjectPage && !isNavbarCollapsed) {
+      setIsNavbarCollapsed(true);
+    }
+  };
+
+  const isCollapsed = isCreateProjectPage && isNavbarCollapsed;
 
   // 获取对赌众筹状态
   useEffect(() => {
@@ -354,9 +384,44 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <AppBar position="static" sx={{ py: 0 }}>
-      <Container maxWidth="xl">
-        <Toolbar disableGutters sx={{ minHeight: '64px' }}>
+    <Box
+      ref={navbarRef}
+      onMouseEnter={handleNavbarMouseEnter}
+      onMouseLeave={handleNavbarMouseLeave}
+      sx={{ position: 'relative' }}
+    >
+      {/* 折叠时的透明占位层，用于捕获鼠标事件 */}
+      {isCollapsed && (
+        <Box
+          sx={{
+            height: '8px',
+            width: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 0,
+            cursor: 'default',
+          }}
+        />
+      )}
+      <AppBar
+        position="static"
+        sx={{
+          py: 0,
+          height: isCollapsed ? 0 : 'auto',
+          minHeight: isCollapsed ? 0 : '64px',
+          opacity: isCollapsed ? 0 : 1,
+          overflow: 'visible',
+          position: isCollapsed ? 'absolute' : 'relative',
+          top: 0,
+          left: 0,
+          width: '100%',
+          zIndex: isCollapsed ? 0 : 1100,
+          transition: 'height 0.3s ease-in-out, opacity 0.3s ease-in-out',
+        }}
+      >
+          <Container maxWidth="xl">
+            <Toolbar disableGutters sx={{ minHeight: '64px' }}>
           <Typography
             variant="h6"
             noWrap
@@ -411,8 +476,8 @@ const Navbar: React.FC = () => {
               </Tooltip>
               )}
 
-              {/* 对赌众筹按钮 - 放在 demoLink 条件之外，确保只要是项目成员就能看到 */}
-              {currentSlug && (
+              {/* 对赌众筹按钮 - 仅在项目启用对赌众筹功能时显示 */}
+              {currentSlug && sharedProjectData?.enableBetCampaign == true && (
                 (isMember || isCreator) ? (
                   // 项目成员：跳转到管理页面
                   <Tooltip title="管理对赌众筹">
@@ -650,6 +715,7 @@ const Navbar: React.FC = () => {
         </Toolbar>
       </Container>
     </AppBar>
+    </Box>
   );
 };
 

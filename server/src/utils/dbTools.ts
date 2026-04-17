@@ -82,6 +82,7 @@ const createTables = async (): Promise<void> => {
         enableTaskQueue BOOLEAN DEFAULT TRUE,
         enableProposals BOOLEAN DEFAULT TRUE,
         enableDiscussions BOOLEAN DEFAULT TRUE,
+        enableBetCampaign BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (createdBy) REFERENCES users(id)
       );
     `);
@@ -769,7 +770,14 @@ export const migrateProjectFeatures = async (): Promise<void> => {
       await conn.query('ALTER TABLE projects ADD COLUMN enableDiscussions BOOLEAN DEFAULT TRUE');
       console.log('已添加 enableDiscussions 字段到 projects 表');
     }
-    
+
+    // 检查 enableBetCampaign 字段是否存在
+    const [enableBetCampaignColumns] = await conn.query('SHOW COLUMNS FROM projects LIKE "enableBetCampaign"');
+    if (Array.isArray(enableBetCampaignColumns) && enableBetCampaignColumns.length === 0) {
+      await conn.query('ALTER TABLE projects ADD COLUMN enableBetCampaign BOOLEAN DEFAULT FALSE');
+      console.log('已添加 enableBetCampaign 字段到 projects 表');
+    }
+
     conn.release();
     console.log('项目功能模块字段迁移完成');
   } catch (error) {

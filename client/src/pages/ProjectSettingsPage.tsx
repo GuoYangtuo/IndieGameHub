@@ -162,6 +162,7 @@ const ProjectSettingsPage: React.FC = () => {
   const [enableTaskQueue, setEnableTaskQueue] = useState(true);
   const [enableProposals, setEnableProposals] = useState(true);
   const [enableDiscussions, setEnableDiscussions] = useState(true);
+  const [enableBetCampaign, setEnableBetCampaign] = useState(false);
 
   // 项目账户管理相关状态
   const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
@@ -216,6 +217,7 @@ const ProjectSettingsPage: React.FC = () => {
         setEnableTaskQueue(projectData.enableTaskQueue !== undefined ? projectData.enableTaskQueue : true);
         setEnableProposals(projectData.enableProposals !== undefined ? projectData.enableProposals : true);
         setEnableDiscussions(projectData.enableDiscussions !== undefined ? projectData.enableDiscussions : true);
+        setEnableBetCampaign(projectData.enableBetCampaign !== undefined ? projectData.enableBetCampaign : false);
         
         if (projectData.contributionRates) {
           setContributionRates(projectData.contributionRates);
@@ -312,7 +314,8 @@ const ProjectSettingsPage: React.FC = () => {
         enableContributions,
         enableTaskQueue,
         enableProposals,
-        enableDiscussions
+        enableDiscussions,
+        enableBetCampaign
       );
       
       setProject(response.data);
@@ -838,6 +841,25 @@ const ProjectSettingsPage: React.FC = () => {
                     讨论区
                     <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
                       (包含 ProjectComments)
+                    </Typography>
+                  </Typography>
+                }
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={enableBetCampaign}
+                    onChange={(e) => setEnableBetCampaign(e.target.checked)}
+                    color="primary"
+                    disabled={!isCreator}
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    对赌众筹系统
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                      (控制顶部导航栏的"对赌众筹"按钮是否显示)
                     </Typography>
                   </Typography>
                 }
