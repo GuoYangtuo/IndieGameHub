@@ -142,7 +142,7 @@ const BetCampaignGuide: React.FC<BetCampaignGuideProps> = ({
           </Box>
         </Typography>
         <Box component="ul" sx={{ pl: 3.5, m: 0, '& li': { mb: 0.5 } }}>
-          <Typography component="li" variant="body2">比传统众筹单次资金少，整个开发阶段可能会进行几十次</Typography>
+          <Typography component="li" variant="body2">比传统众筹单次资金少，周期短，整个开发阶段可能会进行几十次</Typography>
           <Typography component="li" variant="body2">粉丝的捐款更有保障，捐赠意愿更高，同时也能让开发者自我挑战加快开发</Typography>
         </Box>
       </Box>
