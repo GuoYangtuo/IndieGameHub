@@ -65,11 +65,14 @@ interface LayoutProps {
 
 const Layout = ({ children, disablePadding = false }: LayoutProps) => {
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
       <Box
         sx={{
-          minHeight: 'calc(100vh - 64px)',
+          minHeight: 0,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
           py: disablePadding ? 0 : 3,
           px: disablePadding ? 0 : { xs: 2, sm: 3, md: 4 },
           bgcolor: theme => theme.palette.background.default
@@ -77,7 +80,7 @@ const Layout = ({ children, disablePadding = false }: LayoutProps) => {
       >
         {children}
       </Box>
-    </>
+    </Box>
   );
 };
 

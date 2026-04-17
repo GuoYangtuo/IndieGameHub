@@ -51,6 +51,18 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
     }
   };
 
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasMultipleImages) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const halfWidth = rect.width / 2;
+    if (clickX < halfWidth) {
+      handlePrev();
+    } else {
+      handleNext();
+    }
+  };
+
   const imageSrc = images[currentImageIndex]?.[isDarkMode ? 'dark' : 'light'] || '';
 
   const contentPanel = (
@@ -124,6 +136,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
       }}
     >
       <Box
+        onClick={handleImageClick}
         sx={{
           position: 'absolute',
           inset: 0,
@@ -135,6 +148,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          cursor: hasMultipleImages ? 'pointer' : 'default',
         }}
       >
         {imageSrc ? (
@@ -155,7 +169,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
             暂无预览图
           </Typography>
         )}
-        {hasMultipleImages && images[currentImageIndex]?.description && (
+        {images[currentImageIndex]?.description && (
           <Typography
             variant="caption"
             color="text.secondary"
@@ -181,9 +195,6 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
               position: 'absolute',
               left: { xs: 8, md: 16 },
               bottom: { xs: 8, md: 16 },
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
               minWidth: 40,
               p: '6px 8px',
               '&:hover': {
@@ -246,9 +257,8 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
   return (
     <Box
       sx={{
-        display: { xs: 'flex', md: 'grid' },
-        flexDirection: { xs: 'column', md: 'grid' },
-        gridTemplateColumns: { md: '1fr 1fr' },
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
         minHeight: { xs: 'auto', md: 500 },
         flex: 1,
         overflow: 'hidden',
@@ -261,8 +271,12 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
         </>
       ) : (
         <>
-          {contentPanel}
-          {imagePanel}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {contentPanel}
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {imagePanel}
+          </Box>
         </>
       )}
     </Box>

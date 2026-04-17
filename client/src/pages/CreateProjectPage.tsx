@@ -482,7 +482,7 @@ const CreateProjectPage: React.FC = () => {
             title="是否启用 对赌众筹？"
             description="开发者可以设定一个目标和一个截止日期，如果到截止日期时项目获得了足够多的支持，则开发者必须完成承诺"
             images={[
-              { dark: '/images/features/contributions-dark.png', light: '/images/features/contributions-light.png' },
+              { dark: '/images/features/contributions-dark.png', light: '/images/features/contributions-light.png', description: '开发者可以设定一个目标和一个截止日期，如果到截止日期时项目获得了足够多的支持，则开发者必须完成承诺' },
             ]}
             onEnable={() => { setEnableBetCampaign(true); handleNext(); }}
             onDisable={() => { setEnableBetCampaign(false); handleNext(); }}
@@ -682,7 +682,7 @@ const CreateProjectPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', px: { xs: 2, md: 4 }, pt: (currentStep === 0 || currentStep === 4) ? 0 : 3, pb: 3 }}>
+    <Box sx={{ width: '100%', minHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', px: { xs: 2, md: 4 }, pt: (currentStep === 0 || currentStep === 4) ? 0 : 3, pb: 3 }}>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -691,7 +691,7 @@ const CreateProjectPage: React.FC = () => {
         )}
 
         <Slide in={true} direction={slideDirection === 'left' ? 'right' : 'left'}>
-          <Box sx={{ mt: (currentStep === 0 || currentStep === 4) ? 0 : 3, mb: 3 }}>
+          <Box sx={{ mt: (currentStep === 0 || currentStep === 4) ? 0 : 3, mb: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {renderStepContent()}
           </Box>
         </Slide>
