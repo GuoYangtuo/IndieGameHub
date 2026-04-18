@@ -1620,13 +1620,17 @@ function parseSteamPage(markdown: string, url: string): any {
     result.publisher = publisherMatch[1].trim();
   }
 
-  // 提取描述 - 截取 "## 关于此游戏" 到 "## 系统需求" 之间的原始内容
-  const aboutIdx = markdown.indexOf('## 关于此游戏');
-  const sysIdx = markdown.indexOf('## 系统需求');
-  if (aboutIdx !== -1 && sysIdx !== -1 && sysIdx > aboutIdx) {
-    result.description = markdown.slice(aboutIdx + '## 关于此游戏'.length, sysIdx).trim();
-  } else if (aboutIdx !== -1) {
-    result.description = markdown.slice(aboutIdx + '## 关于此游戏'.length).trim();
+  // 提取描述 - 截取 "## 关于此游戏" 到 "## 系统需求" 之间的内容，
+  // 同时移除其中的 ## / ### 子标题行，保留子标题下的正文（如卡片Forge等非标准结构）
+  const aboutSectionMatch = markdown.match(/## 关于此游戏\s*([\s\S]*?)(?=##\s+系统需求|$)/);
+  if (aboutSectionMatch) {
+    let rawDescription = aboutSectionMatch[1];
+    rawDescription = rawDescription
+      .replace(/^#{1,3}\s+[^\n]*\n*/gm, '')
+      .trim();
+    if (rawDescription) {
+      result.description = rawDescription;
+    }
   }
 
   // 提取标签 - 匹配 "标签" 行之后的所有 [ xxx ] 格式（方括号内可能有空格）
