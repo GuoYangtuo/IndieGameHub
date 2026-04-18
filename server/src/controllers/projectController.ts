@@ -37,6 +37,7 @@ import {
 import { findUserByUsername } from '../models/userModel';
 import { findProposalsByProjectId } from '../models/proposalModel';
 import { validateGitHubRepo } from '../utils/githubTools';
+import { crawlUrl } from '../utils/storeCrawler';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -1498,6 +1499,218 @@ export const getProjectTagsHandler = async (req: Request, res: Response): Promis
     res.status(500).json({ message: '服务器错误' });
   }
 };
+
+// 从商店页面URL自动获取项目数据
+export const fetchFromStoreURL = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { url } = req.body;
+
+    if (!url || typeof url !== 'string') {
+      res.status(400).json({ message: '请提供有效的URL' });
+      return;
+    }
+
+    // 验证URL格式
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      res.status(400).json({ message: 'URL格式无效' });
+      return;
+    }
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const pathname = parsedUrl.pathname;
+
+    let platform: 'steam' | 'itchio' | null = null;
+
+    // 识别平台
+    if (hostname.includes('store.steampowered.com') || hostname.includes('steamcommunity.com')) {
+      // 确保是应用页面
+      const appMatch = pathname.match(/^\/app\/(\d+)/);
+      if (!appMatch) {
+        res.status(400).json({ message: 'Steam URL 必须是应用商店页面，例如 https://store.steampowered.com/app/123456/GameName/' });
+        return;
+      }
+      platform = 'steam';
+    } else if (hostname.includes('itch.io')) {
+      platform = 'itchio';
+    } else {
+      res.status(400).json({
+        message: '不支持的平台。目前支持: Steam 商店页面, itch.io 页面',
+        supported: ['store.steampowered.com/app/*', '*.itch.io/*']
+      });
+      return;
+    }
+
+    // 使用 crawl4ai 爬取页面
+    let markdown = '';
+
+    try {
+      const crawlResult = await crawlUrl(url);
+      if (!crawlResult.success || !crawlResult.markdown) {
+        res.status(502).json({ message: `爬取页面失败: ${crawlResult.error || '网络错误'}` });
+        return;
+      }
+      markdown = crawlResult.markdown;
+    } catch (crawlError: any) {
+      console.error('爬取页面失败:', crawlError);
+      res.status(502).json({ message: `爬取页面失败: ${crawlError.message || '网络错误'}` });
+      return;
+    }
+
+    let parsedData: {
+      name: string;
+      description: string;
+      developer?: string;
+      publisher?: string;
+      tags?: string[];
+      coverImageUrl?: string;
+    } = {
+      name: '',
+      description: '',
+    };
+
+    if (platform === 'steam') {
+      parsedData = parseSteamPage(markdown, url);
+    } else if (platform === 'itchio') {
+      parsedData = parseItchioPage(markdown, url);
+    }
+
+    res.status(200).json({
+      success: true,
+      platform,
+      url,
+      data: parsedData
+    });
+
+  } catch (error: any) {
+    console.error('从商店URL获取数据失败:', error);
+    res.status(500).json({ message: `服务器错误: ${error.message || '未知错误'}` });
+  }
+};
+
+// 解析Steam商店页面Markdown
+function parseSteamPage(markdown: string, url: string): any {
+  const lines = markdown.split('\n');
+  const result: any = {
+    name: '',
+    description: '',
+    developer: '',
+    publisher: '',
+    tags: [],
+    coverImageUrl: '',
+  };
+
+  // 提取名称 - 优先找 <title> 标签或游戏名称模式
+  const titleMatch = markdown.match(/\*\*名称:\*\*\s*([^\n*]+)/) || markdown.match(/^#\s+(.+)$/m);
+  if (titleMatch) {
+    result.name = titleMatch[1].trim().replace(/\*\*/g, '').replace(/\[\|\]\([^)]+\)/g, '').trim();
+  }
+
+  // 提取开发者
+  const developerMatch = markdown.match(/\*\*开发者:\*\*\s*\[([^\]]+)\]/) || markdown.match(/开发者\s+([^\n]+?)(?=\n|$)/);
+  if (developerMatch) {
+    result.developer = developerMatch[1].trim();
+  }
+
+  // 提取发行商
+  const publisherMatch = markdown.match(/\*\*发行商:\*\*\s*\[([^\]]+)\]/) || markdown.match(/发行商\s+([^\n]+?)(?=\n|$)/);
+  if (publisherMatch) {
+    result.publisher = publisherMatch[1].trim();
+  }
+
+  // 提取描述 - 截取 "## 关于此游戏" 到 "## 系统需求" 之间的原始内容
+  const aboutIdx = markdown.indexOf('## 关于此游戏');
+  const sysIdx = markdown.indexOf('## 系统需求');
+  if (aboutIdx !== -1 && sysIdx !== -1 && sysIdx > aboutIdx) {
+    result.description = markdown.slice(aboutIdx + '## 关于此游戏'.length, sysIdx).trim();
+  } else if (aboutIdx !== -1) {
+    result.description = markdown.slice(aboutIdx + '## 关于此游戏'.length).trim();
+  }
+
+  // 提取标签 - 匹配 "标签" 行之后的所有 [ xxx ] 格式（方括号内可能有空格）
+  const tagBlockMatch = markdown.match(/标签\s*\n((?:.|\n)*?)(?=^##\s+|^\+\s+评测)/m);
+  if (tagBlockMatch) {
+    const tagParts = tagBlockMatch[1].match(/\[\s*([^\]]+?)\s*\](?:\s*\([^)]+\))?/g);
+    if (tagParts) {
+      result.tags = tagParts
+        .map(t => t.replace(/\[\s*([^\]]+)\s*\].*/g, '$1').trim())
+        .filter(t => t && t.length < 20);
+    }
+  } else {
+    // 回退：找 "该产品的热门用户自定义标签：" 块
+    const altTagMatch = markdown.match(/该产品的热门用户自定义标签[：:]?\s*([\s\S]*?)(?=##|^\+\s+评测|$)/im);
+    if (altTagMatch) {
+      const tagParts = altTagMatch[1].match(/\[\s*([^\]]+?)\s*\](?:\s*\([^)]+\))?/g);
+      if (tagParts) {
+        result.tags = tagParts
+          .map(t => t.replace(/\[\s*([^\]]+)\s*\].*/g, '$1').trim())
+          .filter(t => t && t.length < 20);
+      }
+    }
+  }
+
+  // 提取封面图片URL
+  const imageMatch = markdown.match(/!\[.*?\]\((https:\/\/shared\.st\.dl\.eccdnx\.com\/store_item_assets\/[^)]+\.jpg[^)]*)\)/i)
+    || markdown.match(/!\[.*?\]\((https:\/\/[^)]+\/header_[^)]+\.jpg[^)]*)\)/i)
+    || markdown.match(/!\[.*?\]\((https:\/\/[^)]+\/ss_[^)]+\.jpg[^)]*)\)/i);
+  if (imageMatch) {
+    result.coverImageUrl = imageMatch[1].split('?')[0];
+  }
+
+  console.log(result);
+
+  return result;
+}
+
+// 解析 itch.io 页面 Markdown
+function parseItchioPage(markdown: string, url: string): any {
+  const result: any = {
+    name: '',
+    description: '',
+    developer: '',
+    publisher: '',
+    tags: [],
+    coverImageUrl: '',
+  };
+
+  // 提取名称 - title 或 h1
+  const titleMatch = markdown.match(/^#\s+(.+)$/m) || markdown.match(/<title>([^<]+)<\/title>/i);
+  if (titleMatch) {
+    result.name = titleMatch[1].trim().replace(/\s*[-|]\s*itch\.io$/i, '').replace(/<\/?[^>]+>/g, '').trim();
+  }
+
+  // 提取开发者（itch.io 通常以用户名作为开发者）
+  const authorMatch = markdown.match(/by\s+\[([^\]]+)\]/) || markdown.match(/作者[：:]\s*([^\n]+)/i);
+  if (authorMatch) {
+    result.developer = authorMatch[1].trim();
+  }
+
+  // 提取描述
+  const descMatch = markdown.match(/#{1,3}\s*(描述|Description|About)\s*([\s\S]*?)(?=#{1,3}\s*|$)/i);
+  if (descMatch) {
+    result.description = descMatch[2].trim().replace(/^[*\-#\s]+/gm, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
+  }
+
+  // 提取标签
+  const tagMatches = markdown.match(/标签[：:]\s*((?:\[[^\]]+\]|[^\n])+)/i) || markdown.match(/tags[：:]\s*((?:\[[^\]]+\]|[^\n])+)/i);
+  if (tagMatches) {
+    const tagLine = tagMatches[1];
+    const tagParts = tagLine.match(/\[([^\]]+)\]/g) || tagLine.match(/([^\s\[\],，、]+)/g);
+    if (tagParts) {
+      result.tags = tagParts.map(t => t.replace(/[\[\]]/g, '').trim()).filter(t => t && t.length < 30);
+    }
+  }
+
+  // 提取封面图片
+  const imageMatch = markdown.match(/!\[.*?\]\((https:\/\/[^)]+\.(?:jpg|jpeg|png|webp)[^)]*)\)/i);
+  if (imageMatch) {
+    result.coverImageUrl = imageMatch[1].split('?')[0];
+  }
+
+  return result;
+}
 
 // 更新项目标签
 export const updateProjectTagsHandler = async (req: Request, res: Response): Promise<void> => {

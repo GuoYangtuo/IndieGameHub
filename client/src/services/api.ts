@@ -258,8 +258,12 @@ export const projectAPI = {
   getProjectTags: (projectId: string) => api.get(`/projects/${projectId}/tags`),
     
   // 更新项目标签
-  updateProjectTags: (projectId: string, tagNames?: string[], tagIds?: string[], colors?: string[]) => 
-    api.put(`/projects/${projectId}/tags`, { tagNames, tagIds, colors })
+  updateProjectTags: (projectId: string, tagNames?: string[], tagIds?: string[], colors?: string[]) =>
+    api.put(`/projects/${projectId}/tags`, { tagNames, tagIds, colors }),
+
+  // 从商店URL自动获取项目数据
+  fetchFromStoreURL: (url: string) =>
+    api.post('/projects/fetch-from-url', { url })
 };
 
 // 提案API
