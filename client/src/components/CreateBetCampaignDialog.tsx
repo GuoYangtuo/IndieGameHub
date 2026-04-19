@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { CloudUpload, Delete } from '@mui/icons-material';
+import { NumberStepper } from './NumberStepper';
 import { BetCampaign, BetDonationAggregate } from '../types/betCampaign';
 import BetCampaignCard from './BetCampaignCard';
 
@@ -201,25 +202,27 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
 
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
-              <TextField
-                label="众筹阶段天数"
-                type="number"
+              <NumberStepper
+                label={fundingDays > 0 ? `创建之时起，预热${fundingDays}天` : '不预热，创建后立即开始'}
                 value={fundingDays}
-                onChange={(e) => setFundingDays(parseInt(e.target.value) || 0)}
-                fullWidth
-                required
-                helperText={`创建之时起，众筹${fundingDays}天`}
+                onChange={setFundingDays}
+                min={0}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
-              <TextField
-                label="开发阶段天数"
-                type="number"
+              <NumberStepper
+                label={fundingDays > 0 ? `预热结束后，开始众筹${fundingDays}天` : `众筹${fundingDays}天`}
+                value={fundingDays}
+                onChange={setFundingDays}
+                min={1}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <NumberStepper
+                label={`众筹成功后，开发${developmentDays}天`}
                 value={developmentDays}
-                onChange={(e) => setDevelopmentDays(parseInt(e.target.value) || 0)}
-                fullWidth
-                required
-                helperText={`众筹成功后，开发${developmentDays}天`}
+                onChange={setDevelopmentDays}
+                min={1}
               />
             </Box>
           </Box>
