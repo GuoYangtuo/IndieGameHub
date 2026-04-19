@@ -335,7 +335,7 @@ const CreateProjectPage: React.FC = () => {
         return (
           <Box sx={{ maxWidth: 'md', width: '100%', mx: 'auto', pt: 0, display: 'flex', flexDirection: 'column', minHeight: 500 }}>
             <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="h5">
                   填写项目信息
                 </Typography>
@@ -604,8 +604,23 @@ const CreateProjectPage: React.FC = () => {
       case 1:
         return (
           <FeatureStepPanel
-            title="是否启用 对赌众筹？"
-            description="开发者给自己设定一个短期开发目标（比如一周或一个月内做完xx）然后众筹，完成目标之后才能拿到筹得捐款，如果开发失败则退还捐款。"
+            customContent={
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 600, mb: 1.5 }}>
+                  是否启用 对赌众筹？
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
+                  开发者给自己设定一个短期开发目标（比如一周或一个月内做完xx）然后众筹，完成目标之后才能拿到筹得捐款，如果开发失败则退还捐款。
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 0.5 }}>
+                  不适合哪些开发者：
+                </Typography>
+                <Box component="ul" sx={{ mt: 0, mb: 8, pl: 3, color: 'text.secondary', '& li': { mb: 0.5, lineHeight: 1.6 } }}>
+                  <li>开发游戏给自己玩，粉丝什么的无所谓，我不想给自己设定目标或deadline~</li>
+                  <li>我暂时不缺钱</li>
+                </Box>
+              </Box>
+            }
             images={[
               { dark: '/images/features/bet-campaign-introduction.png', light: '/images/features/bet-campaign-introduction.png', description: '介绍什么是"对赌众筹"' },
               { dark: '/images/features/bet-campaign-example.png', light: '/images/features/bet-campaign-example.png', description: '一个对赌众筹的例子' },
@@ -619,8 +634,23 @@ const CreateProjectPage: React.FC = () => {
       case 2:
         return (
           <FeatureStepPanel
-            title="意见征询系统"
-            description="用于在开发者面临选择时，征求粉丝的看法，支持投票或自由发言"
+            customContent={
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1.5 }}>
+                  意见征询系统
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
+                  用于在开发者面临选择时，征求粉丝的看法，支持投票或自由发言。
+                </Typography>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  适合场景：
+                </Typography>
+                <Box component="ul" sx={{ mt: 0, mb: 0, pl: 3, color: 'text.secondary', '& li': { mb: 0.5, lineHeight: 1.6 } }}>
+                  <li>不知道新功能做成A还是B？发起投票</li>
+                  <li>卡关需要灵感？让粉丝出主意</li>
+                </Box>
+              </Box>
+            }
             images={[
               { dark: '/images/features/surveys-dark.png', light: '/images/features/surveys-light.png' },
             ]}
@@ -633,8 +663,24 @@ const CreateProjectPage: React.FC = () => {
       case 3:
         return (
           <FeatureStepPanel
-            title="提案系统"
-            description="一个让开发者和粉丝共同记录想法或者bug的地方"
+            customContent={
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1.5 }}>
+                  提案系统
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
+                  一个让开发者和粉丝共同记录想法或者bug的地方。
+                </Typography>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  适合场景：
+                </Typography>
+                <Box component="ul" sx={{ mt: 0, mb: 0, pl: 3, color: 'text.secondary', '& li': { mb: 0.5, lineHeight: 1.6 } }}>
+                  <li>记录粉丝提出的游戏创意</li>
+                  <li>收集并整理bug反馈</li>
+                  <li>公开开发计划，接受审议</li>
+                </Box>
+              </Box>
+            }
             images={[
               { dark: '/images/features/proposals-dark.png', light: '/images/features/proposals-light.png' },
               { dark: '/images/features/proposals-dark.png', light: '/images/features/proposals-light.png' },

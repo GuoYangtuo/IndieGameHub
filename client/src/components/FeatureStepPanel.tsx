@@ -16,8 +16,9 @@ interface FeatureImage {
 }
 
 interface FeatureStepPanelProps {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
+  customContent?: React.ReactNode;
   images: FeatureImage[];
   onEnable: () => void;
   onDisable: () => void;
@@ -27,6 +28,7 @@ interface FeatureStepPanelProps {
 const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
   title,
   description,
+  customContent,
   images,
   onEnable,
   onDisable,
@@ -87,26 +89,29 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
         返回上一步
       </Button>
 
-      <Box sx={{ maxWidth: 480 }}>
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 600,
-            mb: 1.5,
-          }}
-        >
-          {title}
-        </Typography>
+      <Box>
+        {customContent ?? (
+          <>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                mb: 1.5,
+              }}
+            >
+              {title}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 3, lineHeight: 1.6 }}
+            >
+              {description}
+            </Typography>
+          </>
+        )}
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mb: 3, lineHeight: 1.6 }}
-        >
-          {description}
-        </Typography>
-
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', gap: 1.5, maxWidth: 380 }}>
           <Button
             variant="contained"
             color="primary"
@@ -156,7 +161,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
           <Box
             component="img"
             src={imageSrc}
-            alt={`${title} 预览`}
+            alt={`${title ?? ''} 预览`}
             sx={{
               width: '100%',
               flex: 1,
