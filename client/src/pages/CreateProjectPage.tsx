@@ -15,12 +15,14 @@ import {
   FormControlLabel,
   Collapse,
   Slide,
+  Popover,
+  Link,
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { projectAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Delete, ArrowBack, ArrowForward, Check, CloudDownload } from '@mui/icons-material';
+import { Delete, ArrowBack, ArrowForward, Check, CloudDownload, ImportExport } from '@mui/icons-material';
 import FeatureStepPanel from '../components/FeatureStepPanel';
 import { useDebounce } from '../hooks/useDebounce';
 
@@ -49,6 +51,7 @@ const CreateProjectPage: React.FC = () => {
   const [checkingName, setCheckingName] = useState(false);
   const [storeUrl, setStoreUrl] = useState('');
   const [fetchingFromUrl, setFetchingFromUrl] = useState(false);
+  const [storeUrlAnchor, setStoreUrlAnchor] = useState<HTMLElement | null>(null);
 
   // 标签相关状态
   const [tags, setTags] = useState<Tag[]>([]);
@@ -181,7 +184,7 @@ const CreateProjectPage: React.FC = () => {
       }
 
       const platformLabel = platform === 'steam' ? 'Steam' : 'itch.io';
-      setError(`已从 ${platformLabel} 页面获取数据，请检查并修改`);
+      setError(`已从 ${platformLabel} 页面获取数据，请检查并整理`);
     } catch (err: any) {
       const msg = err.response?.data?.message || '获取数据失败，请稍后重试';
       setError(msg);
@@ -332,47 +335,83 @@ const CreateProjectPage: React.FC = () => {
         return (
           <Box sx={{ maxWidth: 'md', width: '100%', mx: 'auto', pt: 0, display: 'flex', flexDirection: 'column', minHeight: 500 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="h5">
-                填写项目信息
-              </Typography>
-
-            {/* 从商店页面URL导入 */}
-            <Box sx={{ mt: 2, mb: 3, p: 2, border: '1px dashed', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CloudDownload color="primary" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1" color="primary">
-                  从商店页面一键导入
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h5">
+                  填写项目信息
                 </Typography>
-              </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                支持 Steam 商店页面和 itch.io 项目页面，放置链接即可自动识别并填充项目名称、描述、标签等信息
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="例如: https://store.steampowered.com/app/4364270/CardForge/"
-                  value={storeUrl}
-                  onChange={(e) => setStoreUrl(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleFetchFromStoreUrl();
-                    }
-                  }}
-                  disabled={fetchingFromUrl}
-                />
                 <Button
                   variant="outlined"
-                  onClick={handleFetchFromStoreUrl}
-                  disabled={fetchingFromUrl || !storeUrl.trim()}
-                  startIcon={fetchingFromUrl ? <CircularProgress size={16} color="inherit" /> : <CloudDownload />}
-                  sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                  size="small"
+                  startIcon={<ImportExport />}
+                  onClick={(e) => setStoreUrlAnchor(e.currentTarget)}
                 >
-                  {fetchingFromUrl ? '获取中...' : '获取数据'}
+                  从其它平台导入
                 </Button>
               </Box>
-            </Box>
+
+            <Popover
+              open={Boolean(storeUrlAnchor)}
+              anchorEl={storeUrlAnchor}
+              onClose={() => setStoreUrlAnchor(null)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              sx={{
+                mt: 1,
+                '& .MuiPaper-root': {
+                  bgcolor: 'grey.950',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'grey.700',
+                }
+              }}
+            >
+              <Box sx={{ p: 2, width: 400, maxWidth: '90vw' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                  <CloudDownload color="primary" sx={{ mr: 1 }} />
+                  <Typography variant="subtitle1" color="primary">
+                    从其它平台一键导入
+                  </Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  目前支持 Steam 商店页面链接和 itch.io 页面链接
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="https://store.steampowered.com/..."
+                    value={storeUrl}
+                    onChange={(e) => setStoreUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleFetchFromStoreUrl();
+                      }
+                    }}
+                    disabled={fetchingFromUrl}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'grey.700',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'primary.main',
+                        },
+                      },
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleFetchFromStoreUrl}
+                    disabled={fetchingFromUrl || !storeUrl.trim()}
+                    startIcon={fetchingFromUrl ? <CircularProgress size={16} color="inherit" /> : <CloudDownload />}
+                    sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                  >
+                    {fetchingFromUrl ? '获取中...' : '拉取'}
+                  </Button>
+                </Box>
+              </Box>
+            </Popover>
 
             <TextField
               margin="normal"
@@ -771,7 +810,7 @@ const CreateProjectPage: React.FC = () => {
     <Box sx={{ width: '100%', minHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', px: { xs: 2, md: 4 }, pt: (currentStep === 0 || currentStep === 4) ? 0 : 3, pb: 3 }}>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2, maxWidth: 'md', mx: 'auto', width: '100%' }}>
             {error}
           </Alert>
         )}

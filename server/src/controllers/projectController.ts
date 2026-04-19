@@ -1679,36 +1679,80 @@ function parseItchioPage(markdown: string, url: string): any {
     coverImageUrl: '',
   };
 
-  // 提取名称 - title 或 h1
-  const titleMatch = markdown.match(/^#\s+(.+)$/m) || markdown.match(/<title>([^<]+)<\/title>/i);
-  if (titleMatch) {
-    result.name = titleMatch[1].trim().replace(/\s*[-|]\s*itch\.io$/i, '').replace(/<\/?[^>]+>/g, '').trim();
+  // 提取名称 - 找含中文/斜杠的标题行（如 "ShardSpace/碎星空间"），回退到第一个 # 标题
+  const titleRegex = /^#\s+(.+)$/gm;
+  let titleMatch: RegExpExecArray | null;
+  const titleMatches: RegExpExecArray[] = [];
+  while ((titleMatch = titleRegex.exec(markdown)) !== null) {
+    titleMatches.push(titleMatch);
+  }
+  for (const m of titleMatches) {
+    const candidate = m[1].trim();
+    if (candidate.includes('/') || /[\u4e00-\u9fa5]/.test(candidate)) {
+      result.name = candidate.replace(/<\/?[^>]+>/g, '').trim();
+      break;
+    }
+  }
+  if (!result.name && titleMatches.length > 0) {
+    result.name = titleMatches[0][1].trim().replace(/<\/?[^>]+>/g, '').replace(/\s*[-|]\s*itch\.io$/i, '').trim();
   }
 
-  // 提取开发者（itch.io 通常以用户名作为开发者）
-  const authorMatch = markdown.match(/by\s+\[([^\]]+)\]/) || markdown.match(/作者[：:]\s*([^\n]+)/i);
+  // 提取开发者 - itch.io 表格式，"Authors" 或 "Author" 均可
+  const authorMatch = markdown.match(/Authors?\s*\|\s*((?:[^\n]+))/i);
   if (authorMatch) {
-    result.developer = authorMatch[1].trim();
-  }
-
-  // 提取描述
-  const descMatch = markdown.match(/#{1,3}\s*(描述|Description|About)\s*([\s\S]*?)(?=#{1,3}\s*|$)/i);
-  if (descMatch) {
-    result.description = descMatch[2].trim().replace(/^[*\-#\s]+/gm, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
-  }
-
-  // 提取标签
-  const tagMatches = markdown.match(/标签[：:]\s*((?:\[[^\]]+\]|[^\n])+)/i) || markdown.match(/tags[：:]\s*((?:\[[^\]]+\]|[^\n])+)/i);
-  if (tagMatches) {
-    const tagLine = tagMatches[1];
-    const tagParts = tagLine.match(/\[([^\]]+)\]/g) || tagLine.match(/([^\s\[\],，、]+)/g);
-    if (tagParts) {
-      result.tags = tagParts.map(t => t.replace(/[\[\]]/g, '').trim()).filter(t => t && t.length < 30);
+    const authorParts = authorMatch[1].match(/\[([^\]]+)\]/g);
+    if (authorParts) {
+      result.developer = authorParts.map(t => t.replace(/[\[\]]/g, '')).join(', ');
     }
   }
 
-  // 提取封面图片
-  const imageMatch = markdown.match(/!\[.*?\]\((https:\/\/[^)]+\.(?:jpg|jpeg|png|webp)[^)]*)\)/i);
+  // 提取描述 - 从 # 标题行之后到 ## Download 之间的内容（跳过元数据表行，
+  // 移除 ## / ### 章节导航标题行如 ## Download / ## Comments 等，保留游戏内章节如 ## 01. Wake Up）
+  const firstTitleIdx = markdown.search(/^#\s+.+$/m);
+  const downloadSectionMatch = markdown.match(/^##\s+Download\s*$/im);
+  const descEndIdx = downloadSectionMatch ? downloadSectionMatch.index : markdown.length;
+  if (firstTitleIdx !== -1) {
+    let raw = markdown.substring(firstTitleIdx, descEndIdx);
+    raw = raw.replace(/^#[^\n]*\n*/m, ''); // 跳过第一行标题本身
+
+    // 移除 itch.io 元数据表行（格式："| 字段 | 值 |" 或类似）
+    raw = raw.replace(/^\s*\|[^\n]*\|\n*/gm, '');
+
+    // 移除 itch.io 页面级章节导航标题（## Comments, ## Download, ## Development log 等），
+    // 保留游戏内章节（如 ## 01. Wake Up, ## Features 等带序号的叙事章节）
+    raw = raw
+      .replace(/\n*##\s+(Download|Comments|Development\s+log|My\s+files?|View all|License)\b[^\n]*\n*/gi, '\n');
+
+    raw = raw
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, '')        // 移除图片引用
+      .replace(/\*\*■[^\n]*\n?/g, '')               // 移除特性符号标题行
+      .replace(/^\*\*(.+?)\*\*$/gm, '$1')            // 把残留的独立行 **bold** 转为纯文本
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')      // 把 [text](url) 转为纯文本
+      .replace(/_{1,2}([^_]+)_{1,2}/g, '$1')        // 移除斜体标记
+      .trim();
+
+    // 过滤掉只有空白/特殊字符的行（如表格分隔线、水平线等残留）
+    const lines = raw.split('\n');
+    const filteredLines = lines.filter(line => {
+      const stripped = line.trim();
+      return stripped.length > 0 && !/^[|\-+:]+$/.test(stripped) && !/^={3,}$/.test(stripped);
+    });
+    result.description = filteredLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  // 提取标签 - itch.io 表格式 "Tags |  [Strategy](...), [2D](...)"
+  const tagMatch = markdown.match(/Tags\s*\|\s*((?:[^\n]+))/i);
+  if (tagMatch) {
+    const tagParts = tagMatch[1].match(/\[([^\]]+)\]/g);
+    if (tagParts) {
+      result.tags = tagParts
+        .map(t => t.replace(/[\[\]]/g, '').trim())
+        .filter(t => t && t.length < 30);
+    }
+  }
+
+  // 提取封面图片 - 优先找开头的图片
+  const imageMatch = markdown.match(/!\[[^\]]*\]\((https:\/\/img\.itch\.zone\/[^)]+\.(?:jpg|jpeg|png|webp)[^)]*)\)/i);
   if (imageMatch) {
     result.coverImageUrl = imageMatch[1].split('?')[0];
   }
