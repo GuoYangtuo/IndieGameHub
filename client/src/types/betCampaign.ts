@@ -34,6 +34,8 @@ export interface BetCampaign {
   title: string;
   description?: string;
   targetAmount: number;
+  warmupDays: number;
+  warmupEndTime?: string;
   fundingDays: number;
   developmentDays: number;
   fundingEndTime: string;
@@ -42,7 +44,7 @@ export interface BetCampaign {
   developmentGoalImages?: string[];
   tierAmounts: number[];
   allowCustomAmount: boolean;
-  status: 'funding' | 'development' | 'completed' | 'failed' | 'cancelled';
+  status: 'preheating' | 'funding' | 'development' | 'completed' | 'failed' | 'cancelled';
   result: 'pending' | 'success' | 'failed';
   totalRaised: number;
   createdAt: string;

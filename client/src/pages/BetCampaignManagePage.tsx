@@ -102,6 +102,7 @@ const BetCampaignManagePage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [targetAmount, setTargetAmount] = useState(100);
+  const [warmupDays, setWarmupDays] = useState(0);
   const [fundingDays, setFundingDays] = useState(3);
   const [developmentDays, setDevelopmentDays] = useState(7);
   const [developmentGoals, setDevelopmentGoals] = useState('');
@@ -161,6 +162,11 @@ const BetCampaignManagePage: React.FC = () => {
       return;
     }
 
+    if (warmupDays < 0) {
+      alert('预热天数不能为负数');
+      return;
+    }
+
     if (fundingDays < 1 || developmentDays < 1) {
       alert('天数必须大于0');
       return;
@@ -178,6 +184,7 @@ const BetCampaignManagePage: React.FC = () => {
         title,
         description,
         targetAmount,
+        warmupDays,
         fundingDays,
         developmentDays,
         developmentGoals: developmentGoals || undefined,
@@ -268,6 +275,7 @@ const BetCampaignManagePage: React.FC = () => {
     setTitle('');
     setDescription('');
     setTargetAmount(100);
+    setWarmupDays(0);
     setFundingDays(3);
     setDevelopmentDays(7);
     setDevelopmentGoals('');
@@ -280,6 +288,8 @@ const BetCampaignManagePage: React.FC = () => {
   // 获取状态颜色和文字
   const getStatusInfo = (status: string, result?: string) => {
     switch (status) {
+      case 'preheating':
+        return { color: 'warning', text: '预热中' };
       case 'funding':
         return { color: 'primary', text: '众筹中' };
       case 'development':
@@ -398,8 +408,15 @@ const BetCampaignManagePage: React.FC = () => {
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             目标：¥{activeCampaign.targetAmount} | 已筹集：¥{activeCampaign.totalRaised}
+            {activeCampaign.warmupDays > 0 ? ` | 预热：${activeCampaign.warmupDays}天` : ''}
             {' | '}众筹：{activeCampaign.fundingDays}天 | 开发：{activeCampaign.developmentDays}天
           </Typography>
+
+          {activeCampaign.status === 'preheating' && (
+            <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
+              预热中，距离开始众筹：{getRemainingTime(activeCampaign.warmupEndTime!)}
+            </Typography>
+          )}
 
           {activeCampaign.status === 'funding' && (
             <Typography variant="body2" color="primary" sx={{ mb: 2 }}>
@@ -443,7 +460,7 @@ const BetCampaignManagePage: React.FC = () => {
             >
               查看详情
             </Button>
-            {activeCampaign.status === 'funding' && (
+            {(activeCampaign.status === 'preheating' || activeCampaign.status === 'funding') && (
               <Button
                 variant="outlined"
                 color="error"
@@ -523,6 +540,8 @@ const BetCampaignManagePage: React.FC = () => {
         setDescription={setDescription}
         targetAmount={targetAmount}
         setTargetAmount={setTargetAmount}
+        warmupDays={warmupDays}
+        setWarmupDays={setWarmupDays}
         fundingDays={fundingDays}
         setFundingDays={setFundingDays}
         developmentDays={developmentDays}

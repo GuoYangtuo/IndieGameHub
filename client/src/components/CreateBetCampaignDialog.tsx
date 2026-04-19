@@ -32,6 +32,8 @@ interface CreateBetCampaignDialogProps {
   setDescription: (value: string) => void;
   targetAmount: number;
   setTargetAmount: (value: number) => void;
+  warmupDays: number;
+  setWarmupDays: (value: number) => void;
   fundingDays: number;
   setFundingDays: (value: number) => void;
   developmentDays: number;
@@ -61,6 +63,8 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
   setDescription,
   targetAmount,
   setTargetAmount,
+  warmupDays,
+  setWarmupDays,
   fundingDays,
   setFundingDays,
   developmentDays,
@@ -78,7 +82,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
   projectName,
   projectSlug
 }) => {
-  const [previewPhase, setPreviewPhase] = useState<'funding' | 'development' | 'completed'>('funding');
+  const [previewPhase, setPreviewPhase] = useState<'preheating' | 'funding' | 'development' | 'completed'>('preheating');
 
   // 模拟捐赠者数据
   const mockDonations: BetDonationAggregate[] = useMemo(() => [
@@ -123,6 +127,20 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
 
   // 获取预览用的 campaign 对象
   const previewCampaign: BetCampaign = useMemo(() => {
+    const now = new Date();
+    const warmupEndTime = warmupDays > 0
+      ? new Date(now.getTime() + warmupDays * 24 * 60 * 60 * 1000)
+      : now;
+    const fundingEndTime = new Date(warmupEndTime.getTime() + fundingDays * 24 * 60 * 60 * 1000);
+    const developmentEndTime = new Date(fundingEndTime.getTime() + developmentDays * 24 * 60 * 60 * 1000);
+
+    const getStatus = (phase: string): BetCampaign['status'] => {
+      if (phase === 'preheating') return 'preheating';
+      if (phase === 'funding') return 'funding';
+      if (phase === 'development') return 'development';
+      return 'completed';
+    };
+
     return {
       id: 'preview',
       projectId: 'preview-project',
@@ -130,21 +148,23 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
       title: title || '（请输入标题）',
       description: description || undefined,
       targetAmount: targetAmount || 100,
+      warmupDays,
+      warmupEndTime: warmupDays > 0 ? warmupEndTime.toISOString() : undefined,
       fundingDays,
       developmentDays,
-      fundingEndTime: new Date(Date.now() + fundingDays * 24 * 60 * 60 * 1000).toISOString(),
-      developmentEndTime: new Date(Date.now() + (fundingDays + developmentDays) * 24 * 60 * 60 * 1000).toISOString(),
+      fundingEndTime: fundingEndTime.toISOString(),
+      developmentEndTime: developmentEndTime.toISOString(),
       developmentGoals: developmentGoals || undefined,
       developmentGoalImages: imagePreviews.length > 0 ? imagePreviews : undefined,
       tierAmounts: tierAmounts.length > 0 ? tierAmounts : [5, 10, 20],
       allowCustomAmount,
-      status: previewPhase === 'funding' ? 'funding' : previewPhase === 'development' ? 'development' : 'completed',
+      status: getStatus(previewPhase),
       result: previewPhase === 'completed' ? 'success' : 'pending',
       totalRaised: mockProgress.raised,
       createdAt: new Date().toISOString(),
       donations: mockDonations
     };
-  }, [title, description, targetAmount, fundingDays, developmentDays, developmentGoals, imagePreviews, tierAmounts, allowCustomAmount, previewPhase, mockProgress, mockDonations]);
+  }, [title, description, targetAmount, warmupDays, fundingDays, developmentDays, developmentGoals, imagePreviews, tierAmounts, allowCustomAmount, previewPhase, mockProgress, mockDonations]);
 
   return (
     <Dialog
@@ -203,15 +223,15 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <NumberStepper
-                label={fundingDays > 0 ? `创建之时起，预热${fundingDays}天` : '不预热，创建后立即开始'}
-                value={fundingDays}
-                onChange={setFundingDays}
+                label={warmupDays > 0 ? `预热${warmupDays}天` : '不预热，立即众筹'}
+                value={warmupDays}
+                onChange={setWarmupDays}
                 min={0}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
               <NumberStepper
-                label={fundingDays > 0 ? `预热结束后，开始众筹${fundingDays}天` : `众筹${fundingDays}天`}
+                label={`众筹${fundingDays}天`}
                 value={fundingDays}
                 onChange={setFundingDays}
                 min={1}
@@ -219,7 +239,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
             </Box>
             <Box sx={{ flex: 1 }}>
               <NumberStepper
-                label={`众筹成功后，开发${developmentDays}天`}
+                label={`开发${developmentDays}天`}
                 value={developmentDays}
                 onChange={setDevelopmentDays}
                 min={1}
@@ -364,6 +384,7 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
                     '& .MuiTab-root': { minHeight: 36, py: 0.5 }
                   }}
                 >
+                  <Tab label="预热阶段" value="preheating" />
                   <Tab label="众筹阶段" value="funding" />
                   <Tab label="开发阶段" value="development" />
                   <Tab label="完成阶段" value="completed" />

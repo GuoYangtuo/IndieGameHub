@@ -53,7 +53,7 @@ interface DonationState {
 interface BetCampaignCardProps {
   campaign: BetCampaign;
   mode: 'view' | 'preview';
-  previewPhase?: 'funding' | 'development' | 'completed';
+  previewPhase?: 'preheating' | 'funding' | 'development' | 'completed';
   mockProgress?: MockProgress;
   donationState?: DonationState;
   onDonate?: (amount: number, message: string, payType: string) => void;
@@ -98,6 +98,8 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
   // 获取状态颜色和文字
   const getStatusInfo = () => {
     switch (currentStatus) {
+      case 'preheating':
+        return { color: 'warning', text: '预热中' };
       case 'funding':
         return { color: 'primary', text: '正在众筹中' };
       case 'development':
@@ -146,6 +148,10 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
     backgroundColor: isDarkMode ? 'rgba(88, 166, 255, 0.2)' : 'rgba(9, 105, 218, 0.12)',
     color: isDarkMode ? '#79b8ff' : '#0550ae',
     fontWeight: 600,
+  } : statusInfo.color === 'warning' ? {
+    backgroundColor: isDarkMode ? 'rgba(255, 183, 77, 0.2)' : 'rgba(245, 158, 11, 0.12)',
+    color: isDarkMode ? '#ffb74d' : '#e65100',
+    fontWeight: 600,
   } : undefined;
 
   return (
@@ -160,6 +166,14 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
             {campaign.title}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
+            {campaign.warmupDays > 0 && (
+              <Chip
+                label={`预热${campaign.warmupDays}天`}
+                size="small"
+                variant="outlined"
+                color="warning"
+              />
+            )}
             <Chip
               label={`众筹${campaign.fundingDays}天`}
               size="small"
@@ -251,6 +265,13 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
               </Typography>
             </Box>
           </Box>
+        )}
+
+        {/* 预热阶段的提示信息 */}
+        {currentStatus === 'preheating' && (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            众筹正在预热中，页面已开放展示。你可以先浏览项目信息、了解开发目标，待预热结束后众筹正式开始，届时即可参与捐赠。
+          </Alert>
         )}
 
 
@@ -647,13 +668,12 @@ const TimelineProgress: React.FC<TimelineProgressProps> = ({ campaign }) => {
     });
   };
 
-  // 计算总时间跨度
+  // 计算总时间跨度（从创建开始，审核终止结束）
+  const now = new Date();
   const totalStart = new Date(campaign.createdAt).getTime();
   const totalEnd = reviewDeadline.getTime();
   const totalDuration = totalEnd - totalStart;
-
   // 计算当前进度百分比
-  const now = new Date();
   const currentProgress = Math.min(Math.max(((now.getTime() - totalStart) / totalDuration) * 100, 0), 100);
 
   // 计算各时间点在进度条上的位置（按比例）
@@ -663,12 +683,26 @@ const TimelineProgress: React.FC<TimelineProgressProps> = ({ campaign }) => {
   };
 
   // 时间点数据（按实际时间比例分布位置）
-  const milestones = [
-    { key: 'created', label: '众筹创建', time: campaign.createdAt },
-    { key: 'fundingEnd', label: '众筹结束', time: campaign.fundingEndTime },
-    { key: 'devEnd', label: '开发结束', time: campaign.developmentEndTime },
-    { key: 'reviewEnd', label: '审核终止', time: reviewDeadline.toISOString() },
-  ].map(m => ({ ...m, position: getPosition(m.time) }));
+  // 预热阶段：创建 -> warmupEndTime -> fundingEndTime -> developmentEndTime -> reviewDeadline
+  // 非预热阶段：创建 -> fundingEndTime -> developmentEndTime -> reviewDeadline
+  const milestones = (() => {
+    const base = [
+      { key: 'created', label: '众筹创建', time: campaign.createdAt },
+      { key: 'fundingEnd', label: '众筹结束', time: campaign.fundingEndTime },
+      { key: 'devEnd', label: '开发结束', time: campaign.developmentEndTime },
+      { key: 'reviewEnd', label: '审核终止', time: reviewDeadline.toISOString() },
+    ];
+    if (campaign.warmupDays > 0 && campaign.warmupEndTime) {
+      return [
+        { key: 'created', label: '众筹创建', time: campaign.createdAt },
+        { key: 'warmupEnd', label: '预热结束', time: campaign.warmupEndTime },
+        { key: 'fundingEnd', label: '众筹结束', time: campaign.fundingEndTime },
+        { key: 'devEnd', label: '开发结束', time: campaign.developmentEndTime },
+        { key: 'reviewEnd', label: '审核终止', time: reviewDeadline.toISOString() },
+      ];
+    }
+    return base;
+  })().map(m => ({ ...m, position: getPosition(m.time) }));
 
   return (
     <Box sx={{ mb: 8 }}>

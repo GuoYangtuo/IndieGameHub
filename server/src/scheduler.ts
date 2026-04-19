@@ -2,6 +2,30 @@ import { query } from './utils/dbTools';
 import { checkAndUpdateCampaignStatus, refundAllDonations } from './services/betCampaignService';
 
 /**
+ * 预热结束时间点检查：自动从 preheating 切换为 funding
+ */
+async function checkWarmupEnd(): Promise<void> {
+  try {
+    const now = new Date();
+    const rows = await query(
+      `SELECT id FROM bet_campaigns WHERE status = 'preheating' AND warmupEndTime IS NOT NULL AND warmupEndTime <= ?`,
+      [now]
+    ) as any[];
+
+    if (!rows || rows.length === 0) return;
+
+    console.log(`[Scheduler] 检查到 ${rows.length} 个预热到期`);
+
+    for (const campaign of rows) {
+      await query("UPDATE bet_campaigns SET status = 'funding' WHERE id = ?", [campaign.id]);
+      console.log(`[Scheduler] 众筹 ${campaign.id} 预热结束，进入众筹阶段`);
+    }
+  } catch (error) {
+    console.error('[Scheduler] checkWarmupEnd 执行失败:', error);
+  }
+}
+
+/**
  * 众筹结束时间点检查：自动切换为 development 或 failed
  */
 async function checkFundingEnd(): Promise<void> {
@@ -61,10 +85,12 @@ async function checkDevelopmentEnd(): Promise<void> {
  * @param intervalMs 检查间隔（毫秒），默认每 10 分钟检查一次
  */
 export function startBetCampaignScheduler(intervalMs: number = 10 * 60 * 1000): NodeJS.Timeout {
+  checkWarmupEnd();
   checkFundingEnd();
   checkDevelopmentEnd();
 
   const timer = setInterval(() => {
+    checkWarmupEnd();
     checkFundingEnd();
     checkDevelopmentEnd();
   }, intervalMs);

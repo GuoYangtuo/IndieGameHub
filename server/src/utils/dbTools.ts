@@ -441,6 +441,8 @@ const createTables = async (): Promise<void> => {
         title VARCHAR(200) NOT NULL,
         description TEXT,
         targetAmount INT NOT NULL,
+        warmupDays INT NOT NULL DEFAULT 0,
+        warmupEndTime TIMESTAMP NULL,
         fundingDays INT NOT NULL,
         developmentDays INT NOT NULL,
         fundingEndTime TIMESTAMP NOT NULL,
@@ -449,7 +451,7 @@ const createTables = async (): Promise<void> => {
         developmentGoalImages TEXT,
         tierAmounts TEXT NOT NULL,
         allowCustomAmount BOOLEAN DEFAULT TRUE,
-        status ENUM('funding', 'development', 'completed', 'failed', 'cancelled') DEFAULT 'funding',
+        status ENUM('preheating', 'funding', 'development', 'completed', 'failed', 'cancelled') DEFAULT 'preheating',
         result ENUM('pending', 'success', 'failed') DEFAULT 'pending',
         totalRaised INT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -600,7 +602,7 @@ export const migrateDatabase = async (): Promise<void> => {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN pay_type VARCHAR(20) AFTER trade_no');
     }
 
-    const [statusColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "status"');
+    const [statusColumns] = await conn.query('SHOW COLUMNS FROM bet_donations LIKE "status"') as any[];
     if (Array.isArray(statusColumns) && statusColumns.length === 0) {
       await conn.query('ALTER TABLE bet_donations ADD COLUMN status ENUM("pending", "paid", "refunded", "failed") DEFAULT "pending" AFTER reviewedAt');
     }
@@ -639,6 +641,36 @@ export const migrateDatabase = async (): Promise<void> => {
     if (Array.isArray(deliveryImagesColumns) && deliveryImagesColumns.length === 0) {
       await conn.query('ALTER TABLE bet_campaigns ADD COLUMN deliveryImages TEXT AFTER deliveryContent');
       console.log('已添加 deliveryImages 字段到 bet_campaigns 表');
+    }
+
+    // 检查 bet_campaigns 表是否有 warmupDays 字段（预热天数）
+    const [warmupDaysColumns] = await conn.query('SHOW COLUMNS FROM bet_campaigns LIKE "warmupDays"');
+    if (Array.isArray(warmupDaysColumns) && warmupDaysColumns.length === 0) {
+      await conn.query('ALTER TABLE bet_campaigns ADD COLUMN warmupDays INT NOT NULL DEFAULT 0 AFTER targetAmount');
+      console.log('已添加 warmupDays 字段到 bet_campaigns 表');
+    }
+
+    // 检查 bet_campaigns 表是否有 warmupEndTime 字段（预热结束时间）
+    const [warmupEndTimeColumns] = await conn.query('SHOW COLUMNS FROM bet_campaigns LIKE "warmupEndTime"');
+    if (Array.isArray(warmupEndTimeColumns) && warmupEndTimeColumns.length === 0) {
+      await conn.query('ALTER TABLE bet_campaigns ADD COLUMN warmupEndTime TIMESTAMP NULL AFTER warmupDays');
+      console.log('已添加 warmupEndTime 字段到 bet_campaigns 表');
+    }
+
+    // 检查 status 字段是否包含 preheating 值（MySQL 8.0.19+ 支持直接 ADD COLUMN + ENUM）
+    const [campaignStatusColumns] = await conn.query('SHOW COLUMNS FROM bet_campaigns LIKE "status"') as any[];
+    if (campaignStatusColumns && campaignStatusColumns.length > 0) {
+      const typeStr = (campaignStatusColumns[0] as any).Type || '';
+      if (!typeStr.includes('preheating')) {
+        try {
+          await conn.query(
+            "ALTER TABLE bet_campaigns MODIFY COLUMN status ENUM('preheating','funding','development','completed','failed','cancelled') DEFAULT 'preheating'"
+          );
+          console.log('已更新 bet_campaigns.status ENUM 添加 preheating 值');
+        } catch (enumErr: any) {
+          console.warn('更新 status ENUM 失败（可能 MySQL 版本不支持或值已被使用）:', enumErr.message);
+        }
+      }
     }
 
     // 检查是否存在 chat_rooms 表

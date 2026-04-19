@@ -530,6 +530,7 @@ export const betCampaignAPI = {
     title: string;
     description?: string;
     targetAmount: number;
+    warmupDays?: number;
     fundingDays: number;
     developmentDays: number;
     developmentGoals?: string;
@@ -541,6 +542,7 @@ export const betCampaignAPI = {
     formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     formData.append('targetAmount', data.targetAmount.toString());
+    if (data.warmupDays !== undefined) formData.append('warmupDays', data.warmupDays.toString());
     formData.append('fundingDays', data.fundingDays.toString());
     formData.append('developmentDays', data.developmentDays.toString());
     if (data.developmentGoals) formData.append('developmentGoals', data.developmentGoals);

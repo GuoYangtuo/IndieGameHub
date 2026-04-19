@@ -70,7 +70,7 @@ export const uploadDeliveryImages = multer({
 export const createBetCampaign = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    let { projectId, title, description, targetAmount, fundingDays, developmentDays, developmentGoals, tierAmounts, allowCustomAmount } = req.body;
+    let { projectId, title, description, targetAmount, warmupDays, fundingDays, developmentDays, developmentGoals, tierAmounts, allowCustomAmount } = req.body;
 
     // 解析从 FormData 发送的 JSON 字符串
     if (typeof tierAmounts === 'string') {
@@ -91,6 +91,10 @@ export const createBetCampaign = async (req: Request, res: Response): Promise<vo
       res.status(401).json({ error: '未登录' });
       return;
     }
+
+    // 解析 warmupDays（默认为 0，即不预热）
+    warmupDays = parseInt(warmupDays) || 0;
+    if (warmupDays < 0) warmupDays = 0;
 
     if (!projectId || !title || !targetAmount || !fundingDays || !developmentDays || !tierAmounts) {
       res.status(400).json({ error: '缺少必要参数' });
@@ -115,9 +119,9 @@ export const createBetCampaign = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // 检查是否有进行中的对赌众筹
+    // 检查是否有进行中的对赌众筹（包含预热阶段）
     const existingCampaign = await query(
-      "SELECT id FROM bet_campaigns WHERE projectId = ? AND status IN ('funding', 'development')",
+      "SELECT id FROM bet_campaigns WHERE projectId = ? AND status IN ('preheating', 'funding', 'development')",
       [projectId]
     );
     if (existingCampaign && (existingCampaign as any[]).length > 0) {
@@ -127,13 +131,21 @@ export const createBetCampaign = async (req: Request, res: Response): Promise<vo
 
     const campaignId = generateId();
     const now = new Date();
-    const fundingEndTime = new Date(now.getTime() + fundingDays * 24 * 60 * 60 * 1000);
+
+    // 根据是否有预热期决定初始状态和时间计算
+    const initialStatus = warmupDays > 0 ? 'preheating' : 'funding';
+    const warmupEndTime = warmupDays > 0
+      ? new Date(now.getTime() + warmupDays * 24 * 60 * 60 * 1000)
+      : null;
+    // 众筹结束时间从预热结束（或创建时间）开始计算
+    const fundingStartTime: Date = warmupDays > 0 && warmupEndTime !== null ? warmupEndTime : now;
+    const fundingEndTime = new Date(fundingStartTime.getTime() + fundingDays * 24 * 60 * 60 * 1000);
     const developmentEndTime = new Date(fundingEndTime.getTime() + developmentDays * 24 * 60 * 60 * 1000);
 
     await query(
-      `INSERT INTO bet_campaigns (id, projectId, createdBy, title, description, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals, developmentGoalImages, tierAmounts, allowCustomAmount, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'funding')`,
-      [campaignId, projectId, userId, title, description || null, targetAmount, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals || null, JSON.stringify(developmentGoalImages), JSON.stringify(tierAmounts), allowCustomAmount !== false]
+      `INSERT INTO bet_campaigns (id, projectId, createdBy, title, description, targetAmount, warmupDays, warmupEndTime, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals, developmentGoalImages, tierAmounts, allowCustomAmount, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [campaignId, projectId, userId, title, description || null, targetAmount, warmupDays, warmupEndTime, fundingDays, developmentDays, fundingEndTime, developmentEndTime, developmentGoals || null, JSON.stringify(developmentGoalImages), JSON.stringify(tierAmounts), allowCustomAmount !== false, initialStatus]
     );
 
     const newCampaign = await query('SELECT * FROM bet_campaigns WHERE id = ?', [campaignId]);
@@ -323,7 +335,7 @@ export const getActiveBetCampaign = async (req: Request, res: Response): Promise
     const { projectId } = req.params;
 
     const campaign = await query(
-      "SELECT * FROM bet_campaigns WHERE projectId = ? AND status IN ('funding', 'development') ORDER BY createdAt DESC LIMIT 1",
+      "SELECT * FROM bet_campaigns WHERE projectId = ? AND status IN ('preheating', 'funding', 'development') ORDER BY createdAt DESC LIMIT 1",
       [projectId]
     );
 
@@ -445,7 +457,11 @@ export const donateToBetCampaign = async (req: Request, res: Response): Promise<
     const campaignData = (campaign as any[])[0];
 
     if (campaignData.status !== 'funding') {
-      res.status(400).json({ error: '当前不在众筹阶段，无法捐赠' });
+      if (campaignData.status === 'preheating') {
+        res.status(400).json({ error: '当前正在预热中，众筹尚未开始，请稍后再来' });
+      } else {
+        res.status(400).json({ error: '当前不在众筹阶段，无法捐赠' });
+      }
       return;
     }
 
@@ -644,9 +660,9 @@ export const deleteBetCampaign = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // 检查是否在众筹阶段（只要还没进入开发阶段都可以取消）
-    if (campaignData.status !== 'funding') {
-      res.status(400).json({ error: '只能在众筹阶段取消对赌众筹' });
+    // 检查是否在众筹阶段（预热阶段或众筹阶段都可以取消）
+    if (campaignData.status !== 'preheating' && campaignData.status !== 'funding') {
+      res.status(400).json({ error: '只能在预热或众筹阶段取消对赌众筹' });
       return;
     }
 
