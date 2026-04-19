@@ -270,7 +270,7 @@ const BetCampaignCard: React.FC<BetCampaignCardProps> = ({
         {/* 预热阶段的提示信息 */}
         {currentStatus === 'preheating' && (
           <Alert severity="info" sx={{ mt: 2 }}>
-            众筹正在预热中，页面已开放展示。你可以先浏览项目信息、了解开发目标，待预热结束后众筹正式开始，届时即可参与捐赠。
+            众筹暂未开始。可以先浏览项目信息、了解开发目标，待预热结束后可参与众筹~
           </Alert>
         )}
 

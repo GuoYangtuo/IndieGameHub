@@ -3,7 +3,7 @@ import { Box, IconButton, Typography, Paper } from '@mui/material';
 import { Add, Remove } from '@mui/icons-material';
 
 interface NumberStepperProps {
-  label: string;
+  label: React.ReactNode;
   value: number;
   onChange: (value: number) => void;
   min?: number;

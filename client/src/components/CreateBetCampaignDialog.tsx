@@ -14,9 +14,10 @@ import {
   Tab,
   Stack,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
-import { CloudUpload, Delete } from '@mui/icons-material';
+import { CloudUpload, Delete, HelpOutline } from '@mui/icons-material';
 import { NumberStepper } from './NumberStepper';
 import { BetCampaign, BetDonationAggregate } from '../types/betCampaign';
 import BetCampaignCard from './BetCampaignCard';
@@ -223,7 +224,22 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <NumberStepper
-                label={warmupDays > 0 ? `预热${warmupDays}天` : '不预热，立即众筹'}
+                label={
+                  <Tooltip
+                    title={
+                      <>
+                        预热期间，众筹页面可见，粉丝可预约<br />
+                        预热期间可修改众筹信息或取消众筹<br />
+                      </>
+                    }
+                    placement="top"
+                  >
+                    <span style={{ cursor: 'help' }}>
+                      {warmupDays > 0 ? `预热${warmupDays}天` : '不预热，立即众筹'}
+                      <HelpOutline sx={{ fontSize: 14, ml: 0.5, verticalAlign: 'middle' }} />
+                    </span>
+                  </Tooltip>
+                }
                 value={warmupDays}
                 onChange={setWarmupDays}
                 min={0}
@@ -231,7 +247,22 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
             </Box>
             <Box sx={{ flex: 1 }}>
               <NumberStepper
-                label={`众筹${fundingDays}天`}
+                label={
+                  <Tooltip
+                    title={
+                      <>
+                        众筹期间，不可修改众筹信息，可取消众筹<br />
+                        众筹结束未达目标则众筹失败，支持款原路退回
+                      </>
+                    }
+                    placement="top"
+                  >
+                    <span style={{ cursor: 'help' }}>
+                      {`众筹${fundingDays}天`}
+                      <HelpOutline sx={{ fontSize: 14, ml: 0.5, verticalAlign: 'middle' }} />
+                    </span>
+                  </Tooltip>
+                }
                 value={fundingDays}
                 onChange={setFundingDays}
                 min={1}
@@ -239,7 +270,22 @@ const CreateBetCampaignDialog: React.FC<CreateBetCampaignDialogProps> = ({
             </Box>
             <Box sx={{ flex: 1 }}>
               <NumberStepper
-                label={`开发${developmentDays}天`}
+                label={
+                  <Tooltip
+                    title={
+                      <>
+                        众筹成功后，开发阶段的最长持续天数<br />
+                        期间可提前完成目标或放弃开发
+                      </>
+                    }
+                    placement="top"
+                  >
+                    <span style={{ cursor: 'help' }}>
+                      {`开发${developmentDays}天`}
+                      <HelpOutline sx={{ fontSize: 14, ml: 0.5, verticalAlign: 'middle' }} />
+                    </span>
+                  </Tooltip>
+                }
                 value={developmentDays}
                 onChange={setDevelopmentDays}
                 min={1}
