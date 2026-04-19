@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -17,13 +17,22 @@ import {
   Slide,
   Popover,
   Link,
+  Avatar,
+  Popper,
+  Grow,
+  Paper,
+  MenuList,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 import { projectAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Delete, ArrowBack, ArrowForward, Check, CloudDownload, ImportExport } from '@mui/icons-material';
+import { Delete, ArrowBack, ArrowForward, Check, CloudDownload, ImportExport, Home, Add, Settings, MonetizationOn, Logout } from '@mui/icons-material';
 import FeatureStepPanel from '../components/FeatureStepPanel';
+import RechargeDialog from '../components/RechargeDialog';
 import { useDebounce } from '../hooks/useDebounce';
 
 interface Tag {
@@ -53,6 +62,13 @@ const CreateProjectPage: React.FC = () => {
   const [fetchingFromUrl, setFetchingFromUrl] = useState(false);
   const [storeUrlAnchor, setStoreUrlAnchor] = useState<HTMLElement | null>(null);
 
+  // 用户头像菜单状态
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const avatarAnchorRef = useRef<HTMLDivElement>(null);
+
+  // 充值弹窗状态
+  const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
+
   // 标签相关状态
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -68,7 +84,7 @@ const CreateProjectPage: React.FC = () => {
   const [enableDiscussions, setEnableDiscussions] = useState(true);
   const [enableBetCampaign, setEnableBetCampaign] = useState(false);
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -145,6 +161,29 @@ const CreateProjectPage: React.FC = () => {
   const handleRemoveCoverImage = () => {
     setCoverImage(null);
     setCoverImagePreview(null);
+  };
+
+  // 处理登出
+  const handleLogout = () => {
+    logout();
+    setAvatarMenuOpen(false);
+    navigate('/');
+  };
+
+  // 鼠标离开头像菜单区域时关闭
+  const handleAvatarMenuClose = (event: Event | React.SyntheticEvent) => {
+    if (
+      avatarAnchorRef.current &&
+      avatarAnchorRef.current.contains(event.target as HTMLElement)
+    ) {
+      return;
+    }
+    setAvatarMenuOpen(false);
+  };
+
+  // 处理点击头像进入个人资料页
+  const handleAvatarClick = () => {
+    navigate('/profile');
   };
 
   // 从商店URL自动获取数据
@@ -854,7 +893,97 @@ const CreateProjectPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', px: (currentStep === 0 || currentStep === 4) ? { xs: 4, md: 6 } : 0, pt: (currentStep === 0 || currentStep === 4) ? 2 : 0, pb: (currentStep === 0 || currentStep === 4) ? 5 : 0 }}>
+    <Box sx={{ width: '100%', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', px: (currentStep === 0 || currentStep === 4) ? { xs: 4, md: 6 } : 0, pt: (currentStep === 0 || currentStep === 4) ? 6 : 0, pb: (currentStep === 0 || currentStep === 4) ? 5 : 0 }}>
+
+        {/* 固定在右上角的用户头像 */}
+        {user && (
+          <Box
+            ref={avatarAnchorRef}
+            sx={{
+              position: 'fixed',
+              top: 16,
+              right: 16,
+              zIndex: 1300,
+            }}
+            onMouseEnter={() => setAvatarMenuOpen(true)}
+            onMouseLeave={() => setAvatarMenuOpen(false)}
+          >
+            <IconButton onClick={handleAvatarClick} sx={{ p: 0.5 }}>
+              <Avatar
+                alt={user.username}
+                src={user.avatarUrl || undefined}
+                sx={{ width: 40, height: 40 }}
+              >
+                {user.username.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+
+            <Popper
+              open={avatarMenuOpen}
+              anchorEl={avatarAnchorRef.current}
+              placement="bottom-end"
+              transition
+              disablePortal
+              sx={{ zIndex: 1300 }}
+            >
+              {({ TransitionProps }) => (
+                <Grow
+                  {...TransitionProps}
+                  style={{ transformOrigin: 'top right' }}
+                >
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      mt: 1.5,
+                      minWidth: 180,
+                      overflow: 'visible',
+                      filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                    }}
+                  >
+                    <MenuList autoFocusItem={false}>
+                      <MenuItem component={RouterLink} to="/">
+                        <ListItemIcon>
+                          <Home fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>关注的/发现项目</ListItemText>
+                      </MenuItem>
+                      <MenuItem component={RouterLink} to="/create-project">
+                        <ListItemIcon>
+                          <Add fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>创建新项目</ListItemText>
+                      </MenuItem>
+                      {user.username === 'admin' && (
+                        <MenuItem component={RouterLink} to="/admin">
+                          <ListItemIcon>
+                            <Settings fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText>管理控制台</ListItemText>
+                        </MenuItem>
+                      )}
+                      <MenuItem onClick={() => setRechargeDialogOpen(true)}>
+                        <ListItemIcon>
+                          <MonetizationOn fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>金币余额: {user.coins}</ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={handleLogout}>
+                        <ListItemIcon>
+                          <Logout fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>退出登录</ListItemText>
+                      </MenuItem>
+                    </MenuList>
+                  </Paper>
+                </Grow>
+              )}
+            </Popper>
+          </Box>
+        )}
+        <RechargeDialog
+          open={rechargeDialogOpen}
+          onClose={() => setRechargeDialogOpen(false)}
+        />
 
         {error && (
           <Alert severity="error" sx={{ mb: 2, maxWidth: 'md', mx: 'auto', width: '100%' }}>

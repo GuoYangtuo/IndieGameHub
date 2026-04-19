@@ -98,12 +98,31 @@ const ChatLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// 创建项目页专用布局（无导航栏）
+const CreateProjectLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box
+        sx={{
+          minHeight: 0,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: theme => theme.palette.background.default
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
+  );
+};
+
 // 应用路由组件
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout><HomePage /></Layout>} />
-      <Route path="/create-project" element={<Layout disablePadding><CreateProjectPage /></Layout>} />
+      <Route path="/create-project" element={<CreateProjectLayout><CreateProjectPage /></CreateProjectLayout>} />
       <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/user/:id" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/projects/:slug/donate" element={<Layout><DonatePage /></Layout>} />

@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link as RouterLink, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
   IconButton,
-  Menu,
   MenuItem,
   Avatar,
   Box,
@@ -19,11 +18,9 @@ import {
   Grow,
   ListItemIcon,
   ListItemText,
-  Stack,
   Badge
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
   Brightness4,
   Brightness7,
   Add,
@@ -35,10 +32,8 @@ import {
   FavoriteBorder,
   Logout,
   Home,
-  Person,
   Share,
   TrendingUp,
-  History,
   Mail
 } from '@mui/icons-material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -46,7 +41,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useProjectTitle } from '../contexts/ProjectTitleContext';
 import { projectAPI, userAPI, betCampaignAPI, notificationAPI } from '../services/api'; // userAPI still needed for handleToggleFavorite
-import { Description, Update, AccountTree } from '@mui/icons-material';
 import AuthDialog from './AuthDialog';
 import RechargeDialog from './RechargeDialog';
 
@@ -64,10 +58,7 @@ const Navbar: React.FC = () => {
   const { projectTitle, demoLink, sharedProjectData, updateFavoriteStatus } = useProjectTitle();
   const navigate = useNavigate();
   const { slug } = useParams<{ slug?: string }>();
-  const location = useLocation();
 
-  const isCreateProjectPage = location.pathname === '/create-project';
-  
   // 用户项目状态（仅保留这一个需要独立请求的数据）
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -103,37 +94,8 @@ const Navbar: React.FC = () => {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // 导航栏折叠状态（仅在创建项目页生效）
-  const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false);
 
   // 当路由参数slug变化时更新currentSlug
-  useEffect(() => {
-    if (slug) {
-      setCurrentSlug(slug);
-    }
-  }, [slug]);
-
-  // 创建项目页自动折叠，鼠标靠近展开
-  useEffect(() => {
-    if (isCreateProjectPage) {
-      setIsNavbarCollapsed(true);
-    } else {
-      setIsNavbarCollapsed(false);
-    }
-  }, [isCreateProjectPage]);
-
-  const handleNavbarMouseEnter = () => {
-    if (isCreateProjectPage && isNavbarCollapsed) {
-      setIsNavbarCollapsed(false);
-    }
-  };
-
-  const handleNavbarMouseLeave = () => {
-    if (isCreateProjectPage && !isNavbarCollapsed) {
-      setIsNavbarCollapsed(true);
-    }
-  };
-
-  const isCollapsed = isCreateProjectPage && isNavbarCollapsed;
 
   // 获取对赌众筹状态
   useEffect(() => {
@@ -383,20 +345,12 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <Box
-      onMouseEnter={handleNavbarMouseEnter}
-      onMouseLeave={handleNavbarMouseLeave}
+    <AppBar
+      position="static"
+      sx={{
+        py: 0,
+      }}
     >
-      <AppBar
-        position="static"
-        sx={{
-          py: 0,
-          visibility: isCollapsed ? 'hidden' : 'visible',
-          opacity: isCollapsed ? 0 : 1,
-          transition: 'opacity 0.3s ease-in-out',
-          pointerEvents: isCollapsed ? 'none' : 'auto',
-        }}
-      >
           <Container maxWidth="xl">
             <Toolbar disableGutters sx={{ minHeight: '64px' }}>
           <Typography
@@ -692,7 +646,6 @@ const Navbar: React.FC = () => {
         </Toolbar>
       </Container>
     </AppBar>
-    </Box>
   );
 };
 

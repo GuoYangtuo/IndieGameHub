@@ -73,7 +73,6 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
         display: 'flex',
         flexDirection: 'column',
         p: { xs: 2, md: 4 },
-        pt:"0!important",
         height: '100%',
         order: isMobile ? 2 : 1,
         justifyContent: { xs: 'flex-start', md: 'center' },
@@ -242,9 +241,6 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
               position: 'absolute',
               right: { xs: 8, md: 16 },
               bottom: { xs: 8, md: 16 },
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
               minWidth: 40,
               p: '6px 8px',
               '&:hover': {
