@@ -71,6 +71,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
         display: 'flex',
         flexDirection: 'column',
         p: { xs: 2, md: 4 },
+        pt:"0!important",
         height: '100%',
         order: isMobile ? 2 : 1,
         justifyContent: { xs: 'flex-start', md: 'center' },
@@ -160,7 +161,6 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
               width: '100%',
               flex: 1,
               objectFit: 'contain',
-              p: 2,
               minHeight: 0,
             }}
           />
@@ -174,7 +174,7 @@ const FeatureStepPanel: React.FC<FeatureStepPanelProps> = ({
             variant="caption"
             color="text.secondary"
             sx={{
-              p: { xs: 1, md: 2 },
+              py: 0.5,
               textAlign: 'center',
               width: '100%',
               flexShrink: 0,

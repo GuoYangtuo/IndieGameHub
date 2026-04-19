@@ -103,7 +103,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout><HomePage /></Layout>} />
-      <Route path="/create-project" element={<Layout><CreateProjectPage /></Layout>} />
+      <Route path="/create-project" element={<Layout disablePadding><CreateProjectPage /></Layout>} />
       <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/user/:id" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/projects/:slug/donate" element={<Layout><DonatePage /></Layout>} />

@@ -607,7 +607,8 @@ const CreateProjectPage: React.FC = () => {
             title="是否启用 对赌众筹？"
             description="开发者给自己设定一个短期开发目标（比如一周或一个月内做完xx）然后众筹，完成目标之后才能拿到筹得捐款，如果开发失败则退还捐款。"
             images={[
-              { dark: '/images/features/contributions-dark.png', light: '/images/features/contributions-light.png', description: '开发者可以设定一个目标和一个截止日期，如果到截止日期时项目获得了足够多的支持，则开发者必须完成承诺' },
+              { dark: '/images/features/bet-campaign-introduction.png', light: '/images/features/bet-campaign-introduction.png', description: '介绍什么是"对赌众筹"' },
+              { dark: '/images/features/bet-campaign-example.png', light: '/images/features/bet-campaign-example.png', description: '一个对赌众筹的例子' },
             ]}
             onEnable={() => { setEnableBetCampaign(true); handleNext(); }}
             onDisable={() => { setEnableBetCampaign(false); handleNext(); }}
@@ -807,7 +808,7 @@ const CreateProjectPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', minHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', px: { xs: 2, md: 4 }, pt: (currentStep === 0 || currentStep === 4) ? 0 : 3, pb: 3 }}>
+    <Box sx={{ width: '100%', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', px: (currentStep === 0 || currentStep === 4) ? { xs: 4, md: 6 } : 0, pt: (currentStep === 0 || currentStep === 4) ? 2 : 0, pb: (currentStep === 0 || currentStep === 4) ? 5 : 0 }}>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2, maxWidth: 'md', mx: 'auto', width: '100%' }}>
@@ -816,7 +817,7 @@ const CreateProjectPage: React.FC = () => {
         )}
 
         <Slide in={true} direction={slideDirection === 'left' ? 'right' : 'left'}>
-          <Box sx={{ mt: (currentStep === 0 || currentStep === 4) ? 0 : 3, mb: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             {renderStepContent()}
           </Box>
         </Slide>
