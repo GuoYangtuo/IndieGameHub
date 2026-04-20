@@ -226,9 +226,9 @@ async function syncProjectGitHubCommits(project: { id: string; name: string; git
 
 /**
  * 启动 GitHub commits 同步调度器
- * @param intervalMs 检查间隔（毫秒），默认每 10 分钟检查一次
+ * @param intervalMs 检查间隔（毫秒），默认每 30 分钟检查一次
  */
-export function startGitHubSyncScheduler(intervalMs: number = 10 * 60 * 1000): NodeJS.Timeout {
+export function startGitHubSyncScheduler(intervalMs: number = 30 * 60 * 1000): NodeJS.Timeout {
   // 立即执行一次
   syncGitHubCommits();
 

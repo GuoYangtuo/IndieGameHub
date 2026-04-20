@@ -587,12 +587,6 @@ const Navbar: React.FC = () => {
                               </ListItemIcon>
                               <ListItemText>关注的/发现项目</ListItemText>
                             </MenuItem>
-                            <MenuItem component={RouterLink} to="/">
-                              <ListItemIcon>
-                                <Home fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText>介绍</ListItemText>
-                            </MenuItem>
                             <MenuItem component={RouterLink} to="/create-project">
                               <ListItemIcon>
                                 <Add fontSize="small" />

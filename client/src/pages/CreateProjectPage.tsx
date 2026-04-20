@@ -745,7 +745,7 @@ const CreateProjectPage: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Switch
-                      disabled={true}
+                      disabled={false}
                       checked={enableUpdates}
                       onChange={(e) => setEnableUpdates(e.target.checked)}
                     />
@@ -766,7 +766,7 @@ const CreateProjectPage: React.FC = () => {
                       GitHub 仓库关联 (可选)
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-                      关联GitHub仓库后可自动获取更新日志
+                      用于从仓库commits记录自动获取更新日志
                     </Typography>
                     <TextField
                       margin="dense"
@@ -783,13 +783,13 @@ const CreateProjectPage: React.FC = () => {
                       margin="dense"
                       fullWidth
                       id="githubAccessToken"
-                      label="GitHub 访问令牌 (私有仓库需要)"
+                      label="访问令牌 (私有仓库需要)"
                       name="githubAccessToken"
                       type="password"
                       value={githubAccessToken}
                       onChange={(e) => setGithubAccessToken(e.target.value)}
                       placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                      helperText="访问私有仓库需要提供Personal Access Token"
+                      helperText="建议使用一张仅开启 repo:status 权限的令牌，关闭源码访问权限，只提供commits记录"
                       size="small"
                       sx={{ mt: 1 }}
                     />
