@@ -581,11 +581,17 @@ const Navbar: React.FC = () => {
                           }}
                         >
                           <MenuList autoFocusItem={false}>
-                            <MenuItem component={RouterLink} to="/">
+                            <MenuItem component={RouterLink} to="/home">
                               <ListItemIcon>
                                 <Home fontSize="small" />
                               </ListItemIcon>
                               <ListItemText>关注的/发现项目</ListItemText>
+                            </MenuItem>
+                            <MenuItem component={RouterLink} to="/">
+                              <ListItemIcon>
+                                <Home fontSize="small" />
+                              </ListItemIcon>
+                              <ListItemText>介绍</ListItemText>
                             </MenuItem>
                             <MenuItem component={RouterLink} to="/create-project">
                               <ListItemIcon>

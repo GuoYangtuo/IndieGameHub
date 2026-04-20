@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { StyledEngineProvider } from '@mui/material/styles';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProjectTitleProvider } from './contexts/ProjectTitleContext';
 import { WebSocketProvider, useWebSocketContext } from './contexts/WebSocketContext';
 import Navbar from './components/Navbar';
@@ -27,6 +27,7 @@ const ChatRoomPage = withLoadable(() => import('./pages/ChatRoomPage'));
 const BetCampaignPage = withLoadable(() => import('./pages/BetCampaignPage'));
 const BetCampaignManagePage = withLoadable(() => import('./pages/BetCampaignManagePage'));
 const InboxPage = withLoadable(() => import('./pages/InboxPage'));
+const AboutPage = withLoadable(() => import('./pages/AboutPage'));
 
 // 自定义滚动条全局样式
 const ScrollbarStyles = () => {
@@ -119,9 +120,14 @@ const CreateProjectLayout = ({ children }: { children: React.ReactNode }) => {
 
 // 应用路由组件
 const AppRoutes = () => {
+  const { user } = useAuth();
+
   return (
     <Routes>
-      <Route path="/" element={<Layout><HomePage /></Layout>} />
+      <Route path="/" element={
+        user ? <Navigate to="/home" replace /> : <Layout><AboutPage /></Layout>
+      } />
+      <Route path="/home" element={<Layout><HomePage /></Layout>} />
       <Route path="/create-project" element={<CreateProjectLayout><CreateProjectPage /></CreateProjectLayout>} />
       <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/user/:id" element={<Layout><ProfilePage /></Layout>} />
