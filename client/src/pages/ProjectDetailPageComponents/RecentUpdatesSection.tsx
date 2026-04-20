@@ -237,6 +237,7 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
           {/* 日常更新列表 - 右侧 */}
           <Box sx={{ 
             flex: { xs: '1', md: '0.7' },
+            minWidth: 0, // 防止flex子项收缩时出现问题
             borderLeft: { xs: 'none', md: theme => `1px solid ${theme.palette.divider}` },
             pl: { xs: 0}
           }}>
@@ -246,7 +247,7 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
               <Alert severity="info">暂无开发进度更新，发布一条更新日志，或者完成一个提案吧！</Alert>
             ) : (
               <Box sx={{ maxHeight: '200px', overflow: 'auto' }}>
-                <List dense>
+                <List dense disablePadding>
                   {(selectedDate ? selectedDateUpdates : 
                     (Array.isArray(project?.updates) ? project.updates : [])
                       .filter(update => !update.isVersion)
@@ -262,33 +263,53 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
                     <ListItem 
                       key={update.id} 
                       divider
+                      disablePadding
                       sx={{ cursor: 'pointer' }}
                       onClick={() => handleUpdateClick(update)}
                     >
-                      <ListItemText 
-                        primary={
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="body2" noWrap sx={{ maxWidth: '70%' }}>
-                              {update.isVersion && update.versionName 
-                                ? `${update.versionName}` 
-                                : update.content}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatRelativeTime(update.createdAt)}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          Boolean(update.isVersion) && 
-                          <Chip 
-                            label="版本更新" 
-                            size="small" 
-                            color="primary" 
-                            variant="outlined"
-                            sx={{ mt: 0.5 }} 
-                          />
-                        }
-                      />
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        py: 1
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                          {update.isVersion == true && (
+                            <Chip 
+                              label="版本" 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                              sx={{ mr: 1, flexShrink: 0, height: 20, fontSize: '0.7rem' }} 
+                            />
+                          )}
+                          <Typography 
+                            variant="body2" 
+                            noWrap 
+                            sx={{ 
+                              flex: 1,
+                              minWidth: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              mr: 1
+                            }}
+                          >
+                            {update.isVersion && update.versionName 
+                              ? `${update.versionName}` 
+                              : update.content}
+                          </Typography>
+                        </Box>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary"
+                          sx={{ flexShrink: 0, ml: 1 }}
+                        >
+                          {formatRelativeTime(update.createdAt)}
+                        </Typography>
+                      </Box>
                       {update.imageUrl && (
                         <Box 
                           component="img" 
@@ -298,7 +319,8 @@ const RecentUpdatesSection: React.FC<RecentUpdatesSectionProps> = ({
                             height: 40, 
                             ml: 1, 
                             borderRadius: 1,
-                            objectFit: 'cover'
+                            objectFit: 'cover',
+                            flexShrink: 0
                           }} 
                         />
                       )}

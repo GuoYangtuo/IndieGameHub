@@ -951,9 +951,9 @@ const ProjectDetailPage: React.FC = () => {
             </Box>
             
             {/* 主内容区 - 左右两栏布局 */}
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, minWidth: 0, overflow: 'hidden' }}>
               {/* 主内容区 - 左侧 75% */}
-              <Box sx={{ flex: { xs: '1', md: '0.75' } }}>
+              <Box sx={{ flex: { xs: '1', md: '0.75' }, minWidth: 0, overflow: 'hidden' }}>
                 {/* 项目成员的更新表单 */}
                 {isMember && project && project.enableUpdates == true && (
                   <ProjectUpdateForm
