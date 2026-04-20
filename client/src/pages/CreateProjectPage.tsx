@@ -745,6 +745,7 @@ const CreateProjectPage: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Switch
+                      disabled={true}
                       checked={enableUpdates}
                       onChange={(e) => setEnableUpdates(e.target.checked)}
                     />
@@ -881,7 +882,7 @@ const CreateProjectPage: React.FC = () => {
                   enableProposals,
                   enableDiscussions,
                   enableContributions
-                ].filter(Boolean).length} 个功能模块
+                ].filter(Boolean).length} 个功能模块，之后在项目设置页可更改启用状态
               </Typography>
             </Box>
           </Box>
