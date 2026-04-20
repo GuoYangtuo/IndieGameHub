@@ -756,6 +756,29 @@ export const migrateDatabase = async (): Promise<void> => {
   }
 };
 
+// GitHub Commits 同步迁移
+export const migrateGitHubSync = async (): Promise<void> => {
+  try {
+    const conn = await pool.getConnection();
+
+    // 检查 project_updates 表是否有 githubSha 字段
+    const [githubShaColumns] = await conn.query('SHOW COLUMNS FROM project_updates LIKE "githubSha"');
+    if (Array.isArray(githubShaColumns) && githubShaColumns.length === 0) {
+      await conn.query('ALTER TABLE project_updates ADD COLUMN githubSha VARCHAR(100) NULL AFTER imageUrl');
+      console.log('已添加 githubSha 字段到 project_updates 表');
+
+      // 为现有字段添加索引以提高查询性能
+      await conn.query('ALTER TABLE project_updates ADD INDEX idx_github_sha (githubSha)');
+      console.log('已为 githubSha 字段添加索引');
+    }
+
+    conn.release();
+    console.log('GitHub 同步字段迁移完成');
+  } catch (error) {
+    console.error('GitHub 同步字段迁移失败:', error);
+  }
+};
+
 // 新增字段迁移函数
 export const migrateProjectFeatures = async (): Promise<void> => {
   try {

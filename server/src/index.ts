@@ -10,9 +10,9 @@ import { commentRouter } from './routes/commentRoutes';
 import { surveyRouter } from './routes/surveyRoutes';
 import notificationRouter from './routes/notificationRoutes';
 import betCampaignRouter from './routes/betCampaignRoutes';
-import { initDatabase, migrateDatabase, migrateProjectFeatures } from './utils/dbTools';
+import { initDatabase, migrateDatabase, migrateProjectFeatures, migrateGitHubSync } from './utils/dbTools';
 import { initializeWebSocket } from './websocket';
-import { startBetCampaignScheduler } from './scheduler';
+import { startBetCampaignScheduler, startGitHubSyncScheduler } from './scheduler';
 import dotenv from 'dotenv';
 
 // 加载环境变量
@@ -32,6 +32,9 @@ const initApp = async () => {
     
     // 执行项目功能模块字段迁移
     await migrateProjectFeatures();
+
+    // 执行 GitHub 同步字段迁移
+    await migrateGitHubSync();
     
     // 中间件
     app.use(cors());
@@ -68,6 +71,9 @@ const initApp = async () => {
 
     // 启动对赌众筹定时调度器
     startBetCampaignScheduler();
+
+    // 启动 GitHub commits 同步调度器
+    startGitHubSyncScheduler();
     
   } catch (error) {
     console.error('应用初始化失败:', error);

@@ -16,6 +16,33 @@ export interface GitHubValidationResult {
   error?: string;
 }
 
+// GitHub Commit 接口
+export interface GitHubCommit {
+  sha: string;
+  commit: {
+    author: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    committer: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    message: string;
+  };
+  html_url: string;
+  author?: {
+    login: string;
+    avatar_url: string;
+  };
+  committer?: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
 /**
  * 从GitHub URL中提取仓库信息
  */
@@ -179,4 +206,121 @@ export const validateGitHubToken = async (accessToken: string): Promise<boolean>
  */
 export const getPublicRepoInfo = async (repoUrl: string): Promise<GitHubValidationResult> => {
   return validateGitHubRepo(repoUrl);
+};
+
+/**
+ * 获取 GitHub 仓库的 commits
+ * @param repoUrl GitHub 仓库 URL
+ * @param accessToken 可选的 GitHub 访问令牌
+ * @param perPage 每页数量，默认 30
+ * @param page 页码，默认 1
+ * @returns commits 数组或 null（如果获取失败）
+ */
+export const getGitHubCommits = async (
+  repoUrl: string,
+  accessToken?: string,
+  perPage: number = 30,
+  page: number = 1
+): Promise<GitHubCommit[] | null> => {
+  try {
+    const repoInfo = parseGitHubUrl(repoUrl);
+    if (!repoInfo) {
+      console.error('[GitHub] 无效的仓库 URL:', repoUrl);
+      return null;
+    }
+
+    const headers: any = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'IndieGameHub-App'
+    };
+
+    if (accessToken) {
+      headers['Authorization'] = `token ${accessToken}`;
+    }
+
+    const apiUrl = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/commits`;
+    const response = await axios.get(apiUrl, {
+      headers,
+      params: {
+        per_page: perPage,
+        page: page
+      },
+      timeout: 15000 // 15秒超时
+    });
+
+    if (response.status === 200 && Array.isArray(response.data)) {
+      return response.data as GitHubCommit[];
+    }
+
+    return null;
+  } catch (error: any) {
+    console.error('[GitHub] 获取 commits 失败:', error.message);
+
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 403) {
+        console.error('[GitHub] API 速率限制已达到，请稍后再试或添加访问令牌');
+      } else if (status === 404) {
+        console.error('[GitHub] 仓库不存在或无法访问');
+      }
+    }
+
+    return null;
+  }
+};
+
+/**
+ * 获取从指定 SHA 之前的 commits（用于增量同步）
+ * @param repoUrl GitHub 仓库 URL
+ * @param accessToken 可选的 GitHub 访问令牌
+ * @param sha 要获取的起始 SHA（或分支名），将获取此 SHA 之前的 commits
+ * @param perPage 每页数量，默认 30
+ * @returns commits 数组或 null（如果获取失败）
+ */
+export const getGitHubCommitsBefore = async (
+  repoUrl: string,
+  accessToken?: string,
+  sha?: string,
+  perPage: number = 30
+): Promise<GitHubCommit[] | null> => {
+  try {
+    const repoInfo = parseGitHubUrl(repoUrl);
+    if (!repoInfo) {
+      console.error('[GitHub] 无效的仓库 URL:', repoUrl);
+      return null;
+    }
+
+    const headers: any = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'IndieGameHub-App'
+    };
+
+    if (accessToken) {
+      headers['Authorization'] = `token ${accessToken}`;
+    }
+
+    const apiUrl = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/commits`;
+    const params: any = {
+      per_page: perPage
+    };
+
+    if (sha) {
+      params.sha = sha;
+    }
+
+    const response = await axios.get(apiUrl, {
+      headers,
+      params,
+      timeout: 15000
+    });
+
+    if (response.status === 200 && Array.isArray(response.data)) {
+      return response.data as GitHubCommit[];
+    }
+
+    return null;
+  } catch (error: any) {
+    console.error('[GitHub] 获取 commits 失败:', error.message);
+    return null;
+  }
 };

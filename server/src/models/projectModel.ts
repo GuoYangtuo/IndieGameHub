@@ -43,6 +43,7 @@ export interface ProjectUpdate {
   isVersion?: boolean;
   versionName?: string;
   imageUrl?: string;
+  githubSha?: string; // GitHub commit SHA，用于去重和关联
 }
 
 // 创建项目接口
@@ -395,21 +396,35 @@ export const addProjectUpdate = async (
   demoLink?: string,
   isVersion?: boolean,
   versionName?: string,
-  imageUrl?: string
+  imageUrl?: string,
+  githubSha?: string,
+  createdAt?: string
 ): Promise<ProjectUpdate | null> => {
   try {
     const id = generateId();
     const now = new Date();
-    const mysqlDateFormat = now.toISOString().slice(0, 19).replace('T', ' ');
-    const createdAt = now.toISOString(); // 保留ISO格式用于返回的对象
-    
+
+    // 将日期转换为 MySQL DATETIME 格式
+    let mysqlDateFormat: string;
+    let createdAtISO: string;
+
+    if (createdAt) {
+      // 解析传入的日期并转换为 MySQL 格式
+      const date = new Date(createdAt);
+      mysqlDateFormat = date.toISOString().slice(0, 19).replace('T', ' ');
+      createdAtISO = date.toISOString();
+    } else {
+      mysqlDateFormat = now.toISOString().slice(0, 19).replace('T', ' ');
+      createdAtISO = now.toISOString();
+    }
+
     await query(
-      `INSERT INTO project_updates 
-       (id, projectId, content, demoLink, isVersion, versionName, imageUrl, createdAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, projectId, content, demoLink || null, isVersion || false, versionName || null, imageUrl || null, mysqlDateFormat]
+      `INSERT INTO project_updates
+       (id, projectId, content, demoLink, isVersion, versionName, imageUrl, githubSha, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, projectId, content, demoLink || null, isVersion || false, versionName || null, imageUrl || null, githubSha || null, mysqlDateFormat]
     );
-    
+
     const updates = await query('SELECT * FROM project_updates WHERE id = ?', [id]);
     return updates.length > 0 ? updates[0] : null;
   } catch (error) {
@@ -946,6 +961,20 @@ export const deleteTag = async (tagId: string): Promise<boolean> => {
     return result.affectedRows > 0;
   } catch (error) {
     console.error('删除标签失败:', error);
+    return false;
+  }
+};
+
+// 检查 GitHub commit 是否已存在
+export const checkGitHubCommitExists = async (projectId: string, githubSha: string): Promise<boolean> => {
+  try {
+    const result = await query(
+      'SELECT id FROM project_updates WHERE projectId = ? AND githubSha = ? LIMIT 1',
+      [projectId, githubSha]
+    );
+    return result.length > 0;
+  } catch (error) {
+    console.error('检查 GitHub commit 存在性失败:', error);
     return false;
   }
 }; 
